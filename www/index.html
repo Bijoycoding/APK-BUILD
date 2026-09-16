@@ -83,6 +83,7 @@
   .overlay.start.show > *{opacity:1;transform:translateY(0)}
   .overlay.start.show > *:nth-child(1){transition-delay:.2s}
   .overlay.start.show > *:nth-child(2){transition-delay:.7s}
+  .overlay.start.show > *:nth-child(3){transition-delay:1s}
 
   .brand{
     font-family:'JetBrains Mono','SF Mono','Fira Code',ui-monospace,Menlo,monospace;
@@ -124,6 +125,35 @@
   .btn:hover{background:#fff;
     box-shadow:0 2px 8px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.85)}
   .btn:active{transform:scale(.975);background:#c8d1dc}
+
+  /* ── Color picker ── */
+  .color-picker{
+    display:flex;flex-direction:column;align-items:center;gap:16px;
+    margin-top:34px}
+  .preview{
+    font-family:'JetBrains Mono','SF Mono','Fira Code',ui-monospace,Menlo,monospace;
+    font-size:24px;font-weight:500;letter-spacing:.06em;
+    color:#7dd3c0;
+    transition:color .3s ease, text-shadow .3s ease;
+    text-shadow:0 0 14px currentColor;
+    line-height:1}
+  .color-row{
+    display:flex;gap:11px;flex-wrap:wrap;justify-content:center;
+    max-width:280px}
+  .swatch{
+    position:relative;width:20px;height:20px;border-radius:50%;
+    cursor:pointer;border:none;padding:0;
+    transition:transform .2s cubic-bezier(.34,1.4,.64,1);
+    box-shadow:inset 0 -2px 4px rgba(0,0,0,.15),
+               inset 0 2px 3px rgba(255,255,255,.25);
+    outline:none;-webkit-tap-highlight-color:transparent}
+  .swatch:hover{transform:scale(1.18)}
+  .swatch::after{
+    content:'';position:absolute;inset:-5px;border-radius:50%;
+    border:1.5px solid currentColor;opacity:0;
+    transition:opacity .25s ease}
+  .swatch.active{transform:scale(1.1)}
+  .swatch.active::after{opacity:1}
 
   .final-label{font-size:9px;letter-spacing:.32em;text-transform:uppercase;
     color:#3f4854;font-weight:500;margin-bottom:22px}
@@ -173,6 +203,10 @@
 <div class="overlay start show" id="start">
   <h1 class="brand">Bcod<span>game</span><span class="cur"></span></h1>
   <button class="btn" id="startBtn">Start</button>
+  <div class="color-picker">
+    <div class="preview" id="preview">&lt;_&gt;</div>
+    <div class="color-row" id="colorRow"></div>
+  </div>
 </div>
 
 <div class="overlay over" id="over">
@@ -199,12 +233,11 @@ function resize(){
   DPR = Math.min(devicePixelRatio||1,2);
   W = innerWidth; H = innerHeight;
   canvas.width = W*DPR; canvas.height = H*DPR;
-  canvas.style.width = W+'px'; canvas.style.height = H+'px';
+  canvas.style.width = W+'px'; canvas.style.height='H+px'.replace('H',H);
   ctx.setTransform(DPR,0,0,DPR,0,0);
 }
 addEventListener('resize',resize); resize();
 
-const ACCENT = '125,211,192';
 const GOLD   = '251,191,36';
 const CYAN   = '34,211,238';
 const PURPLE = '168,85,247';
@@ -214,9 +247,25 @@ const ORANGE = '249,115,22';
 const ICE    = '219,234,254';
 const DANGER = '248,113,113';
 
-// ── MAIN CHARACTER — code symbol ──
+// ── Character ──
 const PLAYER_SYMBOL = '<_>';
 const MONO = "'JetBrains Mono','SF Mono','Fira Code',ui-monospace,Menlo,monospace";
+
+// ── Color options ──
+const COLOR_OPTIONS = [
+  { hex:'#7dd3c0', rgb:'125,211,192' },
+  { hex:'#22d3ee', rgb:'34,211,238' },
+  { hex:'#a855f7', rgb:'168,85,247' },
+  { hex:'#ec4899', rgb:'236,72,153' },
+  { hex:'#f97316', rgb:'249,115,22' },
+  { hex:'#fbbf24', rgb:'251,191,36' },
+  { hex:'#ef4444', rgb:'239,68,68' },
+  { hex:'#3b82f6', rgb:'59,130,246' },
+  { hex:'#10b981', rgb:'16,185,129' },
+  { hex:'#e6edf3', rgb:'230,237,243' }
+];
+let playerColorRGB = localStorage.getItem('bcodgameColorRGB') || COLOR_OPTIONS[0].rgb;
+let playerColorHex = localStorage.getItem('bcodgameColorHex') || COLOR_OPTIONS[0].hex;
 
 const scoreEl = document.getElementById('score');
 const bestEl = document.getElementById('best');
@@ -234,6 +283,35 @@ const finalBestEl = document.getElementById('finalBest');
 const statDepth = document.getElementById('statDepth');
 const statCol = document.getElementById('statCol');
 const statPow = document.getElementById('statPow');
+const colorRow = document.getElementById('colorRow');
+const previewEl = document.getElementById('preview');
+
+// ── Build color picker ──
+function buildColorPicker(){
+  colorRow.innerHTML = COLOR_OPTIONS.map(o =>
+    '<button class="swatch" data-hex="'+o.hex+'" data-rgb="'+o.rgb+'" '+
+    'style="background:'+o.hex+';color:'+o.hex+'" '+
+    'aria-label="'+o.hex+'"></button>'
+  ).join('');
+
+  colorRow.querySelectorAll('.swatch').forEach(sw => {
+    if(sw.dataset.rgb === playerColorRGB) sw.classList.add('active');
+    sw.addEventListener('click', () => {
+      playerColorHex = sw.dataset.hex;
+      playerColorRGB = sw.dataset.rgb;
+      localStorage.setItem('bcodgameColorHex', playerColorHex);
+      localStorage.setItem('bcodgameColorRGB', playerColorRGB);
+      colorRow.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+      sw.classList.add('active');
+      updatePreview();
+    });
+  });
+  updatePreview();
+}
+function updatePreview(){
+  previewEl.style.color = playerColorHex;
+  previewEl.style.textShadow = '0 0 14px ' + playerColorHex;
+}
 
 const EFFECTS_CONFIG = [
   { key:'chaos',   color:'#fbbf24', get:()=>player.chaos },
@@ -268,6 +346,7 @@ function updateEffectsUI(){
   }
 }
 
+// ── Audio ──
 let actx=null;
 function initAudio(){
   if(!actx){ try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){} }
@@ -529,7 +608,7 @@ function emitPulse(){
       x:player.x, y:player.y,
       vx:Math.cos(a)*(chaos?7:4), vy:Math.sin(a)*(chaos?7:4),
       life:1, size: chaos?3:2,
-      hue: chaos ? GOLD : (unlim ? PURPLE : ACCENT)
+      hue: chaos ? GOLD : (unlim ? PURPLE : playerColorRGB)
     });
   }
   updateEnergy();
@@ -769,7 +848,7 @@ function update(dt){
       for(let j=0;j<6;j++){
         const a=Math.random()*6.28;
         particles.push({x:pl.x,y:pl.y,vx:Math.cos(a)*2.5,vy:Math.sin(a)*2.5,
-          life:1,size:1.8,hue:ACCENT});
+          life:1,size:1.8,hue:playerColorRGB});
       }
       plankton.splice(i,1);
       updateHUD();
@@ -784,7 +863,7 @@ function update(dt){
     for(let j=0;j<24;j++){
       const a=Math.random()*6.28;
       particles.push({x:player.x,y:player.y,vx:Math.cos(a)*4,vy:Math.sin(a)*4,
-        life:1,size:2,hue:ACCENT});
+        life:1,size:2,hue:playerColorRGB});
     }
   }
 
@@ -824,7 +903,7 @@ function draw(){
 
   for(const d of dust){
     const a = d.alpha * (.6 + Math.sin(d.phase)*.4);
-    ctx.fillStyle = 'rgba('+(chaos?GOLD:(unlim?PURPLE:ACCENT))+','+a+')';
+    ctx.fillStyle = 'rgba('+(chaos?GOLD:(unlim?PURPLE:playerColorRGB))+','+a+')';
     ctx.beginPath(); ctx.arc(d.x,d.y,d.size,0,6.28); ctx.fill();
   }
 
@@ -845,7 +924,7 @@ function draw(){
 
   for(const p of particles){
     ctx.globalAlpha = Math.max(0, Math.min(1, p.life));
-    ctx.fillStyle = 'rgba('+(p.hue||ACCENT)+',1)';
+    ctx.fillStyle = 'rgba('+(p.hue||playerColorRGB)+',1)';
     ctx.beginPath();
     ctx.arc(p.x, p.y, p.size*Math.min(1,p.life), 0, 6.28);
     ctx.fill();
@@ -856,7 +935,7 @@ function draw(){
 
 function drawPulse(p){
   const a = p.life*.7;
-  let col = ACCENT;
+  let col = playerColorRGB;
   if(p.chaos) col = GOLD;
   else if(p.shield) col = CYAN;
   else if(p.unlim) col = PURPLE;
@@ -876,9 +955,9 @@ function drawPulse(p){
 function drawPlankton(){
   for(const pl of plankton){
     const pulse = .85 + Math.sin(pl.phase)*.15;
-    ctx.fillStyle = 'rgba('+ACCENT+',0.10)';
+    ctx.fillStyle = 'rgba('+playerColorRGB+',0.10)';
     ctx.beginPath(); ctx.arc(pl.x,pl.y,pl.size*3,0,6.28); ctx.fill();
-    ctx.fillStyle = 'rgba('+ACCENT+','+(0.85*pulse)+')';
+    ctx.fillStyle = 'rgba('+playerColorRGB+','+(0.85*pulse)+')';
     ctx.beginPath(); ctx.arc(pl.x,pl.y,pl.size*pulse,0,6.28); ctx.fill();
   }
 }
@@ -1032,19 +1111,19 @@ function drawPickupGroup(arr, shape, color){
   }
 }
 
-// ── PREMIUM SIMPLE PLAYER — <_> symbol ──
+// ── PREMIUM PLAYER with user-chosen color ──
 function drawPlayer(){
   const {x,y,size} = player;
   const blink = player.hitCooldown>0 && player.chaos<=0 && player.shield<=0 && Math.floor(time*20)%2===0;
   const chaos = player.chaos > 0;
   const shielded = player.shield > 0;
   const unlim = player.unlimited > 0;
-  const col = chaos ? GOLD : ACCENT;
+  const col = chaos ? GOLD : playerColorRGB;      // ← ব্যবহারকারীর রঙ
 
   ctx.save();
   if(blink) ctx.globalAlpha = .45;
 
-  // ── Soft trail ──
+  // Soft trail
   for(let i=player.trail.length-1;i>=0;i--){
     const t = player.trail[i];
     const a = (t.life/.4)*.18;
@@ -1056,7 +1135,7 @@ function drawPlayer(){
     ctx.beginPath(); ctx.arc(t.x,t.y,r,0,6.28); ctx.fill();
   }
 
-  // ── Breathing glow ──
+  // Breathing glow
   const breathe = 0.92 + Math.sin(time * 1.6) * 0.08;
   const glowR = size * (chaos ? 3.0 : 2.4) * breathe;
   const g = ctx.createRadialGradient(x,y,0,x,y,glowR);
@@ -1066,27 +1145,26 @@ function drawPlayer(){
   ctx.fillStyle = g;
   ctx.beginPath(); ctx.arc(x,y,glowR,0,6.28); ctx.fill();
 
-  // ── Base ring (very subtle) ──
+  // Base ring
   const baseRingA = 0.12 + Math.sin(time * 2) * 0.04;
   ctx.strokeStyle = 'rgba('+col+','+baseRingA+')';
   ctx.lineWidth = 1;
   ctx.beginPath(); ctx.arc(x,y,size*1.6,0,6.28); ctx.stroke();
 
-  // ── Chaos ring ──
+  // Chaos ring
   if(chaos){
     ctx.strokeStyle = 'rgba('+GOLD+',0.5)';
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.arc(x,y,size*1.8,0,6.28); ctx.stroke();
   }
-
-  // ── Unlimited ring ──
+  // Unlimited ring
   if(unlim && !chaos){
     ctx.strokeStyle = 'rgba('+PURPLE+',0.45)';
     ctx.lineWidth = 1;
     ctx.beginPath(); ctx.arc(x,y,size*1.75,0,6.28); ctx.stroke();
   }
 
-  // ── Shield bubble ──
+  // Shield bubble
   if(shielded){
     const sAlpha = Math.min(1, player.shield / 2.5);
     const sR = size * 1.95;
@@ -1101,7 +1179,7 @@ function drawPlayer(){
     ctx.beginPath(); ctx.arc(x,y,sR,0,6.28); ctx.stroke();
   }
 
-  // ── The <_> symbol ──
+  // ── <_> symbol in user-chosen color ──
   const symSize = size * 1.55;
   const bob = Math.sin(time * 2.4) * 0.9;
 
@@ -1113,11 +1191,11 @@ function drawPlayer(){
   ctx.textBaseline = 'middle';
   ctx.shadowColor = 'rgba('+col+','+(chaos?0.85:0.55)+')';
   ctx.shadowBlur = chaos ? 22 : 14;
-  ctx.fillStyle = '#e6edf3';
+  ctx.fillStyle = chaos ? '#ffeab8' : playerColorHex;    // ← এখানে hex রঙ
   ctx.fillText(PLAYER_SYMBOL, 0, 0);
   ctx.shadowBlur = 0;
 
-  // Colored underline — subtle code cursor feel
+  // Underline
   const underW = size * 1.5;
   const underY = symSize * 0.52;
   const pulseA = 0.55 + Math.sin(time * 3) * 0.2;
@@ -1128,7 +1206,7 @@ function drawPlayer(){
   ctx.lineTo(underW/2, underY);
   ctx.stroke();
 
-  // ── Shine sweep (slow, subtle) ──
+  // Shine
   const cycle = (time * 0.4) % 5;
   if(cycle < 1){
     const t01 = cycle;
@@ -1196,6 +1274,7 @@ function animateNumber(el, from, to, dur){
 document.getElementById('startBtn').addEventListener('click', startGame);
 document.getElementById('restartBtn').addEventListener('click', startGame);
 
+buildColorPicker();
 buildEffectsUI();
 initGame();
 state = 'menu';
