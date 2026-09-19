@@ -1,1588 +1,1492 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Bcodgame</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Loading...</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
 <style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  html,body{height:100%;overflow:hidden;background:#0a0b0f;color:#e6edf3;
-    font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
-    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
-    touch-action:none;user-select:none;-webkit-tap-highlight-color:transparent;
-    font-feature-settings:'ss01','cv01','tnum'}
-  canvas{display:block;width:100%;height:100%}
+    /* --- 1. THEME VARIABLES (Neumorphic / Soft UI) --- */
+    :root {
+        --bg-body: #e6e7eb;
+        --bg-card: #e6e7eb;
+        --bg-input: #e6e7eb;
+        --primary: #3b82f6;
+        --primary-dark: #2563eb;
+        --primary-light: #dce8fd;
+        --accent: #f43f5e;
+        --text-main: #23262b;
+        --text-muted: #767b87;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --nav-height: 65px;
+        --radius: 22px;
 
-  .hud{position:fixed;top:0;left:0;right:0;z-index:5;
-    display:flex;justify-content:space-between;align-items:flex-start;
-    padding:calc(env(safe-area-inset-top,0px) + 40px) 32px 0;
-    pointer-events:none}
-  .hud-left{text-align:left}
-  .hud-right{text-align:right}
-  .label{font-size:9px;letter-spacing:.26em;text-transform:uppercase;
-    color:#3f4854;font-weight:600;margin-bottom:9px;line-height:1}
-  .score-row{display:flex;align-items:center;gap:0}
-  .value{font-size:24px;font-weight:400;letter-spacing:-.03em;
-    color:#e6edf3;font-variant-numeric:tabular-nums;line-height:1;
-    transition:transform .18s ease}
-  .value.pop{transform:scale(1.05)}
+        --sh-dist: 6px;
+        --sh-blur: 12px;
+        --shadow-dark: rgba(163, 170, 183, 0.55);
+        --shadow-light: rgba(255, 255, 255, 0.85);
 
-  .lives{display:flex;gap:6px;align-items:center;margin-top:14px;height:6px}
-  .life{width:5px;height:5px;border-radius:50%;background:#7dd3c0;
-    box-shadow:0 0 8px #7dd3c0;
-    transition:all .5s cubic-bezier(.4,0,.2,1)}
-  .life.dead{background:transparent;
-    box-shadow:inset 0 0 0 1px #1f242e;
-    transform:scale(.7)}
+        --neu-out: var(--sh-dist) var(--sh-dist) var(--sh-blur) var(--shadow-dark),
+                   calc(var(--sh-dist) * -1) calc(var(--sh-dist) * -1) var(--sh-blur) var(--shadow-light);
+        --neu-out-sm: 3px 3px 6px var(--shadow-dark), -3px -3px 6px var(--shadow-light);
+        --neu-in: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
+        --neu-in-sm: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
+    }
 
-  .effects{position:fixed;top:calc(env(safe-area-inset-top,0px) + 20px);
-    left:50%;transform:translateX(-50%);z-index:6;
-    display:flex;gap:12px;pointer-events:none;
-    font-size:11px;font-weight:600;letter-spacing:.02em;
-    font-variant-numeric:tabular-nums;flex-wrap:wrap;justify-content:center;
-    max-width:55vw}
-  .eff{display:flex;align-items:center;gap:5px;color:currentColor;
-    opacity:0;transform:scale(.85);
-    transition:opacity .3s ease, transform .3s cubic-bezier(.34,1.4,.64,1)}
-  .eff.on{opacity:1;transform:scale(1)}
-  .eff::before{content:'';width:4px;height:4px;border-radius:50%;
-    background:currentColor;flex-shrink:0;
-    box-shadow:0 0 6px currentColor}
+    /* --- 2. GLOBAL RESET --- */
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
+    html, body { height: 100%; width: 100%; font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); font-size: 14px; overflow: hidden; }
 
-  /* ── SHOP ── */
-  .shop{
-    position:fixed;right:14px;top:50%;transform:translateY(-50%);
-    z-index:7;display:none;flex-direction:column;gap:6px;
-    pointer-events:auto}
-  .shop.show{display:flex}
+    #app-interface { position: relative; height: 100%; width: 100%; overflow: hidden; }
+    #main-view { position: relative; width: 100%; height: 100%; }
 
-  .coins{
-    display:flex;align-items:center;gap:5px;
-    padding:7px 12px;border-radius:50px;
-    background:rgba(255,255,255,.045);
-    backdrop-filter:blur(20px) saturate(150%);
-    -webkit-backdrop-filter:blur(20px) saturate(150%);
-    border:1px solid rgba(255,255,255,.07);
-    font-size:11.5px;font-weight:700;letter-spacing:.01em;
-    color:#fbbf24;margin-bottom:2px;justify-content:center;
-    font-variant-numeric:tabular-nums;
-    box-shadow:0 1px 3px rgba(0,0,0,.06),
-               inset 0 1px 0 rgba(255,255,255,.1);
-    transition:transform .2s cubic-bezier(.34,1.4,.64,1)}
-  .coins.pop{transform:scale(1.08)}
-  .coins .dot{
-    width:5px;height:5px;border-radius:50%;
-    background:currentColor;flex-shrink:0;
-    box-shadow:0 0 5px currentColor}
-  .coins .amt{min-width:16px;text-align:center}
+    .page-section {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; background: var(--bg-body);
+        padding-bottom: 80px;
+        transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s; opacity: 0; transform: translateX(30px) scale(0.95); pointer-events: none; z-index: 10;
+        -webkit-overflow-scrolling: touch; padding-top: 80px;
+    }
+    .page-section:not(.hidden) { opacity: 1; transform: translateX(0) scale(1); pointer-events: auto; z-index: 20; }
+    .page-section::-webkit-scrollbar { display: none; }
 
-  .shop-item{
-    position:relative;
-    display:flex;align-items:center;justify-content:center;gap:6px;
-    width:64px;
-    padding:8px 0;border-radius:12px;
-    background:rgba(255,255,255,.045);
-    backdrop-filter:blur(20px) saturate(150%);
-    -webkit-backdrop-filter:blur(20px) saturate(150%);
-    border:1px solid rgba(255,255,255,.07);
-    cursor:pointer;
-    font-size:11px;font-weight:600;
-    transition:all .22s cubic-bezier(.4,0,.2,1);
-    overflow:hidden;
-    outline:none;-webkit-tap-highlight-color:transparent;
-    box-shadow:0 1px 3px rgba(0,0,0,.05),
-               inset 0 1px 0 rgba(255,255,255,.08);
-    user-select:none}
-  .shop-item .icon{
-    font-size:12px;line-height:1;flex-shrink:0;
-    opacity:.85;pointer-events:none;
-    transition:opacity .2s, text-shadow .25s}
-  .shop-item .price{
-    font-variant-numeric:tabular-nums;
-    font-size:10.5px;letter-spacing:.01em;
-    opacity:.7;pointer-events:none;
-    color:#7d8694;
-    transition:opacity .2s}
+    /* Utilities */
+    .text-primary { color: var(--primary); } .text-success { color: var(--success); } .text-danger { color: var(--danger); } .text-muted { color: var(--text-muted); }
+    .bold { font-weight: 600; } .hidden { display: none !important; }
 
-  .shop-item .timer-bar{
-    position:absolute;left:0;bottom:0;height:2px;
-    width:0%;
-    background:currentColor;
-    box-shadow:0 0 8px currentColor;
-    opacity:0;pointer-events:none;
-    transition:width .15s linear, opacity .3s ease}
-  .shop-item.active-bought .timer-bar{opacity:.9}
-  .shop-item.active-bought{
-    background:rgba(255,255,255,.075);
-    border-color:rgba(255,255,255,.14)}
-  .shop-item.active-bought .icon{
-    opacity:1;
-    text-shadow:0 0 10px currentColor}
+    .btn-main { width: 100%; padding: 14px; background: var(--bg-card); color: var(--primary-dark); border: none; border-radius: 16px; font-weight: 700; font-size: 1rem; box-shadow: var(--neu-out); letter-spacing: 0.5px; cursor: pointer; transition: 0.15s; }
+    .btn-main:active { box-shadow: var(--neu-in); }
+    .btn-main:disabled { color: #a7abb4; box-shadow: var(--neu-in-sm); cursor: not-allowed; }
+    .btn-sm { padding: 8px 16px; font-size: 0.8rem; border-radius: 12px; }
 
-  .shop-item.afford{
-    background:rgba(255,255,255,.045);
-    border-color:rgba(255,255,255,.07)}
-  .shop-item.afford:hover{
-    transform:translateX(-2px);
-    background:rgba(255,255,255,.075);
-    border-color:rgba(255,255,255,.14)}
-  .shop-item.afford:hover .icon{opacity:1}
-  .shop-item.afford:hover .price{opacity:.9}
-  .shop-item.afford:active{transform:scale(.96);transition:transform .1s}
+    .input-group { position: relative; margin-bottom: 15px; }
+    .input-group i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1.1rem; }
+    .input-box { width: 100%; padding: 16px 16px 16px 45px; border: none; background: var(--bg-input); border-radius: 16px; font-size: 0.95rem; color: var(--text-main); transition: 0.3s; font-family: 'Inter'; box-shadow: var(--neu-in-sm); }
+    .input-box:focus { box-shadow: var(--neu-in-sm), 0 0 0 3px var(--primary-light); }
 
-  .shop-item.locked{
-    opacity:.35;cursor:not-allowed}
+    /* Header */
+    header {
+        position: absolute; top: 0; left: 0; width: 100%; height: 65px; padding: 0 20px;
+        background: var(--bg-card); border-bottom: none; display: flex;
+        justify-content: space-between; align-items: center; z-index: 100;
+        box-shadow: 0 4px 15px rgba(163,170,183,0.35);
+        transition: transform 0.3s ease-in-out;
+    }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .wallet-pill { background: var(--bg-card); padding: 6px 14px; border-radius: 30px; display: flex; align-items: center; gap: 8px; font-weight: 700; border: none; box-shadow: var(--neu-out-sm); font-size: 0.9rem; transition: 0.2s; cursor: pointer; }
+    .wallet-pill:active { box-shadow: var(--neu-in-sm); }
 
-  .shop-item.flash::after{
-    content:'';position:absolute;inset:0;
-    background:radial-gradient(circle at center, currentColor, transparent 70%);
-    opacity:.55;animation:buyFlash .55s cubic-bezier(.4,0,.2,1);
-    pointer-events:none;border-radius:12px}
-  @keyframes buyFlash{
-    from{opacity:.55;transform:scale(.5)}
-    to{opacity:0;transform:scale(1.7)}}
+    .notification-btn { font-size: 1.2rem; color: var(--text-main); position: relative; cursor: pointer; padding: 5px; }
+    .notif-dot { position: absolute; top: 2px; right: 2px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 1px solid var(--bg-card); display: none; }
 
-  .energy{position:fixed;bottom:0;left:0;right:0;height:1.5px;
-    background:rgba(255,255,255,.025);z-index:5}
-  .energy-fill{height:100%;background:#7dd3c0;width:100%;
-    transition:width .12s linear,background .35s ease}
-  .energy-fill.low{background:#ef4444}
-  .energy-fill.unlimited{background:#a855f7;
-    box-shadow:0 0 20px #a855f7;
-    animation:unlimPulse .8s ease-in-out infinite alternate}
-  @keyframes unlimPulse{from{opacity:.7}to{opacity:1}}
+    /* Navigation Bar */
+    .nav-bar { position: fixed; bottom: 0; width: 100%; height: var(--nav-height); background: var(--bg-card); border-top: none; display: flex; justify-content: space-around; align-items: center; z-index: 500; box-shadow: 0 -4px 15px rgba(163,170,183,0.3); }
+    .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); gap: 5px; padding: 5px; border-radius: 12px; transition: 0.2s; flex: 1; height: 100%; cursor: pointer; }
+    .nav-item i { font-size: 1.3rem; margin-bottom: 2px; }
+    .nav-item span { font-weight: 500; font-size: 0.75rem; }
+    .nav-item.active { color: var(--primary); }
+    .nav-item.active i { transform: translateY(-2px); }
 
-  .chaos-line{position:fixed;bottom:3px;left:0;right:0;height:1.5px;z-index:5;
-    opacity:0;transition:opacity .35s}
-  .chaos-line.show{opacity:1}
-  .chaos-line .fill{height:100%;background:#fbbf24;width:0%;
-    box-shadow:0 0 14px #fbbf24;transition:width .1s linear}
+    /* Drawer */
+    .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(35,38,43,0.35); z-index: 4000; opacity: 0; pointer-events: none; transition: 0.3s; backdrop-filter: blur(2px); }
+    .drawer { position: fixed; top: 0; left: 0; width: 85%; max-width: 320px; height: 100%; background: var(--bg-body); transform: translateX(-100%); transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 4001; display: flex; flex-direction: column; overflow-y: auto; }
+    .drawer-active .drawer-overlay { opacity: 1; pointer-events: all; }
+    .drawer-active .drawer { transform: translateX(0); }
 
-  .unlim-line{position:fixed;bottom:6px;left:0;right:0;height:1.5px;z-index:5;
-    opacity:0;transition:opacity .35s}
-  .unlim-line.show{opacity:1}
-  .unlim-line .fill{height:100%;background:#a855f7;width:0%;
-    box-shadow:0 0 14px #a855f7;transition:width .1s linear}
+    .profile-section { background: var(--bg-body); padding: 30px 20px 20px; border-bottom: none; position: relative; }
+    .profile-top { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+    .p-avatar { width: 60px; height: 60px; border-radius: 50%; padding: 3px; background: var(--bg-card); box-shadow: var(--neu-out-sm); }
+    .p-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+    .p-info h3 { font-size: 1.1rem; font-weight: 800; color: var(--text-main); }
+    .p-info p { font-size: 0.8rem; color: var(--text-muted); }
+    .p-edit-btn { position: absolute; top: 20px; right: 20px; background: var(--bg-card); color: var(--primary); border: none; padding: 6px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; box-shadow: var(--neu-out-sm); }
 
-  .overlay{position:fixed;inset:0;z-index:10;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    padding:36px;text-align:center;background:#0a0b0f;
-    opacity:0;pointer-events:none;
-    transition:opacity .55s cubic-bezier(.4,0,.2,1)}
-  .overlay.show{opacity:1;pointer-events:auto}
+    .p-game-details { background: var(--bg-card); padding: 12px; border-radius: 14px; display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 15px; box-shadow: var(--neu-in-sm); }
+    .pg-item { display: flex; flex-direction: column; }
+    .pg-lbl { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; }
+    .pg-val { font-weight: 700; color: var(--text-main); }
 
-  .overlay.start > *{
-    opacity:0;transform:translateY(8px);
-    transition:opacity .9s cubic-bezier(.4,0,.2,1),
-               transform .9s cubic-bezier(.4,0,.2,1)}
-  .overlay.start.show > *{opacity:1;transform:translateY(0)}
-  .overlay.start.show > *:nth-child(1){transition-delay:.2s}
-  .overlay.start.show > *:nth-child(2){transition-delay:.55s}
-  .overlay.start.show > *:nth-child(3){transition-delay:.9s}
+    .drawer-wallet { background: var(--bg-card); padding: 16px; border-radius: 18px; color: var(--text-main); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--neu-out); }
+    .dw-bal h4 { font-size: 0.7rem; opacity: 0.7; font-weight: 500; }
+    .dw-bal h2 { font-size: 1.4rem; font-weight: 800; color: var(--primary-dark); }
+    .dw-btn { background: var(--bg-card); border: none; color: var(--primary-dark); padding: 8px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 700; box-shadow: var(--neu-out-sm); }
+    .dw-btn:active { box-shadow: var(--neu-in-sm); }
 
-  .brand{
-    font-family:'JetBrains Mono','SF Mono','Fira Code',ui-monospace,Menlo,monospace;
-    font-size:clamp(28px,7.2vw,44px);font-weight:400;
-    letter-spacing:-.02em;color:#e6edf3;line-height:1}
-  .brand span{color:#7dd3c0}
-  .brand .cur{
-    display:inline-block;width:.5em;height:1em;vertical-align:-.14em;
-    background:#7dd3c0;margin-left:.12em;
-    animation:blink 1.1s steps(2) infinite;
-    box-shadow:0 0 12px #7dd3c0}
-  @keyframes blink{0%,50%{opacity:1}51%,100%{opacity:0}}
+    .drawer-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+    .ds-box { background: var(--bg-card); padding: 12px; border-radius: 14px; text-align: center; border: none; box-shadow: var(--neu-out-sm); }
+    .ds-val { font-weight: 800; color: var(--text-main); font-size: 1rem; }
+    .ds-lbl { font-size: 0.65rem; color: var(--text-muted); font-weight: 600; }
 
-  .start-row{
-    display:flex;align-items:center;gap:12px;
-    margin-bottom:34px}
+    .verify-row { display: flex; gap: 10px; margin-bottom: 20px; }
+    .v-badge { flex: 1; background: var(--bg-card); color: #16a34a; font-size: 0.7rem; padding: 8px; text-align: center; border-radius: 10px; font-weight: 700; border: none; box-shadow: var(--neu-in-sm); display: flex; align-items: center; justify-content: center; gap: 5px; }
+    .v-badge.unverified { color: var(--danger); }
 
-  .btn{padding:15px 42px;border:none;border-radius:11px;
-    font-family:'JetBrains Mono','SF Mono',ui-monospace,Menlo,monospace;
-    font-size:12px;font-weight:500;letter-spacing:.14em;
-    text-transform:uppercase;cursor:pointer;
-    background:#e6edf3;color:#0a0b0f;
-    box-shadow:0 1px 2px rgba(0,0,0,.12),
-      inset 0 1px 0 rgba(255,255,255,.1);
-    transition:transform .22s cubic-bezier(.4,0,.2,1),
-      box-shadow .3s ease}
-  .btn:hover{transform:translateY(-1px);
-    box-shadow:0 4px 12px rgba(0,0,0,.15),
-      inset 0 1px 0 rgba(255,255,255,.15)}
-  .btn:active{transform:scale(.975)}
+    .drawer-menu { padding: 10px 20px; }
+    .dm-group { margin-bottom: 20px; }
+    .dm-title { font-size: 0.7rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
+    .dm-item { display: flex; align-items: center; gap: 15px; padding: 12px 10px; color: var(--text-main); font-weight: 500; border-radius: 12px; transition: 0.2s; }
+    .dm-item:active { box-shadow: var(--neu-in-sm); }
+    .dm-item i { width: 25px; text-align: center; color: var(--text-muted); font-size: 1.1rem; }
+    .dm-item.danger { color: var(--danger); } .dm-item.danger i { color: var(--danger); }
 
-  .color-picker{
-    display:flex;flex-direction:column;align-items:center;gap:16px}
-  .preview{
-    font-family:'JetBrains Mono','SF Mono','Fira Code',ui-monospace,Menlo,monospace;
-    font-size:26px;font-weight:500;letter-spacing:.06em;
-    color:#7dd3c0;line-height:1;
-    transition:color .3s ease,text-shadow .3s ease}
+    /* AUTH MODAL */
+    #auth-modal-wrapper { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(35,38,43, 0.92); z-index: 6000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 25px; transition: 0.3s; opacity: 0; pointer-events: none; visibility: hidden; backdrop-filter: blur(10px); }
+    #auth-modal-wrapper.active { opacity: 1; pointer-events: all; visibility: visible; }
+    .auth-card { background: var(--bg-card); width: 100%; max-width: 400px; padding: 30px; border-radius: 28px; box-shadow: var(--neu-out); text-align: center; position: relative; }
+    .app-logo-icon { width: 70px; height: 70px; background: var(--bg-card); color: var(--primary); border-radius: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 2rem; margin-bottom: 15px; box-shadow: var(--neu-out-sm); transform: rotate(-5deg); }
+    .app-title { font-size: 1.8rem; font-weight: 900; color: var(--text-main); margin-bottom: 5px; }
+    .auth-switch-text { margin-top: 20px; font-size: 0.9rem; color: var(--text-muted); }
+    .auth-switch-btn { color: var(--primary); font-weight: 700; cursor: pointer; text-decoration: none; }
+    .auth-close { position: absolute; top: 20px; right: 20px; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; }
 
-  .color-row{
-    display:flex;gap:11px;flex-wrap:wrap;justify-content:center;
-    max-width:290px}
-  .swatch{
-    position:relative;width:20px;height:20px;border-radius:50%;
-    cursor:pointer;border:1px solid rgba(0,0,0,.08);padding:0;
-    transition:transform .2s cubic-bezier(.34,1.4,.64,1);
-    box-shadow:inset 0 -2px 4px rgba(0,0,0,.08),
-               inset 0 2px 3px rgba(255,255,255,.25);
-    outline:none;-webkit-tap-highlight-color:transparent}
-  .swatch:hover{transform:scale(1.18)}
-  .swatch::after{
-    content:'';position:absolute;inset:-5px;border-radius:50%;
-    border:1.5px solid currentColor;opacity:0;
-    transition:opacity .25s ease}
-  .swatch.active{transform:scale(1.1)}
-  .swatch.active::after{opacity:1}
+    /* Cards & Matches */
+    .match-card { background: var(--bg-card); margin: 0 20px 25px; border-radius: var(--radius); box-shadow: var(--neu-out); border: none; overflow: hidden; position: relative; }
+    .match-banner { height: 140px; width: 100%; position: relative; overflow: hidden; background: #d9dbe0; }
+    .match-banner img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
+    .match-banner::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 60%; background: linear-gradient(to top, rgba(35,38,43,0.75), transparent); }
+    .card-badge { position: absolute; top: 12px; padding: 5px 12px; border-radius: 30px; font-size: 0.75rem; font-weight: 700; z-index: 2; backdrop-filter: blur(4px); }
+    .badge-live { right: 12px; background: rgba(35,38,43,0.55); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.4); }
+    .badge-type { left: 12px; background: rgba(230,231,235,0.95); color: var(--text-main); box-shadow: var(--neu-out-sm); }
+    .match-info-overlay { position: absolute; bottom: 12px; left: 15px; z-index: 3; color: #fff; width: 90%; }
+    .match-title { font-size: 1.2rem; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.5); margin-bottom: 2px; }
+    .match-meta { font-size: 0.8rem; opacity: 0.9; display: flex; align-items: center; gap: 8px; }
+    .match-body { padding: 15px 15px 20px; }
+    .card-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: var(--bg-card); padding: 12px; border-radius: 16px; text-align: center; margin-bottom: 15px; box-shadow: var(--neu-in-sm); }
+    .stat-val { font-weight: 800; color: var(--text-main); font-size: 1.1rem; }
+    .stat-lbl { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+    .progress-area { margin-bottom: 15px; }
+    .progress-bar { width: 100%; height: 10px; background: var(--bg-card); border-radius: 10px; overflow: hidden; margin-bottom: 6px; box-shadow: var(--neu-in-sm); }
+    .progress-fill { height: 100%; background: var(--primary); border-radius: 10px; }
+    .prog-text { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
+    .countdown-timer { color: #d97706; font-weight: 700; letter-spacing: 0.5px; font-family: monospace; font-size: 0.9rem; }
+    .countdown-ended { color: #dc2626; font-weight: 700; }
 
-  .overlay.over > *{
-    opacity:0;transform:translateY(10px);
-    transition:opacity .8s cubic-bezier(.4,0,.2,1),
-               transform .8s cubic-bezier(.4,0,.2,1)}
-  .overlay.over.show > *{opacity:1;transform:translateY(0)}
-  .overlay.over.show > *:nth-child(1){transition-delay:.05s}
-  .overlay.over.show > *:nth-child(2){transition-delay:.3s}
-  .overlay.over.show > *:nth-child(3){transition-delay:.44s}
-  .overlay.over.show > *:nth-child(4){transition-delay:.6s}
-  .overlay.over.show > *:nth-child(5){transition-delay:.74s}
-  .overlay.over.show > *:nth-child(6){transition-delay:.88s}
+    /* Tabs & History */
+    .mm-tabs-wrapper { background: var(--bg-card); padding: 6px; border-radius: 16px; display: flex; margin: 0 20px 20px; border: none; box-shadow: var(--neu-in-sm); }
+    .mm-tab { flex: 1; text-align: center; padding: 12px; border-radius: 12px; font-weight: 600; color: var(--text-muted); transition: 0.3s; font-size: 0.9rem; }
+    .mm-tab.active { background: var(--bg-card); color: var(--primary); font-weight: 700; box-shadow: var(--neu-out-sm); }
+    .mm-card { background: var(--bg-card); margin: 0 20px 15px; border-radius: 18px; border: none; overflow: hidden; box-shadow: var(--neu-out-sm); }
+    .mm-header { padding: 15px; border-bottom: 1px solid rgba(163,170,183,0.25); display: flex; justify-content: space-between; align-items: center; }
+    .mm-game-info { display: flex; align-items: center; gap: 12px; }
+    .mm-thumb { width: 45px; height: 45px; border-radius: 12px; object-fit: cover; background: #d9dbe0; }
+    .mm-meta h4 { font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-bottom: 2px; }
+    .mm-status { font-size: 0.7rem; padding: 4px 10px; border-radius: 30px; font-weight: 700; }
+    .st-upcoming { background: #fdf1e4; color: #c2660c; border: none; }
+    .st-completed { background: #e1f7ea; color: #0f9d58; border: none; }
+    .room-box { background: var(--bg-card); margin: 15px; padding: 15px; border-radius: 14px; box-shadow: var(--neu-in-sm); text-align: center; }
+    .room-wait { color: var(--text-muted); font-size: 0.85rem; font-weight: 500; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+    .room-creds { display: flex; justify-content: space-between; gap: 10px; }
+    .cred-item { flex: 1; background: var(--bg-card); padding: 10px; border-radius: 10px; box-shadow: var(--neu-out-sm); display: flex; flex-direction: column; align-items: center; }
+    .cred-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+    .cred-val { font-size: 1rem; font-weight: 800; font-family: monospace; }
+    .btn-copy { font-size: 0.7rem; color: var(--primary); margin-top: 5px; font-weight: 600; cursor: pointer; }
 
-  .mark{width:24px;height:1px;background:#7dd3c0;margin-bottom:32px;
-    transform:scaleX(0);
-    transition:transform .95s cubic-bezier(.4,0,.2,1) .15s}
-  .overlay.show .mark{transform:scaleX(1)}
+    /* Modals - General */
+    .modal-wrap { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 5000; opacity: 0; pointer-events: none; transition: 0.3s; visibility: hidden; }
+    .modal-wrap.active { opacity: 1; pointer-events: all; visibility: visible; }
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(35,38,43,0.4); }
 
-  .final-label{font-size:9px;letter-spacing:.32em;text-transform:uppercase;
-    color:#3f4854;font-weight:600;margin-bottom:22px}
-  .final-score{
-    font-family:'JetBrains Mono','SF Mono',ui-monospace,Menlo,monospace;
-    font-size:clamp(64px,18vw,108px);font-weight:200;
-    letter-spacing:-.05em;color:#e6edf3;line-height:1;
-    font-variant-numeric:tabular-nums;margin-bottom:14px}
-  .final-best{font-size:11.5px;letter-spacing:.06em;color:#3f4854;
-    margin-bottom:44px}
-  .final-best strong{color:#7dd3c0;font-weight:600}
-  .final-stats{display:flex;gap:38px;margin-bottom:48px}
-  .stat{display:flex;flex-direction:column;gap:8px;align-items:center;min-width:60px}
-  .stat .label{margin-bottom:0}
-  .stat .value{font-size:14px;font-weight:500;color:#7d8694}
-  .stat .value.coin{color:#fbbf24}
+    /* DEFAULT BOTTOM SHEET MODAL */
+    .modal-sheet { position: absolute; bottom: 0; left: 0; width: 100%; background: var(--bg-body); border-radius: 28px 28px 0 0; padding: 30px; transform: translateY(100%); transition: 0.3s cubic-bezier(0.2, 1, 0.2, 1); max-height: 90vh; overflow-y: auto; box-shadow: 0 -8px 25px rgba(163,170,183,0.35); }
+    .modal-wrap.active .modal-sheet { transform: translateY(0); }
+    .sheet-handle { width: 40px; height: 5px; background: var(--bg-card); box-shadow: var(--neu-in-sm); border-radius: 5px; margin: 0 auto 20px; }
 
-  @media (max-width:420px){
-    .hud{padding:36px 24px 0}
-    .value{font-size:22px}
-    .effects{gap:9px;font-size:10px;max-width:50vw}
-    .final-stats{gap:24px}
-    .shop{right:10px;gap:5px}
-    .shop-item{width:58px;padding:7px 0}
-    .shop-item .icon{font-size:11px}
-    .shop-item .price{font-size:10px}
-    .coins{font-size:10.5px;padding:6px 10px}
-    .btn{padding:14px 36px}
-  }
+    /* NOTICE POPUP */
+    #modal-notice .modal-sheet {
+        top: 50%; left: 50%;
+        bottom: auto;
+        transform: translate(-50%, -50%) scale(0.9);
+        width: 85%; max-width: 320px;
+        border-radius: var(--radius);
+        border: none;
+        box-shadow: var(--neu-out);
+        text-align: center;
+        padding: 30px 25px;
+        opacity: 0;
+        pointer-events: none;
+    }
+    #modal-notice.active .modal-sheet {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+        pointer-events: auto;
+    }
+    #modal-notice .sheet-handle { display: none; }
+    .notice-icon-box { width: 70px; height: 70px; background: var(--bg-card); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 15px; box-shadow: var(--neu-out-sm); }
+
+    /* Notification Modal Styles */
+    .notif-card { background: var(--bg-card); padding: 15px; border-radius: 14px; margin-bottom: 12px; border: none; box-shadow: var(--neu-out-sm); position: relative; overflow: hidden; }
+    .notif-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--primary); }
+    .notif-title { font-weight: 700; margin-bottom: 5px; color: var(--text-main); font-size: 0.95rem; }
+    .notif-msg { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+    .notif-date { font-size: 0.7rem; color: #a7abb4; margin-top: 8px; text-align: right; font-weight: 600; }
+
+    /* Wallet */
+    .credit-card { background: var(--bg-card); margin: 20px; padding: 25px; border-radius: var(--radius); color: var(--text-main); position: relative; overflow: hidden; box-shadow: var(--neu-out); min-height: 180px; display: flex; flex-direction: column; justify-content: space-between; }
+    .user-chip { background: var(--bg-card); padding: 5px 12px; border-radius: 50px; font-size: 0.75rem; box-shadow: var(--neu-out-sm); }
+    .wallet-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 0 20px; margin-bottom: 25px; }
+    .action-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; background: transparent; border: none; cursor: pointer; }
+    .action-icon { width: 50px; height: 50px; background: var(--bg-card); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--primary); box-shadow: var(--neu-out-sm); transition: 0.2s; border: none; }
+    .action-btn:active .action-icon { box-shadow: var(--neu-in-sm); }
+    .trx-item { display: flex; align-items: center; justify-content: space-between; padding: 15px; background: var(--bg-card); border-radius: 18px; margin-bottom: 12px; border: none; box-shadow: var(--neu-out-sm); }
+    .trx-icon-box { width: 45px; height: 45px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; margin-right: 15px; box-shadow: var(--neu-in-sm); }
+    .icon-deposit { color: #16a34a; } .icon-withdraw { color: #dc2626; } .icon-game { color: #4f46e5; }
+    .trx-status { font-size: 0.65rem; padding: 2px 8px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
+    .status-success { background: #e1f7ea; color: #16a34a; } .status-pending { background: #fdf1d6; color: #d97706; }
+
+    /* Payment Specific */
+    .pay-copy-box { display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 12px; border: none; box-shadow: var(--neu-in-sm); border-radius: 14px; margin-bottom: 15px; }
+    .pay-num { font-weight: 800; font-size: 1.1rem; font-family: monospace; letter-spacing: 1px; color: var(--text-main); }
+    .pay-icon { width: 30px; margin-right: 10px; vertical-align: middle; }
+    .helper-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 5px; display: flex; justify-content: space-between; }
+    .pay-method-badge { background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; margin-right: 5px; font-weight: 700; }
+
+    /* Leaderboard */
+    .lb-header { text-align: center; padding: 20px 20px 0; background: var(--bg-body); }
+    .podium-section { background: var(--bg-body); padding: 20px 20px 40px; display: flex; justify-content: center; align-items: flex-end; gap: 15px; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; box-shadow: 0 10px 25px rgba(163,170,183,0.3); margin-bottom: 20px; }
+    .podium-item { text-align: center; position: relative; width: 30%; }
+    .podium-1 { order: 2; transform: translateY(-15px); } .podium-1 .p-img-box { width: 90px; height: 90px; box-shadow: 0 0 0 4px #f59e0b, var(--neu-out-sm); }
+    .podium-2 { order: 1; } .podium-2 .p-img-box { box-shadow: 0 0 0 3px #94a3b8, var(--neu-out-sm); }
+    .podium-3 { order: 3; } .podium-3 .p-img-box { box-shadow: 0 0 0 3px #b45309, var(--neu-out-sm); }
+    .p-img-box { width: 70px; height: 70px; border-radius: 50%; margin: 0 auto; position: relative; background: var(--bg-card); }
+    .p-img-box img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--bg-body); }
+    .crown { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); color: #f59e0b; font-size: 1.5rem; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2)); }
+    .p-rank-badge { position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 22px; height: 22px; border-radius: 50%; color: white; font-size: 0.8rem; font-weight: bold; line-height: 22px; border: 2px solid var(--bg-body); z-index: 5; }
+    .podium-1 .p-rank-badge{background:#f59e0b} .podium-2 .p-rank-badge{background:#94a3b8} .podium-3 .p-rank-badge{background:#b45309}
+    .rank-item { display: flex; align-items: center; padding: 12px 15px; background: var(--bg-card); border-radius: 14px; margin-bottom: 10px; box-shadow: var(--neu-out-sm); border: none; }
+    .r-pos { width: 30px; font-weight: 700; color: var(--text-muted); text-align: center; }
+    .r-img { width: 40px; height: 40px; border-radius: 50%; margin: 0 15px 0 10px; background: #d9dbe0; }
+    .r-val { font-weight: 800; color: var(--text-main); font-size: 1rem; }
+
+    /* Chips */
+    .filter-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 0 20px 10px; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+    .filter-scroll::-webkit-scrollbar { display: none; }
+    .filter-chip { background: var(--bg-card); padding: 8px 18px; border-radius: 50px; border: none; box-shadow: var(--neu-out-sm); white-space: nowrap; color: var(--text-muted); font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .filter-chip.active { background: var(--bg-card); color: var(--primary); box-shadow: var(--neu-in-sm); }
+
+    /* Toast */
+    #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text-main); padding: 12px 24px; border-radius: 50px; color: #fff; z-index: 9999; transition: 0.3s; opacity: 0; pointer-events: none; display: flex; align-items: center; gap: 10px; white-space: nowrap; box-shadow: var(--neu-out); }
+    #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    /* Summary & Result */
+    .modal-summary { background: var(--bg-card); padding: 12px; border-radius: 14px; display: flex; justify-content: space-between; margin-bottom: 15px; box-shadow: var(--neu-in-sm); font-size: 0.8rem; }
+    .sum-item { text-align: center; }
+    .sum-val { font-weight: 700; color: var(--primary); display:block; }
+    .sum-lbl { font-size: 0.7rem; color: var(--text-muted); }
+    .checkbox-group { display: flex; align-items: center; gap: 10px; margin: 15px 0; font-size: 0.85rem; color: var(--text-muted); }
+    .checkbox-group input { width: 18px; height: 18px; accent-color: var(--primary); }
+    .balance-status { text-align: right; font-size: 0.8rem; margin-top: 10px; font-weight: 600; }
+    .bal-ok { color: var(--success); } .bal-low { color: var(--danger); }
+    .result-box { margin: 15px; padding: 15px; background: var(--bg-card); box-shadow: var(--neu-out-sm); border-radius: 16px; text-align: center; }
+    .winner-trophy { font-size: 2rem; color: #f59e0b; margin-bottom: 5px; }
+    .winner-name { font-size: 1.1rem; font-weight: 800; color: #b45309; }
+    .prize-won { font-weight: 700; color: #16a34a; margin-top: 5px; }
+
+    /* Instruction Box */
+    .instruction-box { margin: 0 15px 15px; background: var(--bg-card); padding: 12px; border-radius: 14px; box-shadow: var(--neu-in-sm); border-left: 4px solid var(--primary); font-size: 0.8rem; text-align: left; }
+    .instruction-box ol { padding-left: 20px; margin-top: 5px; color: var(--text-muted); }
+    .instruction-box li { margin-bottom: 3px; }
+
+    /* Helpers */
+    .guest-hidden { display: none !important; }
+    .guest-show { display: block !important; }
+
+    /* Skeleton Loading */
+    .skeleton-anim {
+        background: linear-gradient(90deg, #dcdde2 25%, #cfd1d7 50%, #dcdde2 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+        border-radius: 8px; color: transparent !important;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* Skeleton Card Styles */
+    .sk-card { height: 260px; margin: 0 20px 25px; border-radius: var(--radius); background: var(--bg-card); box-shadow: var(--neu-out-sm); border: none; padding: 0; overflow: hidden; }
+    .sk-banner { height: 140px; width: 100%; }
+    .sk-body { padding: 15px; }
+    .sk-row { display: flex; gap: 10px; margin-bottom: 10px; }
+    .sk-box { flex: 1; height: 50px; border-radius: 12px; }
+    .sk-line { height: 10px; margin-bottom: 8px; border-radius: 5px; }
+    .sk-btn { height: 45px; width: 100%; border-radius: 12px; margin-top: 10px; }
+
+    /* --- Neumorphic Toggle Switch (from inspiration board) --- */
+    .toggle-switch, input[type="checkbox"].switch, .switch-track {
+        appearance: none; -webkit-appearance: none;
+        width: 54px; height: 30px; border-radius: 30px;
+        background: var(--bg-card); box-shadow: var(--neu-in-sm);
+        position: relative; cursor: pointer; transition: 0.25s; border: none;
+    }
+    .toggle-switch::before, input[type="checkbox"].switch::before {
+        content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px;
+        border-radius: 50%; background: var(--bg-card); box-shadow: var(--neu-out-sm);
+        transition: 0.25s;
+    }
+    .toggle-switch:checked, input[type="checkbox"].switch:checked { background: var(--bg-card); }
+    .toggle-switch:checked::before, input[type="checkbox"].switch:checked::before {
+        transform: translateX(24px); background: var(--primary); box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    /* Slider (range input) */
+    input[type="range"] {
+        -webkit-appearance: none; width: 100%; height: 8px; border-radius: 10px;
+        background: var(--bg-card); box-shadow: var(--neu-in-sm); outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+        -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%;
+        background: var(--primary); box-shadow: var(--neu-out-sm), 0 0 0 4px var(--bg-card);
+        cursor: pointer;
+    }
 </style>
+
 </head>
 <body>
 
-<canvas id="c"></canvas>
+<!-- TOAST MSG -->
 
-<div class="hud">
-  <div class="hud-left">
-    <div class="label">Score</div>
-    <div class="score-row">
-      <div class="value" id="score">0</div>
+<div id="toast"><i class="fa-solid fa-circle-check text-success"></i> <span id="toast-msg">Success</span></div>
+
+<!-- NOTICE POPUP (CENTERED, NO BORDER) -->
+
+<div id="modal-notice" class="modal-wrap">
+    <div class="modal-overlay" onclick="ui.closeModal()"></div>
+    <div class="modal-sheet">
+        <div class="notice-icon-box"><i class="fa-solid fa-bullhorn"></i></div>
+        <h3 style="margin-bottom:10px; font-weight:800; font-size:1.4rem;">Announcement</h3>
+        <p id="notice-text" class="text-muted" style="line-height:1.6; margin-bottom:25px;">Welcome! Join matches and win big prizes.</p>
+        <button class="btn-main" onclick="ui.closeModal()" style="padding:12px; border-radius:50px; box-shadow:none;">Okay, Got it</button>
     </div>
-    <div class="lives" id="lives"></div>
-  </div>
-  <div class="hud-right">
-    <div class="label">Best</div>
-    <div class="value" id="best">0</div>
-  </div>
 </div>
 
-<div class="effects" id="effects"></div>
+<!-- NOTIFICATION PAGE MODAL (PAGE STYLE) -->
 
-<div class="shop" id="shop">
-  <div class="coins" id="coinsBox">
-    <span class="dot"></span>
-    <span class="amt" id="coinAmt">0</span>
-  </div>
-  <div id="shopItems"></div>
+<div id="modal-notifications" class="modal-wrap">
+    <div class="modal-overlay" onclick="ui.closeModal()"></div>
+    <div class="modal-sheet">
+        <div class="sheet-handle"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:15px; border-bottom:1px solid #f1f5f9;">
+            <h2 style="margin:0; font-size:1.5rem;">Notifications</h2>
+            <div onclick="ui.closeModal()" style="width:35px; height:35px; background:#f1f5f9; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--text-muted);"><i class="fa-solid fa-xmark"></i></div>
+        </div>
+        <div id="notif-list-container" style="padding-bottom:20px;">
+            <div style="text-align:center; padding:20px; color:#aaa;">Loading...</div>
+        </div>
+    </div>
 </div>
 
-<div class="energy"><div class="energy-fill" id="energyFill"></div></div>
-<div class="unlim-line" id="unlimLine"><div class="fill" id="unlimFill"></div></div>
-<div class="chaos-line" id="chaosLine"><div class="fill" id="chaosFill"></div></div>
+<!-- === AUTH SCREEN (MODAL OVERLAY) === -->
 
-<div class="overlay start show" id="start">
-  <h1 class="brand">Bcod<span>game</span><span class="cur"></span></h1>
-  <div class="start-row">
-    <button class="btn" id="startBtn">Start</button>
-  </div>
-  <div class="color-picker">
-    <div class="preview" id="preview">&lt;_&gt;</div>
-    <div class="color-row" id="colorRow"></div>
-  </div>
+<div id="auth-modal-wrapper">
+    <div class="auth-card">
+        <div class="auth-close" onclick="window.auth.hideAuth()"><i class="fa-solid fa-xmark"></i></div>
+        <div class="app-logo-icon"><i class="fa-solid fa-gamepad"></i></div>
+        <h1 class="app-title" id="auth-app-title">Tournament App</h1>
+        <p class="app-tagline" style="color:#64748b; margin-bottom:20px;">Login to play matches & win</p>
+
+    <!-- Login Form -->
+    <div id="form-login" class="auth-form">
+        <div class="input-group">
+            <i class="fa-solid fa-envelope"></i>
+            <input type="email" id="login-email" class="input-box" placeholder="Email Address">
+        </div>
+        <div class="input-group">
+            <i class="fa-solid fa-lock"></i>
+            <input type="password" id="login-pass" class="input-box" placeholder="Password">
+        </div>
+        <button class="btn-main" onclick="auth.login()">Login Now</button>
+        <div class="auth-switch-text">
+            Don't have an account? <span class="auth-switch-btn" onclick="auth.switch('register')">Sign Up</span>
+        </div>
+    </div>
+
+    <!-- Register Form -->
+    <div id="form-register" class="auth-form hidden">
+        <div class="input-group"><i class="fa-solid fa-user"></i><input type="text" id="reg-name" class="input-box" placeholder="Full Name"></div>
+        <div class="input-group"><i class="fa-solid fa-mobile-screen"></i><input type="number" id="reg-phone" class="input-box" placeholder="Phone"></div>
+        <div class="input-group"><i class="fa-solid fa-envelope"></i><input type="email" id="reg-email" class="input-box" placeholder="Email"></div>
+        <div class="input-group"><i class="fa-solid fa-lock"></i><input type="password" id="reg-pass" class="input-box" placeholder="Password"></div>
+        <button class="btn-main" onclick="auth.register()">Create Account</button>
+        <div class="auth-switch-text">
+            Already have an account? <span class="auth-switch-btn" onclick="auth.switch('login')">Login</span>
+        </div>
+    </div>
+</div>
 </div>
 
-<div class="overlay over" id="over">
-  <div class="mark"></div>
-  <div class="final-label">Final score</div>
-  <div class="final-score" id="finalScore">0</div>
-  <div class="final-best" id="finalBest">Best <strong>0</strong></div>
-  <div class="final-stats">
-    <div class="stat"><span class="label">Depth</span><span class="value" id="statDepth">0m</span></div>
-    <div class="stat"><span class="label">Collected</span><span class="value" id="statCol">0</span></div>
-    <div class="stat"><span class="label">Coins</span><span class="value coin" id="statCoins">0</span></div>
-  </div>
-  <button class="btn" id="restartBtn">Again</button>
+<!-- === APP INTERFACE === -->
+
+<div id="app-interface">
+
+<!-- SIDEBAR / DRAWER -->
+
+<div id="drawer-wrapper">
+    <div class="drawer-overlay" onclick="ui.toggleDrawer()"></div>
+    <div class="drawer">
+        <!-- 1. Profile Header -->
+        <div class="profile-section">
+
+        <!-- GUEST MODE VIEW -->
+        <div id="drawer-guest" class="guest-show">
+            <div class="profile-top">
+                <div class="p-avatar" style="border-color:#ccc;"><img src="https://ui-avatars.com/api/?name=Guest&background=cbd5e1&color=fff" alt="Guest"></div>
+                <div class="p-info">
+                    <h3>Guest User</h3>
+                    <p class="text-muted">Login to participate</p>
+                </div>
+            </div>
+            <button class="btn-main btn-sm" onclick="ui.toggleDrawer(); auth.showAuth();">Login / Sign Up</button>
+        </div>
+
+        <!-- LOGGED IN USER VIEW -->
+        <div id="drawer-user" class="guest-hidden">
+            <button class="p-edit-btn" onclick="ui.openModal('modal-edit-profile')"><i class="fa-solid fa-pen"></i> Edit</button>
+            <div class="profile-top">
+                <div class="p-avatar"><img src="" id="profile-img" alt="Avatar"></div>
+                <div class="p-info">
+                    <h3 id="profile-name">User</h3>
+                    <p id="profile-phone" style="font-family:monospace; letter-spacing:1px;">01*******89</p>
+                </div>
+            </div>
+            <div class="p-game-details">
+                <div class="pg-item"><span class="pg-lbl">Game Name</span><span class="pg-val" id="drawer-game-name">Not Set</span></div>
+                <div class="pg-item" style="text-align:right;"><span class="pg-lbl">UID</span><span class="pg-val" id="drawer-game-uid">---</span></div>
+            </div>
+            <div class="verify-row">
+                <div class="v-badge" id="badge-phone"><i class="fa-solid fa-check-circle"></i> Phone</div>
+                <div class="v-badge unverified" id="badge-uid"><i class="fa-solid fa-xmark-circle"></i> UID</div>
+            </div>
+            <div class="drawer-wallet">
+                <div class="dw-bal"><h4>Total Balance</h4><h2>৳ <span id="drawer-bal">0</span></h2></div>
+                <button class="dw-btn" onclick="ui.toggleDrawer(); app.checkLogin(() => nav.goto('wallet', document.querySelectorAll('.nav-item')[3]))">Go to Wallet <i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+            <div class="drawer-stats">
+                <div class="ds-box"><div class="ds-val" id="stat-played">0</div><div class="ds-lbl">Matches</div></div>
+                <div class="ds-box"><div class="ds-val" id="stat-won">0</div><div class="ds-lbl">Won</div></div>
+                <div class="ds-box"><div class="ds-val text-success">৳<span id="stat-earned">0</span></div><div class="ds-lbl">Earned</div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Menu List -->
+    <div class="drawer-menu">
+        <div class="dm-group">
+            <div class="dm-title">Shortcuts</div>
+            <div class="dm-item" onclick="ui.toggleDrawer(); app.checkLogin(() => { app.switchTab('upcoming', document.querySelector('.mm-tab')); nav.goto('matches', document.querySelectorAll('.nav-item')[1]) })">
+                <i class="fa-regular fa-calendar text-primary"></i> My Matches
+            </div>
+            <div class="dm-item" onclick="ui.toggleDrawer(); app.checkLogin(() => { app.switchTab('history', document.querySelector('.mm-tab')); nav.goto('matches', document.querySelectorAll('.nav-item')[1]) })">
+                <i class="fa-solid fa-clock-rotate-left text-primary"></i> Match History
+            </div>
+        </div>
+
+        <div class="dm-group">
+            <div class="dm-title">Support & Settings</div>
+            <div class="dm-item" onclick="ui.toggleDrawer(); app.checkLogin(() => ui.openModal('modal-settings'))"><i class="fa-solid fa-shield-halved text-muted"></i> Security & Payment</div>
+            <div class="dm-item" onclick="app.checkLogin(() => app.openSupport())"><i class="fa-brands fa-whatsapp text-success"></i> Help Center</div>
+            <div class="dm-item" onclick="app.openCommunity()"><i class="fa-brands fa-telegram text-primary"></i> Join Community</div>
+            <div class="dm-item" onclick="ui.openModal('modal-rules')"><i class="fa-solid fa-scroll text-muted"></i> Match Rules</div>
+        </div>
+
+        <div class="dm-group guest-hidden" id="menu-logout">
+            <div class="dm-title">Account</div>
+            <div class="dm-item danger" onclick="auth.logout()"><i class="fa-solid fa-right-from-bracket"></i> Logout</div>
+        </div>
+    </div>
+</div>
 </div>
 
-<script>
-(function(){
-'use strict';
+<!-- HEADER -->
 
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-let W,H,DPR;
-function resize(){
-  DPR = Math.min(devicePixelRatio||1,2);
-  W = innerWidth; H = innerHeight;
-  canvas.width = W*DPR; canvas.height = H*DPR;
-  canvas.style.width = W+'px'; canvas.style.height = H+'px';
-  ctx.setTransform(DPR,0,0,DPR,0,0);
-}
-addEventListener('resize',resize); resize();
+<header>
+    <div class="btn" style="font-size: 1.4rem;" onclick="ui.toggleDrawer()"><i class="fa-solid fa-bars-staggered"></i></div>
+    <div class="app-title" id="header-app-title" style="font-size: 1.2rem; background:none; -webkit-text-fill-color:var(--text-main);">Tournament App</div>
+    <div class="header-right">
+         <!-- Notification Button Updated -->
+         <div class="notification-btn" onclick="app.openNotifications()">
+            <i class="fa-regular fa-bell"></i>
+            <div class="notif-dot" id="notif-dot"></div>
+         </div>
+         <div class="wallet-pill" onclick="app.checkLogin(() => nav.goto('wallet', document.querySelectorAll('.nav-item')[3]))">
+            <i class="fa-solid fa-wallet text-primary"></i>
+            <span id="header-coins">Login</span>
+        </div>
+    </div>
+</header>
 
-const GOLD   = '251,191,36';
-const CYAN   = '34,211,238';
-const PURPLE = '168,85,247';
-const EMER   = '16,185,129';
-const PINK   = '236,72,153';
-const ORANGE = '249,115,22';
-const ICE    = '219,234,254';
-const DANGER = '248,113,113';
+<!-- MAIN SCROLLABLE AREA -->
 
-const PLAYER_SYMBOL = '<_>';
-const MONO = "'JetBrains Mono','SF Mono','Fira Code',ui-monospace,Menlo,monospace";
+<div id="main-view">
 
-// ── COOLDOWN কনফিগ ──
-const STREAK_GOAL = 10;      // ১০টি একসাথে ধরলেই ট্রিগার
-const COOLDOWN_TIME = 3.0;   // কুলডাউন সময়
-const COOLDOWN_BONUS = 0.5;  // প্রতি পয়েন্টে অর্ধেক বোনাস
+<!-- 1. HOME -->
+<div id="page-home" class="page-section">
+    <!-- HOME BANNER -->
+    <div id="home-banner-container" style="margin: 20px; border-radius: var(--radius); overflow: hidden; height: 160px; position: relative; background: #d9dbe0; box-shadow: var(--neu-out-sm);">
+        <div id="home-banner-slides" style="width:100%; height:100%; position:relative;">
+            <img src="https://placehold.co/600x300/e6e7eb/999?text=Loading..." style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; opacity:1; transition: opacity 0.6s ease;">
+        </div>
+        <div id="home-banner-dots" style="position:absolute; bottom:10px; left:0; width:100%; display:flex; justify-content:center; gap:6px; z-index:2;"></div>
+    </div>
 
-const COLOR_OPTIONS = [
-  { hex:'#7dd3c0', rgb:'125,211,192' },
-  { hex:'#22d3ee', rgb:'34,211,238' },
-  { hex:'#a855f7', rgb:'168,85,247' },
-  { hex:'#ec4899', rgb:'236,72,153' },
-  { hex:'#f97316', rgb:'249,115,22' },
-  { hex:'#fbbf24', rgb:'251,191,36' },
-  { hex:'#ef4444', rgb:'239,68,68' },
-  { hex:'#3b82f6', rgb:'59,130,246' },
-  { hex:'#10b981', rgb:'16,185,129' },
-  { hex:'#e6edf3', rgb:'230,237,243' }
-];
-let playerColorRGB = localStorage.getItem('bcodgameColorRGB') || COLOR_OPTIONS[0].rgb;
-let playerColorHex = localStorage.getItem('bcodgameColorHex') || COLOR_OPTIONS[0].hex;
+    <!-- Dynamic Category Chips -->
+    <div class="filter-scroll" id="category-filters">
+        <div class="filter-chip skeleton-anim" style="width: 60px; height: 35px; border-radius: 50px;"></div>
+        <div class="filter-chip skeleton-anim" style="width: 80px; height: 35px; border-radius: 50px;"></div>
+        <div class="filter-chip skeleton-anim" style="width: 70px; height: 35px; border-radius: 50px;"></div>
+    </div>
 
-const scoreEl = document.getElementById('score');
-const bestEl = document.getElementById('best');
-const livesEl = document.getElementById('lives');
-const energyFill = document.getElementById('energyFill');
-const chaosLine = document.getElementById('chaosLine');
-const chaosFill = document.getElementById('chaosFill');
-const unlimLine = document.getElementById('unlimLine');
-const unlimFill = document.getElementById('unlimFill');
-const effectsEl = document.getElementById('effects');
-const shopEl = document.getElementById('shop');
-const shopItemsEl = document.getElementById('shopItems');
-const coinAmtEl = document.getElementById('coinAmt');
-const coinsBoxEl = document.getElementById('coinsBox');
-const startScreen = document.getElementById('start');
-const overScreen = document.getElementById('over');
-const finalScoreEl = document.getElementById('finalScore');
-const finalBestEl = document.getElementById('finalBest');
-const statDepth = document.getElementById('statDepth');
-const statCol = document.getElementById('statCol');
-const statCoins = document.getElementById('statCoins');
-const colorRow = document.getElementById('colorRow');
-const previewEl = document.getElementById('preview');
+    <div id="matches-container" style="padding-top: 15px;">
+        <!-- Initial Skeleton Loader for Matches -->
+        <div class="sk-card">
+            <div class="sk-banner skeleton-anim"></div>
+            <div class="sk-body">
+                <div class="sk-row">
+                    <div class="sk-box skeleton-anim"></div>
+                    <div class="sk-box skeleton-anim"></div>
+                    <div class="sk-box skeleton-anim"></div>
+                </div>
+                <div class="sk-line skeleton-anim" style="width:60%"></div>
+                <div class="sk-btn skeleton-anim"></div>
+            </div>
+        </div>
+        <div class="sk-card">
+            <div class="sk-banner skeleton-anim"></div>
+            <div class="sk-body">
+                <div class="sk-row">
+                    <div class="sk-box skeleton-anim"></div>
+                    <div class="sk-box skeleton-anim"></div>
+                    <div class="sk-box skeleton-anim"></div>
+                </div>
+                <div class="sk-btn skeleton-anim"></div>
+            </div>
+        </div>
+    </div>
+</div>
 
-const SHOP_ITEMS = [
-  { key:'chaos',  stateKey:'chaos',     maxTime:12, label:'⚡', color:'#fbbf24', price:70, trigger:()=>triggerChaos() },
-  { key:'unlim',  stateKey:'unlimited', maxTime:20, label:'◆', color:'#a855f7', price:60, trigger:()=>triggerUnlimited() },
-  { key:'double', stateKey:'double',    maxTime:30, label:'‖', color:'#f97316', price:50, trigger:()=>triggerDouble() },
-  { key:'freeze', stateKey:'freeze',    maxTime:8,  label:'❄', color:'#dbeafe', price:40, trigger:()=>triggerFreeze() },
-  { key:'magnet', stateKey:'magnet',    maxTime:24, label:'∞', color:'#ec4899', price:30, trigger:()=>triggerMagnet() },
-  { key:'slow',   stateKey:'slow',      maxTime:15, label:'◎', color:'#10b981', price:20, trigger:()=>triggerSlow() },
-  { key:'shield', stateKey:'shield',    maxTime:24, label:'⬢', color:'#22d3ee', price:10, trigger:()=>triggerShield() }
-];
+<!-- 2. MY MATCHES -->
+<div id="page-matches" class="page-section hidden">
+    <div style="padding: 20px 20px 10px;"><h2>My Matches</h2><p class="text-muted">Track your games</p></div>
+    <div class="mm-tabs-wrapper">
+        <div class="mm-tab active" onclick="app.switchTab('upcoming', this)"><i class="fa-regular fa-calendar"></i> Upcoming</div>
+        <div class="mm-tab" onclick="app.switchTab('history', this)"><i class="fa-solid fa-clock-rotate-left"></i> History</div>
+    </div>
+    <div id="my-matches-list" style="padding-bottom: 20px;"></div>
+</div>
 
-let shopItemEls = {};
-function buildShop(){
-  shopItemsEl.innerHTML = SHOP_ITEMS.map(it =>
-    '<div class="shop-item" data-k="'+it.key+'" style="color:'+it.color+'">'+
-      '<span class="icon">'+it.label+'</span>'+
-      '<span class="price">'+it.price+'</span>'+
-      '<span class="timer-bar"></span>'+
-    '</div>'
-  ).join('');
-  shopItemEls = {};
-  SHOP_ITEMS.forEach(it => {
-    const el = shopItemsEl.querySelector('[data-k="'+it.key+'"]');
-    shopItemEls[it.key] = { el: el, bar: el.querySelector('.timer-bar') };
-    el.addEventListener('click', (e) => {
-      e.stopPropagation();
-      buyItem(it);
+<!-- 3. LEADERBOARD -->
+<div id="page-leaderboard" class="page-section hidden">
+    <div class="lb-header">
+        <h2>Leaderboard</h2>
+        <p class="text-muted" style="margin-bottom:10px">Top players this season</p>
+    </div>
+    <div id="lb-podium" class="podium-section"></div>
+    <div style="padding: 0 25px 10px; display:flex; justify-content:space-between; color:var(--text-muted); font-size:0.8rem; font-weight:600;"><span>Rank</span><span>Score</span></div>
+    <div id="lb-list" style="padding: 0 20px 80px;"></div>
+</div>
+
+<!-- 4. WALLET -->
+<div id="page-wallet" class="page-section hidden">
+    <div class="credit-card">
+        <div class="card-top">
+            <div class="card-label">Total Balance</div>
+            <div style="font-size:1.5rem; opacity:0.8;"><i class="fa-solid fa-wallet"></i></div>
+        </div>
+        <div style="z-index: 2; margin-top: 10px;">
+            <span style="font-size: 1.5rem; opacity: 0.9;">৳</span>
+            <span class="balance-amount" id="wallet-balance">0.00</span>
+        </div>
+        <div style="z-index: 2; display: flex; justify-content: space-between; align-items: flex-end;">
+            <div class="user-chip" id="wallet-uid">UID: ---</div>
+            <div style="font-size:1.5rem; opacity:0.6;"><i class="fa-solid fa-microchip"></i></div>
+        </div>
+    </div>
+    <div class="wallet-actions">
+        <button class="action-btn" onclick="app.checkLogin(() => ui.openModal('modal-deposit'))">
+            <div class="action-icon"><i class="fa-solid fa-plus"></i></div>
+            <span style="font-size:0.75rem; font-weight:600; color:var(--text-muted);">Add Money</span>
+        </button>
+        <button class="action-btn" onclick="app.checkLogin(() => ui.openModal('modal-withdraw'))">
+            <div class="action-icon"><i class="fa-solid fa-arrow-down-long"></i></div>
+            <span style="font-size:0.75rem; font-weight:600; color:var(--text-muted);">Withdraw</span>
+        </button>
+        <button class="action-btn" onclick="app.checkLogin(() => ui.openModal('modal-transfer'))">
+            <div class="action-icon"><i class="fa-solid fa-paper-plane"></i></div>
+            <span style="font-size:0.75rem; font-weight:600; color:var(--text-muted);">Transfer</span>
+        </button>
+        <button class="action-btn" onclick="app.checkLogin(() => app.openSupport())">
+            <div class="action-icon"><i class="fa-solid fa-headset"></i></div>
+            <span style="font-size:0.75rem; font-weight:600; color:var(--text-muted);">Support</span>
+        </button>
+    </div>
+    <div style="padding: 0 25px 10px; display: flex; justify-content: space-between; align-items: center;"><h3>Transactions</h3></div>
+    <div id="trx-list" style="padding: 0 20px 20px;"></div>
+</div>
+</div>
+
+<!-- BOTTOM NAV -->
+
+<nav class="nav-bar">
+    <div class="nav-item active" onclick="nav.goto('home', this)"><i class="fa-solid fa-house"></i><span>Home</span></div>
+    <div class="nav-item" onclick="app.checkLogin(() => nav.goto('matches', this))"><i class="fa-solid fa-gamepad"></i><span>Matches</span></div>
+    <div class="nav-item" onclick="nav.goto('leaderboard', this)"><i class="fa-solid fa-trophy"></i><span>Rank</span></div>
+    <div class="nav-item" onclick="app.checkLogin(() => nav.goto('wallet', this))"><i class="fa-solid fa-wallet"></i><span>Wallet</span></div>
+</nav>
+</div>
+
+<!-- === MODALS (Profile, Settings, Join etc. same as before) === -->
+
+<div id="modal-edit-profile" class="modal-wrap">
+    <div class="modal-overlay" onclick="ui.closeModal()"></div>
+    <div class="modal-sheet">
+        <div class="sheet-handle"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 style="margin:0">Edit Profile</h2>
+            <div onclick="ui.closeModal()" style="font-size:1.5rem; cursor:pointer; color:var(--text-muted);"><i class="fa-solid fa-xmark"></i></div>
+        </div>
+        <div class="edit-avatar-wrapper" onclick="document.getElementById('file-upload').click()">
+            <img src="" id="edit-profile-img" class="edit-avatar-img">
+            <div class="edit-avatar-btn"><i class="fa-solid fa-camera"></i></div>
+            <input type="file" id="file-upload" accept="image/*" hidden onchange="app.handleImageUpload(this)">
+        </div>
+        <div class="input-group">
+            <label class="input-label">App Username</label>
+            <input type="text" id="edit-app-name" class="input-box" placeholder="Display Name">
+            <div id="name-change-note" style="font-size:0.7rem; color:var(--text-muted); margin-top:5px; text-align:right;">Changes left: <span id="changes-left-count">2</span></div>
+        </div>
+        <div style="margin-top:20px; padding-top:20px; border-top:1px dashed #e2e8f0;">
+            <h4 style="margin-bottom:15px; color:var(--primary);">Game Information</h4>
+            <div class="input-group">
+                <label class="input-label">In-Game Name <span class="text-danger">*</span></label>
+                <input type="text" id="edit-game-name" class="input-box" placeholder="Exact FF Name">
+            </div>
+            <div class="input-group">
+                <label class="input-label">Game UID <span id="uid-status-icon"></span></label>
+                <input type="number" id="edit-game-uid" class="input-box" placeholder="FF UID">
+            </div>
+        </div>
+        <button class="btn-main" onclick="app.saveProfile()" style="margin-top:25px;">Save Changes</button>
+    </div>
+</div>
+
+<div id="modal-settings" class="modal-wrap">
+    <div class="modal-overlay" onclick="ui.closeModal()"></div>
+    <div class="modal-sheet">
+        <div class="sheet-handle"></div>
+        <h2 style="margin-bottom:20px;">Security & Payment</h2>
+        <h4 class="text-muted" style="margin-bottom:10px; font-size:0.8rem; text-transform:uppercase;">Withdraw Info</h4>
+        <input type="text" id="set-pay-method" class="input-box" placeholder="bKash/Nagad Number" style="margin-bottom:10px;">
+        <input type="text" id="set-pay-name" class="input-box" placeholder="Account Holder Name">
+        <button class="btn-main btn-sm" onclick="app.savePaymentSettings()" style="margin-top:10px; width:100%;">Update Payment Info</button>
+    </div>
+</div>
+
+<div id="modal-rules" class="modal-wrap">
+    <div class="modal-overlay" onclick="ui.closeModal()"></div>
+    <div class="modal-sheet">
+        <div class="sheet-handle"></div>
+        <h2 style="margin-bottom:15px;">Fair Play Rules</h2>
+        <div class="instruction-box" style="margin:0; background:white; padding:0;">
+            <ol id="rules-list" style="font-size:0.9rem; line-height:1.6;">
+                <li>No Emulators Allowed (Mobile Only).</li>
+                <li>No Hacks, Scripts, or Team-ups.</li>
+                <li>Level 25+ ID Required.</li>
+                <li>Wait in lobby 5 minutes before start.</li>
+                <li>Winners must take Screenshot of Booyah.</li>
+            </ol>
+        </div>
+        <button class="btn-main" onclick="ui.closeModal()" style="margin-top:20px;">I Understand</button>
+    </div>
+</div>
+
+<div id="modal-join" class="modal-wrap">
+    <div class="modal-overlay" onclick="ui.closeModal()"></div>
+    <div class="modal-sheet">
+        <div class="sheet-handle"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h2 style="margin:0">Confirm Join</h2>
+            <div onclick="ui.closeModal()" style="font-size:1.5rem; cursor:pointer; color:var(--text-muted);"><i class="fa-solid fa-xmark"></i></div>
+        </div>
+        <h4 id="join-title" style="margin-bottom:10px;">Match Title</h4>
+        <div class="modal-summary">
+            <div class="sum-item"><span class="sum-val" id="sum-type">Solo</span><span class="sum-lbl">Type</span></div>
+            <div class="sum-item"><span class="sum-val" id="sum-map">Map</span><span class="sum-lbl">Map</span></div>
+            <div class="sum-item"><span class="sum-val text-success" id="sum-prize">0</span><span class="sum-lbl">Prize</span></div>
+        </div>
+        <div style="margin-bottom: 20px;">
+            <label class="text-muted" style="font-size:0.8rem; margin-bottom:4px; display:block;">Game Username <span class="text-danger">*</span></label>
+            <input type="text" id="game-name" class="input-box" placeholder="Exact In-Game Name">
+        </div>
+        <div style="margin-bottom: 10px;">
+            <label class="text-muted" style="font-size:0.8rem; margin-bottom:4px; display:block;">Game UID (Optional)</label>
+            <input type="number" id="game-uid" class="input-box" placeholder="e.g. 123456789">
+        </div>
+        <div class="checkbox-group">
+            <input type="checkbox" id="join-terms">
+            <label for="join-terms">I agree to the match rules & fair play policy.</label>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+            <div>
+                <div class="text-muted" style="font-size:0.8rem">Entry Fee</div>
+                <div class="text-primary bold" style="font-size:1.2rem;">৳ <span id="join-fee">0</span></div>
+            </div>
+            <div class="balance-status" id="join-bal-status">Checking...</div>
+        </div>
+        <button class="btn-main" id="btn-pay-join" onclick="app.confirmJoin()" style="margin-top:15px;">Pay & Join</button>
+    </div>
+</div>
+
+<div id="modal-deposit" class="modal-wrap">
+    <div class="modal-overlay" onclick="ui.closeModal()"></div>
+    <div class="modal-sheet">
+        <div class="sheet-handle"></div>
+
+        <div id="dep-form">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h2 style="margin:0">Add Money</h2>
+                <div onclick="ui.closeModal()" style="font-size:1.5rem; cursor:pointer; color:var(--text-muted);"><i class="fa-solid fa-xmark"></i></div>
+            </div>
+            <p class="text-muted" style="margin-bottom:15px; font-size:0.9rem;">
+                Send money via <span class="pay-method-badge" style="background:#e2136e">bKash</span> or <span class="pay-method-badge" style="background:#f7931a">Nagad</span> Personal number below, then submit the info here.
+            </p>
+
+            <label class="input-label">Select method you sent from</label>
+            <div style="margin:5px 0 15px; display:flex; gap:10px;">
+                <div class="filter-chip" id="dep-btn-bkash" onclick="app.selectDepositMethod('bKash')">bKash</div>
+                <div class="filter-chip" id="dep-btn-nagad" onclick="app.selectDepositMethod('Nagad')">Nagad</div>
+            </div>
+
+            <div class="pay-copy-box">
+                <div>
+                    <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Send Money (Personal) to</div>
+                    <div class="pay-num" id="dep-number-display">Select a method above</div>
+                </div>
+                <div onclick="ui.copy(document.getElementById('dep-number-display').innerText)" style="background:var(--bg-input); padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:700; color:var(--primary);">
+                    <i class="fa-regular fa-copy"></i>
+                </div>
+            </div>
+
+            <input type="number" id="dep-amount" class="input-box" placeholder="Amount Sent (e.g. 100)" oninput="app.validateAmount(this)">
+            <input type="text" id="dep-sender" class="input-box" placeholder="Your bKash/Nagad Number (sent from)" style="margin-top:10px;">
+            <input type="text" id="dep-trx" class="input-box" placeholder="TrxID (Required)" style="margin-top:10px;">
+            <button class="btn-main" onclick="app.deposit()" style="margin-top:15px;">Submit Deposit</button>
+        </div>
+
+        <div id="dep-success" class="hidden" style="text-align:center; padding:20px 5px;">
+            <div class="notice-icon-box" style="color:var(--success);"><i class="fa-solid fa-clock"></i></div>
+            <h3 style="margin-bottom:10px;">Request Submitted!</h3>
+            <p class="text-muted" style="font-size:0.9rem; line-height:1.6; margin-bottom:20px;">
+                সব তথ্য সঠিক থাকলে <b>১ ঘণ্টার মধ্যে</b> আপনার একাউন্টে টাকা যোগ হয়ে যাবে।
+            </p>
+            <button class="btn-main" onclick="ui.closeModal()">ঠিক আছে</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-withdraw" class="modal-wrap">
+    <div class="modal-overlay" onclick="ui.closeModal()"></div>
+    <div class="modal-sheet">
+        <div class="sheet-handle"></div>
+
+        <div id="wd-form">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h2 style="margin:0">Withdraw</h2>
+                <div onclick="ui.closeModal()" style="font-size:1.5rem; cursor:pointer; color:var(--text-muted);"><i class="fa-solid fa-xmark"></i></div>
+            </div>
+            <div style="background:#f0f9ff; padding:10px; border-radius:8px; text-align:center; margin-bottom:15px; border:1px solid #bae6fd;">
+                <span class="text-muted" style="font-size:0.8rem;">Available Balance</span><br>
+                <span style="font-size:1.2rem; font-weight:800; color:var(--primary);">৳ <span class="live-balance">0.00</span></span>
+            </div>
+            <input type="number" id="wd-amount" class="input-box" placeholder="Amount (min 100)" style="margin-top:10px;" oninput="app.validateAmount(this)">
+            <input type="number" id="wd-number" class="input-box" placeholder="Your bKash/Nagad Number" style="margin-top:15px;">
+            <label class="input-label" style="margin-top:15px;">Select Method</label>
+            <div style="margin:5px 0 20px; display:flex; gap:10px;">
+                <div class="filter-chip" id="btn-bkash" onclick="app.selectMethod('bKash')">bKash</div>
+                <div class="filter-chip" id="btn-nagad" onclick="app.selectMethod('Nagad')">Nagad</div>
+            </div>
+            <button class="btn-main" onclick="app.withdraw()">Submit Request</button>
+        </div>
+
+        <div id="wd-success" class="hidden" style="text-align:center; padding:20px 5px;">
+            <div class="notice-icon-box" style="color:var(--success);"><i class="fa-solid fa-clock"></i></div>
+            <h3 style="margin-bottom:10px;">Request Submitted!</h3>
+            <p class="text-muted" style="font-size:0.9rem; line-height:1.6; margin-bottom:20px;">
+                সব তথ্য সঠিক থাকলে <b>১ ঘণ্টার মধ্যে</b> আপনার টাকা পাঠিয়ে দেওয়া হবে।
+            </p>
+            <button class="btn-main" onclick="ui.closeModal()">ঠিক আছে</button>
+        </div>
+    </div>
+</div>
+
+<div id="modal-transfer" class="modal-wrap">
+    <div class="modal-overlay" onclick="ui.closeModal()"></div>
+    <div class="modal-sheet">
+        <div class="sheet-handle"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h2 style="margin:0">Transfer Balance</h2>
+            <div onclick="ui.closeModal()" style="font-size:1.5rem; cursor:pointer; color:var(--text-muted);"><i class="fa-solid fa-xmark"></i></div>
+        </div>
+        <div style="text-align:right; font-size:0.8rem; margin-bottom:15px; color:var(--text-muted);">
+            Available Balance: <b class="text-success">৳ <span class="live-balance">0.00</span></b>
+        </div>
+        <div class="input-group" style="margin-bottom:5px;">
+            <label class="input-label">Recipient UID</label>
+            <input type="text" id="tr-uid" class="input-box" placeholder="Enter User UID" oninput="app.verifyRecipient(this.value)">
+            <div id="recipient-status" style="font-size:0.8rem; margin-top:5px; font-weight:600; min-height:18px;"></div>
+        </div>
+        <div class="input-group">
+            <label class="input-label">Amount</label>
+            <input type="number" id="tr-amount" class="input-box" placeholder="Min: 10 Tk" oninput="app.validateAmount(this)">
+        </div>
+        <div class="input-group">
+            <label class="input-label">Reference / Note (Optional)</label>
+            <input type="text" id="tr-note" class="input-box" placeholder="e.g. Gift">
+        </div>
+        <div class="input-group" style="border-top:1px dashed #e2e8f0; padding-top:15px; margin-top:10px;">
+            <label class="input-label">Security Password <span class="text-danger">*</span></label>
+            <input type="password" id="tr-pass" class="input-box" placeholder="Enter App Password to Confirm">
+        </div>
+        <button class="btn-main" onclick="app.transfer()" style="margin-top:15px;">Confirm & Send</button>
+    </div>
+</div>
+
+<!-- === FIREBASE LOGIC === -->
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs, doc, setDoc, getDoc, updateDoc, arrayUnion, query, orderBy, limit, addDoc, where } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDqWW3Z-dv6h1gfgkTQhqA6-64mfr6sv0E",
+      authDomain: "tournament-4120a.firebaseapp.com",
+      projectId: "tournament-4120a",
+      storageBucket: "tournament-4120a.firebasestorage.app",
+      messagingSenderId: "824483976695",
+      appId: "1:824483976695:web:e83d5981f4c581b5becaf2"
+    };
+
+    const appInstance = initializeApp(firebaseConfig);
+    const authService = getAuth(appInstance);
+    const dbService = getFirestore(appInstance);
+
+    window.db = {
+        balance: 0.00,
+        user_uid: null,
+        user_name: "User",
+        user_data: {},
+        joined_ids: [],
+        matches: [],
+        trx: [],
+        leaderboard: [],
+        categories: []
+    };
+
+    // --- TIMER SYSTEM ---
+    window.timers = {
+        interval: null,
+        start: () => {
+            if(window.timers.interval) clearInterval(window.timers.interval);
+            window.timers.interval = setInterval(window.timers.tick, 1000);
+            window.timers.tick(); 
+        },
+        tick: () => {
+            const now = new Date().getTime();
+            document.querySelectorAll('.countdown-timer').forEach(el => {
+                const targetTime = parseInt(el.getAttribute('data-target'));
+                if(!targetTime || isNaN(targetTime)) {
+                    if(el.innerHTML === "Loading...") el.innerHTML = "<span class='text-muted'>Coming Soon</span>";
+                    return;
+                }
+                const distance = targetTime - now;
+                
+                if (distance < 0) {
+                    el.innerHTML = "<span class='countdown-ended'>LIVE / ENDED</span>";
+                } else {
+                    const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const s = Math.floor((distance % (1000 * 60)) / 1000);
+                    
+                    const hStr = h < 10 ? "0"+h : h;
+                    const mStr = m < 10 ? "0"+m : m;
+                    const sStr = s < 10 ? "0"+s : s;
+
+                    el.innerHTML = `<i class="fa-regular fa-clock"></i> ${hStr}h ${mStr}m ${sStr}s`;
+                    el.style.color = distance < 3600000 ? "#ef4444" : "#fbbf24"; 
+                }
+            });
+        }
+    };
+
+    // --- AUTH LOGIC ---
+    window.auth = {
+        showAuth: () => { document.getElementById('auth-modal-wrapper').classList.add('active'); },
+        hideAuth: () => { document.getElementById('auth-modal-wrapper').classList.remove('active'); },
+
+        login: async () => { 
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+            if(!email || !pass) return window.ui.toast('Fill all fields');
+            try { 
+                await signInWithEmailAndPassword(authService, email, pass); 
+                window.auth.hideAuth();
+                window.ui.toast("Login Success"); 
+            } 
+            catch (error) { window.ui.toast(error.message); }
+        },
+        register: async () => { 
+            const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            const phone = document.getElementById('reg-phone').value;
+            const pass = document.getElementById('reg-pass').value;
+            if(!name || !email || !pass || !phone) return window.ui.toast('Fill all fields');
+            if(phone.length < 11) return window.ui.toast('Invalid Phone');
+            try {
+                const cred = await createUserWithEmailAndPassword(authService, email, pass);
+                await updateProfile(cred.user, { displayName: name });
+                await setDoc(doc(dbService, "users", cred.user.uid), { 
+                    appName: name, email, phone, balance: 0, uid: cred.user.uid, 
+                    joined_matches: [], score: 0, kills: 0, matchesPlayed: 0, matchesWon: 0, totalEarned: 0,
+                    gameName: "", gameUid: "", isUidVerified: false, photoUrl: "", nameChangesLeft: 2
+                }); 
+                window.auth.hideAuth();
+                window.ui.toast("Account Created!");
+            } catch (error) { window.ui.toast(error.message); }
+        },
+        switch: (id) => { document.querySelectorAll('.auth-form').forEach(f=>f.classList.add('hidden')); document.getElementById('form-'+id).classList.remove('hidden'); },
+        logout: () => {
+            signOut(authService);
+            window.ui.toast("Logged Out");
+            window.ui.toggleDrawer();
+            window.nav.goto('home', document.querySelectorAll('.nav-item')[0]);
+        }
+    };
+
+    // --- MAIN STATE LISTENER ---
+    onAuthStateChanged(authService, async (user) => {
+        if (user) {
+            window.db.user_uid = user.uid; 
+            window.db.user_name = user.displayName || "Player";
+            await window.app.fetchUserData();
+
+            document.getElementById('drawer-guest').classList.remove('guest-show');
+            document.getElementById('drawer-guest').classList.add('guest-hidden');
+            document.getElementById('drawer-user').classList.remove('guest-hidden');
+            document.getElementById('menu-logout').classList.remove('guest-hidden');
+
+            const d = window.db.user_data;
+            document.getElementById('profile-name').innerText = d.appName || user.displayName;
+            document.getElementById('wallet-uid').innerText = "UID: " + user.uid.slice(0,6);
+            document.getElementById('header-coins').innerText = Math.floor(d.balance || 0);
+            
+            const ph = d.phone || "";
+            const maskedPhone = ph.length > 5 ? ph.substring(0, 3) + "******" + ph.substring(ph.length - 2) : "Not Set";
+            document.getElementById('profile-phone').innerText = maskedPhone;
+
+            const avatar = d.photoUrl || `https://ui-avatars.com/api/?name=${d.appName}&background=4f46e5&color=fff`;
+            document.getElementById('profile-img').src = avatar;
+            
+            window.app.renderMatches();
+        } else {
+            window.db.user_uid = null;
+            window.db.user_data = {};
+            window.db.balance = 0;
+            window.db.joined_ids = [];
+
+            document.getElementById('drawer-guest').classList.add('guest-show');
+            document.getElementById('drawer-guest').classList.remove('guest-hidden');
+            document.getElementById('drawer-user').classList.add('guest-hidden');
+            document.getElementById('menu-logout').classList.add('guest-hidden');
+
+            document.getElementById('header-coins').innerText = "Login";
+            window.app.renderMatches();
+        }
     });
-  });
-}
 
-function refreshShop(){
-  coinAmtEl.textContent = coins;
-  for(const it of SHOP_ITEMS){
-    const el = shopItemEls[it.key].el;
-    if(coins >= it.price){
-      el.classList.add('afford');
-      el.classList.remove('locked');
-    } else {
-      el.classList.remove('afford');
-      el.classList.add('locked');
-    }
-  }
-}
+    // --- APP LOGIC ---
+    window.app = {
+        currentMatch: null, activeTab: 'upcoming', selectedCategory: 'All', tempImage: null,
+        selectedWithdrawMethod: null, recipientVerified: false, config: {},
+        
+        checkLogin: (callback) => {
+            if (window.db.user_uid) {
+                callback();
+            } else {
+                window.auth.showAuth();
+            }
+        },
 
-function updateShopTimers(){
-  for(const it of SHOP_ITEMS){
-    const ref = shopItemEls[it.key];
-    if(!ref || !player) continue;
-    const cur = player[it.stateKey] || 0;
-    const pct = Math.max(0, Math.min(100, cur / it.maxTime * 100));
-    ref.bar.style.width = pct + '%';
-    if(cur > 0) ref.el.classList.add('active-bought');
-    else ref.el.classList.remove('active-bought');
-  }
-}
+        init: async () => { 
+            await window.app.fetchConfig(); 
+            await window.app.fetchCategories();
+            await window.app.fetchMatches(); 
+            await window.app.fetchLeaderboard();
+            await window.app.fetchNotifications();
+            if(window.db.user_uid) await window.app.fetchTransactions();
+            
+            window.app.renderMatches(); window.app.renderWallet(); window.app.renderLB();
+            
+            window.timers.start();
+        },
 
-function buyItem(it){
-  if(state !== 'play') return;
-  if(coins < it.price) return;
-  coins -= it.price;
-  boughtCount++;
-  it.trigger();
+        fetchConfig: async () => { 
+            try { 
+                const docSnap = await getDoc(doc(dbService, "config", "banner")); 
+                if(docSnap.exists()) {
+                    const d = docSnap.data();
+                    window.app.config = d; // cache full config for openSupport / community / rules
+                    // Support both the old single "url" field and the new "urls" array.
+                    const urls = Array.isArray(d.urls) && d.urls.length ? d.urls : (d.url ? [d.url] : []);
+                    if (urls.length) window.app.setupBannerSlider(urls);
+                    if(d.notice && d.notice.trim() !== "") {
+                        document.getElementById('notice-text').innerText = d.notice;
+                        setTimeout(() => {
+                            window.ui.openModal('modal-notice');
+                        }, 2500);
+                    }
+                    if(d.appName && d.appName.trim() !== "") {
+                        document.title = d.appName;
+                        document.getElementById('header-app-title').innerText = d.appName;
+                        document.getElementById('auth-app-title').innerText = d.appName;
+                    }
+                    if(d.matchRules && d.matchRules.trim() !== "") {
+                        const list = document.getElementById('rules-list');
+                        list.innerHTML = d.matchRules.split('\n').filter(l => l.trim() !== "").map(l => `<li>${l.trim()}</li>`).join('');
+                    }
+                } 
+            } catch(e) {} 
+        },
 
-  const el = shopItemEls[it.key].el;
-  el.classList.remove('flash');
-  void el.offsetWidth;
-  el.classList.add('flash');
-  setTimeout(() => el.classList.remove('flash'), 560);
+        setupBannerSlider: (urls) => {
+            const slidesBox = document.getElementById('home-banner-slides');
+            const dotsBox = document.getElementById('home-banner-dots');
+            slidesBox.innerHTML = urls.map((u, i) => `
+                <img src="${u}" style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; opacity:${i===0?1:0}; transition: opacity 0.6s ease;">
+            `).join('');
+            dotsBox.innerHTML = urls.length > 1 ? urls.map((_, i) => `
+                <span style="width:${i===0?16:6}px; height:6px; border-radius:4px; background:rgba(255,255,255,${i===0?0.95:0.5}); transition:0.3s;"></span>
+            `).join('') : '';
 
-  coinsBoxEl.classList.remove('pop');
-  void coinsBoxEl.offsetWidth;
-  coinsBoxEl.classList.add('pop');
-  setTimeout(() => coinsBoxEl.classList.remove('pop'), 220);
+            if (window.app._bannerInterval) clearInterval(window.app._bannerInterval);
+            if (urls.length <= 1) return;
 
-  SFX.buy();
-  refreshShop();
-  updateShopTimers();
-}
+            let idx = 0;
+            window.app._bannerInterval = setInterval(() => {
+                const imgs = slidesBox.querySelectorAll('img');
+                const dots = dotsBox.querySelectorAll('span');
+                imgs[idx].style.opacity = 0;
+                if (dots[idx]) { dots[idx].style.width = '6px'; dots[idx].style.background = 'rgba(255,255,255,0.5)'; }
+                idx = (idx + 1) % imgs.length;
+                imgs[idx].style.opacity = 1;
+                if (dots[idx]) { dots[idx].style.width = '16px'; dots[idx].style.background = 'rgba(255,255,255,0.95)'; }
+            }, 4000);
+        },
 
-function buildColorPicker(){
-  colorRow.innerHTML = COLOR_OPTIONS.map(o =>
-    '<button class="swatch" data-hex="'+o.hex+'" data-rgb="'+o.rgb+'" '+
-    'style="background:'+o.hex+';color:'+o.hex+'" '+
-    'aria-label="'+o.hex+'"></button>'
-  ).join('');
-  colorRow.querySelectorAll('.swatch').forEach(sw => {
-    if(sw.dataset.rgb === playerColorRGB) sw.classList.add('active');
-    sw.addEventListener('click', (e) => {
-      e.stopPropagation();
-      playerColorHex = sw.dataset.hex;
-      playerColorRGB = sw.dataset.rgb;
-      localStorage.setItem('bcodgameColorHex', playerColorHex);
-      localStorage.setItem('bcodgameColorRGB', playerColorRGB);
-      colorRow.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
-      sw.classList.add('active');
-      updatePreview();
+        fetchNotifications: async () => {
+            const list = document.getElementById('notif-list-container');
+            const dot = document.getElementById('notif-dot');
+            try {
+                const q = query(collection(dbService, "notifications"), orderBy("timestamp", "desc"), limit(10));
+                const snap = await getDocs(q);
+                if(!snap.empty) {
+                    dot.style.display = 'block'; 
+                    list.innerHTML = "";
+                    snap.forEach(doc => {
+                        const n = doc.data();
+                        list.innerHTML += `
+                        <div class="notif-card">
+                            <div class="notif-title">${n.title}</div>
+                            <div class="notif-msg">${n.message}</div>
+                            <div class="notif-date">${n.date}</div>
+                        </div>`;
+                    });
+                } else {
+                    list.innerHTML = "<div style='text-align:center; padding:20px; color:#aaa;'>No notifications found</div>";
+                }
+            } catch (e) { list.innerHTML = "<div style='text-align:center; color:#aaa'>Failed to load</div>"; }
+        },
+
+        openNotifications: () => {
+            document.getElementById('notif-dot').style.display = 'none'; 
+            window.ui.openModal('modal-notifications');
+        },
+
+        fetchUserData: async () => {
+            try {
+                const snap = await getDoc(doc(dbService, "users", window.db.user_uid));
+                if(snap.exists()) {
+                    const d = snap.data(); window.db.user_data = d; window.db.balance = d.balance || 0; window.db.joined_ids = d.joined_matches || [];
+                    document.getElementById('drawer-bal').innerText = d.balance.toFixed(2);
+                    document.getElementById('drawer-game-name').innerText = d.gameName || "Not Set";
+                    document.getElementById('drawer-game-uid').innerText = d.gameUid || "---";
+                    document.getElementById('stat-played').innerText = d.matchesPlayed || 0;
+                    document.getElementById('stat-won').innerText = d.matchesWon || 0;
+                    document.getElementById('stat-earned').innerText = d.totalEarned || 0;
+                    document.querySelectorAll('.live-balance').forEach(el => el.innerText = window.db.balance.toFixed(2));
+                    const bUid = document.getElementById('badge-uid');
+                    if(d.isUidVerified) { bUid.classList.remove('unverified'); bUid.innerHTML='<i class="fa-solid fa-check-circle"></i> UID'; }
+                    if(d.gameName) document.getElementById('game-name').value = d.gameName;
+                    if(d.gameUid) document.getElementById('game-uid').value = d.gameUid;
+                    window.app.renderWallet();
+                }
+            } catch(e) {}
+        },
+
+        handleImageUpload: (input) => {
+            if(input.files && input.files[0]) {
+                const file = input.files[0];
+                if(file.size > 1024 * 50) return window.ui.toast("Image too large! Max 50KB");
+                const reader = new FileReader();
+                reader.onload = function(e) { document.getElementById('edit-profile-img').src = e.target.result; window.app.tempImage = e.target.result; }
+                reader.readAsDataURL(file);
+            }
+        },
+
+        saveProfile: async () => {
+             const d = window.db.user_data;
+             const appName = document.getElementById('edit-app-name').value.trim();
+             const gameName = document.getElementById('edit-game-name').value.trim();
+             const gameUid = document.getElementById('edit-game-uid').value.trim();
+             if(appName.length < 3) return window.ui.toast("App Name: 3-20 Chars");
+             
+             window.ui.toast("Saving Profile...");
+             try {
+                 const updates = {};
+                 if(appName && appName !== d.appName) {
+                     updates.appName = appName; 
+                     await updateProfile(authService.currentUser, { displayName: appName });
+                 }
+                 updates.gameName = gameName;
+                 if(!d.isUidVerified) updates.gameUid = gameUid;
+                 if(window.app.tempImage) updates.photoUrl = window.app.tempImage;
+                 await updateDoc(doc(dbService, "users", window.db.user_uid), updates);
+                 await window.app.fetchUserData();
+                 window.ui.closeModal(); window.ui.toast("Profile Updated!");
+             } catch(e) { window.ui.toast("Error Updating"); }
+        },
+
+        savePaymentSettings: async () => {
+             const method = document.getElementById('set-pay-method').value;
+             const name = document.getElementById('set-pay-name').value;
+             if(!method) return window.ui.toast("Add Number");
+             try {
+                 await updateDoc(doc(dbService, "users", window.db.user_uid), { paymentMethod: method, paymentName: name });
+                 window.ui.toast("Payment Info Saved"); window.ui.closeModal();
+             } catch(e) { window.ui.toast("Error Saving"); }
+        },
+
+        fetchCategories: async () => {
+            const container = document.getElementById('category-filters');
+            try {
+                const q = query(collection(dbService, "categories")); const snapshot = await getDocs(q); let cats = ["All"];
+                snapshot.forEach(doc => cats.push(doc.data().name));
+                if(cats.length === 1) cats = ["All", "CS-Ranked", "Battle Royale", "Ludo"];
+                container.innerHTML = "";
+                cats.forEach((cat, index) => { container.innerHTML += `<div class="${index===0?'filter-chip active':'filter-chip'}" onclick="window.app.filterCategory('${cat}', this)">${cat}</div>`; });
+            } catch(e) {}
+        },
+        filterCategory: (cat, el) => { document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active')); el.classList.add('active'); window.app.selectedCategory = cat; window.app.renderMatches(); },
+        
+        fetchMatches: async () => {
+            try {
+                const q = query(collection(dbService, "matches")); const querySnapshot = await getDocs(q); window.db.matches = [];
+                querySnapshot.forEach((doc) => { window.db.matches.push({ id: doc.id, ...doc.data() }); });
+                window.db.matches.sort((a,b) => {
+                    const timeA = a.startTime ? (a.startTime.seconds ? a.startTime.seconds * 1000 : new Date(a.startTime).getTime()) : 0;
+                    const timeB = b.startTime ? (b.startTime.seconds ? b.startTime.seconds * 1000 : new Date(b.startTime).getTime()) : 0;
+                    return timeA - timeB;
+                });
+            } catch (e) { document.getElementById('matches-container').innerHTML = '<div style="text-align:center; padding:20px; color:red;">Matches Error</div>'; }
+        },
+
+        renderMatches: () => {
+            const c = document.getElementById('matches-container'); let data = window.db.matches;
+            if(window.app.selectedCategory !== 'All') data = data.filter(m => m.type === window.app.selectedCategory);
+            if(data.length === 0) { c.innerHTML="<div style='text-align:center; padding:30px; opacity:0.5'>No Matches Found</div>"; return; }
+            c.innerHTML = "";
+            data.forEach(m => {
+                const p = (m.joined/m.total)*100; const full = m.joined >= m.total; const joined = window.db.joined_ids.includes(m.id);
+                const img = m.img || "https://placehold.co/600x300/1e293b/FFF?text=FF+Match"; 
+                let targetMs = 0;
+                let timeDisplay = "TBD";
+                if(m.startTime) { 
+                    if(m.startTime.seconds) { targetMs = m.startTime.seconds * 1000; } else { targetMs = new Date(m.startTime).getTime(); }
+                    timeDisplay = `<span class="countdown-timer" data-target="${targetMs}">Loading...</span>`; 
+                }
+                let btnAction = "";
+                if(joined) btnAction = ""; else if(full) btnAction = ""; else btnAction = `window.app.checkLogin(() => window.app.openJoin('${m.id}'))`; 
+                c.innerHTML += `
+                <div class="match-card">
+                    <div class="match-banner"><img src="${img}"><div class="card-badge badge-live">LIVE</div><div class="card-badge badge-type">${m.type||'Solo'} • ${m.map||'Bermuda'}</div><div class="match-info-overlay"><div class="match-title">${m.title}</div><div class="match-meta">${timeDisplay}</div></div></div>
+                    <div class="match-body"><div class="card-stats-grid"><div><div class="stat-val text-primary">${m.prize}</div><div class="stat-lbl">Win</div></div><div><div class="stat-val">${m.fee}</div><div class="stat-lbl">Fee</div></div><div><div class="stat-val">${m.total}</div><div class="stat-lbl">Slots</div></div></div><div class="progress-area"><div class="progress-bar"><div class="progress-fill" style="width:${p}%"></div></div><div class="prog-text"><span>${m.joined}/${m.total} Joined</span><span>${m.total-m.joined} Left</span></div></div><button class="btn-main" style="${full||joined?'background:#e2e8f0; color:#64748b; box-shadow:none;':''}" onclick="${btnAction}">${joined?'JOINED':full?'FULL':'JOIN NOW'}</button></div>
+                </div>`;
+            });
+            window.timers.tick();
+        },
+
+        renderMyMatches: () => {
+            const c = document.getElementById('my-matches-list'); c.innerHTML = "";
+            let data = window.app.activeTab === 'upcoming' ? window.db.matches.filter(m => window.db.joined_ids.includes(m.id)) : [];
+            if(window.app.activeTab === 'history') data = window.db.matches.filter(m => window.db.joined_ids.includes(m.id) && m.status === 'completed');
+            if(data.length === 0) { c.innerHTML = `<div style="text-align:center; padding:50px 20px; opacity:0.6;"><i class="fa-solid fa-ghost" style="font-size:3rem;"></i><p>No matches found</p></div>`; return; }
+            data.forEach(m => {
+                const img = m.img || "https://placehold.co/100x100/1e293b/FFF?text=Game"; const isCompleted = m.status === 'completed';
+                let bodyContent = isCompleted ? `<div class="result-box"><div class="winner-trophy"><i class="fa-solid fa-trophy"></i></div><div class="text-muted" style="font-size:0.8rem">WINNER</div><div class="winner-name">${m.winnerName || 'Pending'}</div><div class="prize-won">+${m.prize} Coins</div></div>` : (m.roomId && m.roomPass ? `<div class="room-box"><div class="text-success bold" style="margin-bottom:10px; font-size:0.8rem;"><i class="fa-solid fa-unlock"></i> Room Credentials</div><div class="room-creds"><div class="cred-item" onclick="window.ui.copy('${m.roomId}')"><span class="cred-label">Room ID</span><span class="cred-val">${m.roomId}</span><span class="btn-copy">COPY</span></div><div class="cred-item" onclick="window.ui.copy('${m.roomPass}')"><span class="cred-label">Password</span><span class="cred-val">${m.roomPass}</span><span class="btn-copy">COPY</span></div></div></div>` : `<div class="room-box"><div class="room-wait"><i class="fa-solid fa-lock" style="font-size:1.5rem; color:#cbd5e1;"></i><span>ID & Pass will appear here 10 mins before match.</span></div></div>`);
+                c.innerHTML += `<div class="mm-card"><div class="mm-header"><div class="mm-game-info"><img src="${img}" class="mm-thumb"><div class="mm-meta"><h4>${m.title}</h4><div class="text-muted" style="font-size:0.75rem">${m.time || 'Upcoming'}</div></div></div><span class="mm-status ${isCompleted?'st-completed':'st-upcoming'}">${isCompleted?'FINISHED':'JOINED'}</span></div>${bodyContent}</div>`;
+            });
+        },
+        renderWallet: () => {
+            document.getElementById('wallet-balance').innerText = parseFloat(window.db.balance).toFixed(2);
+            document.getElementById('header-coins').innerText = Math.floor(window.db.balance);
+            const c = document.getElementById('trx-list'); c.innerHTML = "";
+            if(window.db.trx.length===0) { c.innerHTML="<div style='text-align:center; padding:10px; color:#aaa'>No transactions</div>"; return; }
+            window.db.trx.forEach(t => {
+                let icon="fa-gamepad", box="icon-game", col="var(--text-main)";
+                if(t.type==='deposit'){ icon="fa-arrow-down"; box="icon-deposit"; col="var(--success)"; }
+                if(t.type==='withdraw'){ icon="fa-arrow-up"; box="icon-withdraw"; col="var(--danger)"; }
+                c.innerHTML += `<div class="trx-item"><div style="display:flex; align-items:center;"><div class="trx-icon-box ${box}"><i class="fa-solid ${icon}"></i></div><div><h4>${t.title}</h4><p class="text-muted" style="font-size:0.75rem">${t.date}</p></div></div><div style="text-align:right"><div style="font-weight:700; color:${col}">${t.amount}</div><span class="trx-status status-${t.status}">${t.status}</span></div></div>`;
+            });
+        },
+        fetchLeaderboard: async () => { try { const q = query(collection(dbService, "users"), orderBy("score", "desc"), limit(10)); const snap = await getDocs(q); window.db.leaderboard = []; snap.forEach(doc => { let d=doc.data(); window.db.leaderboard.push({ id: doc.id, name: d.appName || "User", score: d.score || 0, kills: d.kills || 0, img: d.photoUrl || `https://ui-avatars.com/api/?name=${d.appName}`, isMe: doc.id === window.db.user_uid }); }); } catch (e) {} },
+        renderLB: () => {
+            const podium = document.getElementById('lb-podium'); const list = document.getElementById('lb-list'); podium.innerHTML=""; list.innerHTML="";
+            if(window.db.leaderboard.length === 0) { list.innerHTML = "<div style='text-align:center; padding:20px; color:#aaa'>No Data Available</div>"; return; }
+            const data = window.db.leaderboard; const top3 = data.slice(0,3); const podiumOrder = [];
+            if(top3[1]) podiumOrder.push({p: top3[1], r: 2}); if(top3[0]) podiumOrder.push({p: top3[0], r: 1}); if(top3[2]) podiumOrder.push({p: top3[2], r: 3});
+            podiumOrder.forEach(item => { const p = item.p; const rank = item.r; podium.innerHTML += `<div class="podium-item podium-${rank}"><div class="crown" style="${rank===1?'':'display:none'}"><i class="fa-solid fa-crown"></i></div><div class="p-img-box"><img src="${p.img}"><div class="p-rank-badge">${rank}</div></div><div style="font-weight:700; margin-top:10px; font-size:0.9rem;">${p.name}</div><div class="text-primary bold">${p.score}</div></div>`; });
+            data.slice(3).forEach((p,i) => { list.innerHTML += `<div class="rank-item" ${p.isMe?'style="border:1px solid var(--primary); background:#eef2ff"':''}><div class="r-pos">${i+4}</div><img src="${p.img}" class="r-img"><div class="r-info"><div style="font-weight:600">${p.name} ${p.isMe?'(You)':''}</div><div style="font-size:0.75rem; color:#aaa">${p.kills} Kills</div></div><div style="text-align:right"><div class="r-val">${p.score}</div></div></div>`; });
+        },
+        fetchTransactions: async () => { try { const q = collection(dbService, "users", window.db.user_uid, "transactions"); const snap = await getDocs(q); window.db.trx = []; snap.forEach(doc => { window.db.trx.push(doc.data()); }); window.db.trx.reverse(); } catch(e) {} },
+        
+        openJoin: (id) => { 
+            window.app.currentMatch = window.db.matches.find(m=>m.id===id); const m = window.app.currentMatch;
+            document.getElementById('join-title').innerText = m.title; document.getElementById('join-fee').innerText = m.fee; document.getElementById('sum-type').innerText = m.type || "Solo"; document.getElementById('sum-map').innerText = m.map || "Bermuda"; document.getElementById('sum-prize').innerText = "৳" + m.prize;
+            const fee = parseFloat(m.fee); const btn = document.getElementById('btn-pay-join'); const balStatus = document.getElementById('join-bal-status');
+            if(window.db.balance < fee) { btn.disabled = true; btn.innerText = "Insufficient Balance"; balStatus.innerHTML = `Wallet: ৳${window.db.balance} <span class="bal-low">(Low)</span>`; } else { btn.disabled = false; btn.innerText = "Pay & Join"; balStatus.innerHTML = `Wallet: ৳${window.db.balance} <span class="bal-ok">(OK)</span>`; }
+            window.ui.openModal('modal-join'); 
+        },
+        confirmJoin: async () => {
+            const match = window.app.currentMatch; const fee = parseFloat(match.fee); const gameName = document.getElementById('game-name').value.trim(); const gameUid = document.getElementById('game-uid').value.trim(); const checkbox = document.getElementById('join-terms');
+            if(gameName.length < 3) return window.ui.toast("Name too short!"); if(!checkbox.checked) return window.ui.toast("Agree to rules!"); if(window.db.balance < fee) return window.ui.toast("Insufficient Balance!");
+            window.ui.toast("Processing...");
+            try {
+                await updateDoc(doc(dbService, "matches", match.id), { joined: match.joined + 1 });
+                await updateDoc(doc(dbService, "users", window.db.user_uid), { balance: window.db.balance - fee, joined_matches: arrayUnion(match.id), matchesPlayed: (window.db.user_data.matchesPlayed || 0) + 1, gameName: gameName, gameUid: gameUid });
+                await addDoc(collection(dbService, "users", window.db.user_uid, "transactions"), { title: `Joined ${match.title}`, amount: `-${fee}`, type: "game", status: "success", date: new Date().toLocaleDateString() });
+                window.ui.closeModal(); window.ui.toast("Joined Successfully!"); window.app.fetchUserData(); window.app.fetchMatches();
+            } catch(e) { window.ui.toast("Error: " + e.message); }
+        },
+        selectDepositMethod: (method) => {
+            window.app.selectedDepositMethod = method;
+            document.querySelectorAll('#dep-btn-bkash, #dep-btn-nagad').forEach(c => c.classList.remove('active'));
+            const num = method === 'bKash' ? (window.app.config.bkash || 'Not set by admin yet') : (window.app.config.nagad || 'Not set by admin yet');
+            document.getElementById('dep-number-display').innerText = num;
+            if(method === 'bKash') document.getElementById('dep-btn-bkash').classList.add('active');
+            if(method === 'Nagad') document.getElementById('dep-btn-nagad').classList.add('active');
+        },
+        deposit: async () => { 
+            const amt = document.getElementById('dep-amount').value; 
+            const trx = document.getElementById('dep-trx').value.trim();
+            const sender = document.getElementById('dep-sender').value.trim();
+            const method = window.app.selectedDepositMethod;
+            if(!method) return window.ui.toast("Select bKash or Nagad");
+            if(!amt) return window.ui.toast("Enter amount");
+            if(!sender) return window.ui.toast("Enter your sending number");
+            if(!trx) return window.ui.toast("TrxID is Required"); 
+            window.ui.toast("Processing..."); 
+            try { 
+                await addDoc(collection(dbService, "users", window.db.user_uid, "transactions"), { title: "Add Money Request", amount: `+${amt}`, type: "deposit", status: "pending", method: method, number: sender, trxId: trx, date: new Date().toLocaleDateString() }); 
+                document.getElementById('dep-form').classList.add('hidden');
+                document.getElementById('dep-success').classList.remove('hidden');
+                window.app.fetchTransactions(); 
+            } catch(e) { window.ui.toast("Error: " + e.message); } 
+        },
+        validateAmount: (el) => { if(el.value < 0) el.value = ""; },
+        selectMethod: (method) => {
+            window.app.selectedWithdrawMethod = method;
+            document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+            if(method === 'bKash') document.getElementById('btn-bkash').classList.add('active');
+            if(method === 'Nagad') document.getElementById('btn-nagad').classList.add('active');
+        },
+        verifyRecipient: async (uid) => {
+            const statusEl = document.getElementById('recipient-status');
+            window.app.recipientVerified = false;
+            if(uid.length < 5) { statusEl.innerHTML = ""; return; }
+            if(uid === window.db.user_uid) { statusEl.innerHTML = "<span class='text-danger'>Cannot send to self</span>"; return; }
+            statusEl.innerHTML = "<span class='text-muted'>Searching...</span>";
+            try {
+                const docRef = doc(dbService, "users", uid);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    statusEl.innerHTML = `<span class="text-success"><i class="fa-solid fa-circle-check"></i> Found: <b>${data.appName || "User"}</b></span>`;
+                    window.app.recipientVerified = true;
+                } else { statusEl.innerHTML = "<span class='text-danger'>Not found!</span>"; }
+            } catch(e) { statusEl.innerHTML = "<span class='text-danger'>Error</span>"; }
+        },
+        withdraw: async () => { 
+            const amt = document.getElementById('wd-amount').value; 
+            const num = document.getElementById('wd-number').value; 
+            const method = window.app.selectedWithdrawMethod;
+            if(!amt || !num) return window.ui.toast("Fill amount and number"); 
+            if(!method) return window.ui.toast("Select bKash or Nagad");
+            if(parseFloat(amt) < (window.app.config.minWithdraw || 100)) return window.ui.toast(`Min withdraw ${window.app.config.minWithdraw || 100} Tk`);
+            if(parseFloat(amt) > window.db.balance) return window.ui.toast("Insufficient Balance"); 
+            window.ui.toast("Processing..."); 
+            try { 
+                // Lock the funds immediately so the same balance can't be withdrawn twice.
+                // If the admin rejects the request, the amount is refunded back (see admin panel).
+                await updateDoc(doc(dbService, "users", window.db.user_uid), { balance: window.db.balance - parseFloat(amt) });
+                await addDoc(collection(dbService, "users", window.db.user_uid, "transactions"), { 
+                    title: `Withdraw (${method})`, amount: `-${amt}`, type: "withdraw", status: "pending", 
+                    number: num, method: method, date: new Date().toLocaleDateString() 
+                }); 
+                document.getElementById('wd-form').classList.add('hidden');
+                document.getElementById('wd-success').classList.remove('hidden');
+                window.app.fetchUserData(); window.app.fetchTransactions(); 
+            } catch(e) { window.ui.toast("Error: " + e.message); } 
+        },
+        transfer: async () => { 
+            const targetUid = document.getElementById('tr-uid').value.trim(); 
+            const amount = parseFloat(document.getElementById('tr-amount').value); 
+            const note = document.getElementById('tr-note').value.trim();
+            const pass = document.getElementById('tr-pass').value;
+            if(!targetUid || !amount || !pass) return window.ui.toast("Fill all fields");
+            if(!window.app.recipientVerified) return window.ui.toast("Invalid Receiver");
+            if(amount > window.db.balance) return window.ui.toast("Insufficient Balance"); 
+            if(!confirm(`Send ৳${amount}?`)) return;
+            window.ui.toast("Verifying..."); 
+            try { 
+                const user = authService.currentUser;
+                const cred = EmailAuthProvider.credential(user.email, pass);
+                await reauthenticateWithCredential(user, cred);
+                const receiverRef = doc(dbService, "users", targetUid);
+                const senderRef = doc(dbService, "users", window.db.user_uid);
+                const receiverSnap = await getDoc(receiverRef);
+                await updateDoc(senderRef, { balance: window.db.balance - amount }); 
+                await updateDoc(receiverRef, { balance: (receiverSnap.data().balance || 0) + amount }); 
+                await addDoc(collection(dbService, "users", window.db.user_uid, "transactions"), { 
+                    title: `Sent to ${receiverSnap.data().appName}`, amount: `-${amount}`, type: "withdraw", status: "success", note: note, date: new Date().toLocaleDateString() 
+                });
+                await addDoc(collection(dbService, "users", targetUid, "transactions"), { 
+                    title: `Received from ${window.db.user_name}`, amount: `+${amount}`, type: "deposit", status: "success", note: note, date: new Date().toLocaleDateString() 
+                });
+                window.ui.closeModal(); window.ui.toast("Transfer Successful!"); 
+                window.app.fetchUserData(); window.app.fetchTransactions(); 
+            } catch (e) { window.ui.toast("Failed: " + e.message); } 
+        },
+        openSupport: () => {
+            const num = (window.app.config.helpWhatsapp || '8801700000000').replace(/[^0-9]/g, '');
+            window.open(`https://wa.me/${num}?text=Hello%20Help%20Needed`, '_blank');
+        },
+        openCommunity: () => {
+            const link = window.app.config.communityLink;
+            if (link) window.open(link, '_blank');
+            else window.ui.toast('Community link not set yet');
+        },
+        switchTab: (t,e) => { window.app.activeTab = t; document.querySelectorAll('.mm-tab').forEach(x=>x.classList.remove('active')); e.classList.add('active'); window.app.renderMyMatches(); }
+    };
+
+    window.ui = {
+        toggleDrawer: (skipHistory = false) => {
+            const el = document.getElementById('drawer-wrapper');
+            const isActive = el.classList.contains('drawer-active');
+            if(!isActive && !skipHistory) history.pushState({drawer: true}, null, '#menu');
+            else if(isActive && !skipHistory) { history.back(); return; }
+            el.classList.toggle('drawer-active');
+        },
+        openModal: (id) => {
+            const d = window.db.user_data;
+            if(id==='modal-edit-profile') {
+                document.getElementById('edit-app-name').value = d.appName || ""; document.getElementById('edit-game-name').value = d.gameName || ""; document.getElementById('edit-game-uid').value = d.gameUid || ""; document.getElementById('edit-profile-img').src = d.photoUrl || `https://ui-avatars.com/api/?name=${d.appName}`;
+                const uidInput = document.getElementById('edit-game-uid'); const uidStatus = document.getElementById('uid-status-icon');
+                if(d.isUidVerified) { uidInput.disabled = true; uidStatus.innerHTML = '<span class="verified-check"><i class="fa-solid fa-circle-check"></i> Verified</span>'; } else { uidInput.disabled = false; uidStatus.innerHTML = ''; }
+                const left = d.nameChangesLeft !== undefined ? d.nameChangesLeft : 2; document.getElementById('changes-left-count').innerText = left; if(left <= 0) document.getElementById('edit-app-name').disabled = true;
+            }
+            if(id === 'modal-settings') { document.getElementById('set-pay-method').value = d.paymentMethod || ""; document.getElementById('set-pay-name').value = d.paymentName || ""; }
+            if(id === 'modal-deposit') {
+                document.getElementById('dep-form').classList.remove('hidden'); document.getElementById('dep-success').classList.add('hidden');
+                document.getElementById('dep-amount').value = ""; document.getElementById('dep-sender').value = ""; document.getElementById('dep-trx').value = "";
+                window.app.selectedDepositMethod = null; document.getElementById('dep-number-display').innerText = "Select a method above";
+                document.querySelectorAll('#dep-btn-bkash, #dep-btn-nagad').forEach(c => c.classList.remove('active'));
+            }
+            if(id === 'modal-withdraw') {
+                document.getElementById('wd-form').classList.remove('hidden'); document.getElementById('wd-success').classList.add('hidden');
+                document.getElementById('wd-amount').value = ""; document.getElementById('wd-number').value = "";
+                window.app.selectedWithdrawMethod = null;
+                document.querySelectorAll('#btn-bkash, #btn-nagad').forEach(c => c.classList.remove('active'));
+            }
+            history.pushState({modal: id}, null, '#'+id); document.getElementById(id).classList.add('active');
+        },
+        closeModal: (skipHistory = false) => {
+            const active = document.querySelector('.modal-wrap.active');
+            if(active) { active.classList.remove('active'); if(!skipHistory) history.back(); }
+        },
+        toast: (m) => { const t=document.getElementById('toast'); document.getElementById('toast-msg').innerText=m; t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000); },
+        copy: (t) => { navigator.clipboard.writeText(t); window.ui.toast('Copied!'); }
+    };
+    
+    // UPDATED: Nav Logic to ensure header comes back
+    window.nav = { 
+        goto: (p,e) => { 
+            if(document.getElementById('page-'+p).classList.contains('hidden') === false) return;
+            history.pushState({page: p}, null, '#'+p); window.nav.renderPage(p); 
+        },
+        renderPage: (p) => {
+            document.querySelectorAll('.page-section').forEach(d=>d.classList.add('hidden')); 
+            document.getElementById('page-'+p).classList.remove('hidden'); 
+            document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active')); 
+            const navLabels = {'home':0, 'matches':1, 'leaderboard':2, 'wallet':3}; 
+            if(navLabels[p] !== undefined) document.querySelectorAll('.nav-item')[navLabels[p]].classList.add('active');
+            if(p=='matches' && window.app.renderMyMatches) window.app.renderMyMatches();
+            
+            // UPDATED: Reset Header Position when changing pages
+            document.querySelector('header').style.transform = 'translateY(0)';
+        }
+    };
+
+    // HISTORY INIT
+    window.historyManager = {
+        init: () => {
+            history.replaceState({page: 'home'}, null, window.location.pathname);
+            window.addEventListener('popstate', (event) => {
+                const state = event.state;
+                const activeModal = document.querySelector('.modal-wrap.active');
+                if (activeModal) { ui.closeModal(true); return; }
+                const drawer = document.getElementById('drawer-wrapper');
+                if (drawer.classList.contains('drawer-active')) { ui.toggleDrawer(true); return; }
+                if (state && state.page) { window.nav.renderPage(state.page); } else { window.nav.renderPage('home'); }
+            });
+        }
+    };
+
+    // UPDATED: Scroll Logic to Hide/Show Header
+    document.addEventListener("DOMContentLoaded", () => {
+        const header = document.querySelector('header');
+        const sections = document.querySelectorAll('.page-section');
+        
+        sections.forEach(section => {
+            let lastScrollTop = 0;
+            section.addEventListener('scroll', function() {
+                let currentScroll = this.scrollTop;
+                // Add a little buffer so small movements don't jitter
+                if (Math.abs(lastScrollTop - currentScroll) <= 5) return;
+
+                if (currentScroll > lastScrollTop && currentScroll > 60) {
+                    // Scroll Down
+                    header.style.transform = 'translateY(-100%)';
+                } else {
+                    // Scroll Up
+                    header.style.transform = 'translateY(0)';
+                }
+                lastScrollTop = currentScroll;
+            });
+        });
     });
-  });
-  updatePreview();
-}
-function updatePreview(){
-  previewEl.style.color = playerColorHex;
-  previewEl.style.textShadow = '0 0 14px ' + playerColorHex;
-}
 
-const EFFECTS_CONFIG = [
-  { key:'chaos',   color:'#fbbf24', get:()=>player.chaos },
-  { key:'freeze',  color:'#dbeafe', get:()=>player.freeze },
-  { key:'shield',  color:'#22d3ee', get:()=>player.shield },
-  { key:'slow',    color:'#10b981', get:()=>player.slow },
-  { key:'unlim',   color:'#a855f7', get:()=>player.unlimited },
-  { key:'magnet',  color:'#ec4899', get:()=>player.magnet },
-  { key:'double',  color:'#f97316', get:()=>player.double }
-];
-let effEls = {};
-function buildEffectsUI(){
-  effectsEl.innerHTML = EFFECTS_CONFIG.map(e =>
-    '<div class="eff" data-k="'+e.key+'" style="color:'+e.color+'"></div>'
-  ).join('');
-  effEls = {};
-  EFFECTS_CONFIG.forEach(e => {
-    effEls[e.key] = effectsEl.querySelector('[data-k="'+e.key+'"]');
-  });
-}
-function updateEffectsUI(){
-  for(const e of EFFECTS_CONFIG){
-    const el = effEls[e.key];
-    const val = e.get();
-    if(val > 0){
-      const n = Math.ceil(val);
-      if(el.textContent !== String(n)) el.textContent = n;
-      if(!el.classList.contains('on')) el.classList.add('on');
-    } else {
-      if(el.classList.contains('on')) el.classList.remove('on');
-    }
-  }
-}
+    window.historyManager.init();
+    window.app.init();
 
-let actx=null;
-function initAudio(){
-  if(!actx){ try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){} }
-  if(actx && actx.state==='suspended') actx.resume();
-}
-function tone(f,d,type,vol,to){
-  if(!actx) return;
-  const o=actx.createOscillator(),g=actx.createGain();
-  o.type=type||'sine'; o.frequency.value=f;
-  if(to) o.frequency.exponentialRampToValueAtTime(to, actx.currentTime+d);
-  g.gain.setValueAtTime(vol||.035, actx.currentTime);
-  g.gain.exponentialRampToValueAtTime(.0001, actx.currentTime+d);
-  o.connect(g); g.connect(actx.destination);
-  o.start(); o.stop(actx.currentTime+d);
-}
-const SFX = {
-  pulse(){ tone(900,.28,'sine',.03,340); },
-  collect(){ tone(1500,.07,'sine',.028); },
-  goal(){ [880, 1100, 1320, 1650].forEach((f,i)=>
-    setTimeout(()=>tone(f,.16,'triangle',.05), i*60)); },
-  buy(){ [700,900,1200,1600].forEach((f,i)=>
-    setTimeout(()=>tone(f,.14,'triangle',.05),i*55)); },
-  hit(){ tone(160,.35,'sine',.05,80); },
-  shield(){ tone(700,.25,'sine',.05,1400);
-    setTimeout(()=>tone(1400,.3,'sine',.04,1800),80); },
-  unlim(){ [800,1100,1400,1700].forEach((f,i)=>
-    setTimeout(()=>tone(f,.2,'triangle',.05),i*70)); },
-  slow(){ [900,700,500].forEach((f,i)=>
-    setTimeout(()=>tone(f,.3,'sine',.05),i*80)); },
-  magnet(){ [600,800,1000].forEach((f,i)=>
-    setTimeout(()=>tone(f,.2,'sine',.045),i*60)); },
-  double(){ [700,900,1200,1600,2000].forEach((f,i)=>
-    setTimeout(()=>tone(f,.15,'triangle',.045),i*50)); },
-  freeze(){ tone(1400,.4,'sine',.05,200);
-    setTimeout(()=>tone(2200,.3,'sine',.04,600),80); },
-  block(){ tone(500,.2,'sine',.05,900); },
-  chaos(){ tone(400,.5,'sine',.05,1600);
-    setTimeout(()=>tone(900,.4,'sine',.045,2000),100); },
-  smash(){ tone(1200,.15,'sine',.05,300); },
-  over(){ [500,400,320,240].forEach((f,i)=>setTimeout(()=>tone(f,.4,'sine',.035),i*180)); }
-};
-
-let state = 'menu';
-let player;
-let predators, plankton;
-let superPoints, shieldPoints, unlimPoints, slowPoints, magnetPoints, doublePoints, freezePoints;
-let pulses, particles, dust;
-let score, best, lives, level, collected, depth;
-let coins, boughtCount, coinTimer;
-let streak, cooldownTimer;
-let shake, time;
-let spawnP, spawnPl, spawnSpecial;
-let pickupQueue = [];
-let chaosTotal, unlimTotal;
-let lastTime = 0;
-let keys = {left:false,right:false};
-let pointerActive = false, pointerX = 0;
-
-best = Number(localStorage.getItem('bcodgameBest'))||0;
-bestEl.textContent = best;
-
-function shuffleQueue(){
-  pickupQueue = ['super','shield','unlim','slow','magnet','double','freeze'];
-  for(let i=pickupQueue.length-1;i>0;i--){
-    const j = Math.floor(Math.random()*(i+1));
-    [pickupQueue[i], pickupQueue[j]] = [pickupQueue[j], pickupQueue[i]];
-  }
-}
-function spawnNextSpecial(){
-  if(pickupQueue.length === 0) shuffleQueue();
-  const type = pickupQueue.pop();
-  switch(type){
-    case 'super':  makePickup(superPoints, 45, 12); break;
-    case 'shield': makePickup(shieldPoints, 50, 11); break;
-    case 'unlim':  makePickup(unlimPoints, 50, 11); break;
-    case 'slow':   makePickup(slowPoints, 48, 11); break;
-    case 'magnet': makePickup(magnetPoints, 48, 11); break;
-    case 'double': makePickup(doublePoints, 46, 11); break;
-    case 'freeze': makePickup(freezePoints, 52, 11); break;
-  }
-}
-function makePickup(arr, vy, r){
-  arr.push({
-    x: 90+Math.random()*(W-180), y: -50,
-    vy: vy||50, r: r||11,
-    phase: Math.random()*6.28, rot: 0
-  });
-}
-
-function initGame(){
-  player = {x:W/2, y:H-140, targetX:W/2, size:22, tentaclePhase:0,
-    energy:1, hitCooldown:0, trail:[],
-    chaos:0, shield:0, unlimited:0, slow:0, magnet:0, double:0, freeze:0};
-  predators = []; plankton = [];
-  superPoints = []; shieldPoints = []; unlimPoints = [];
-  slowPoints = []; magnetPoints = []; doublePoints = []; freezePoints = [];
-  pulses = []; particles = []; dust = [];
-  score = 0; lives = 3; level = 1; collected = 0; depth = 0;
-  coins = 15;
-  boughtCount = 0;
-  coinTimer = 0;
-  streak = 0; cooldownTimer = 0;
-  shake = 0; time = 0; spawnP = 50; spawnPl = 30;
-  spawnSpecial = 4;
-  chaosTotal = 4.0;
-  unlimTotal = 6.0;
-  shuffleQueue();
-  pointerX = W/2; pointerActive = false;
-  for(let i=0;i<40;i++) dust.push(makeDust());
-  updateHUD(); updateEnergy(); updateEffectsUI(); refreshShop(); updateShopTimers();
-  chaosLine.classList.remove('show');
-  unlimLine.classList.remove('show');
-}
-function makeDust(){
-  return {x:Math.random()*W, y:Math.random()*H,
-    size:.5+Math.random()*1.2,
-    vy:5+Math.random()*15, vx:(Math.random()-.5)*6,
-    alpha:.1+Math.random()*.35, phase:Math.random()*6.28};
-}
-function addCoins(n){
-  coins += n;
-  if(coinAmtEl.textContent !== String(coins)){
-    coinAmtEl.textContent = coins;
-    coinsBoxEl.classList.remove('pop');
-    void coinsBoxEl.offsetWidth;
-    coinsBoxEl.classList.add('pop');
-    setTimeout(()=>coinsBoxEl.classList.remove('pop'), 200);
-  }
-  refreshShop();
-}
-function updateHUD(){
-  const is = Math.floor(score);
-  if(scoreEl.textContent !== String(is)){
-    scoreEl.textContent = is;
-    scoreEl.classList.remove('pop'); void scoreEl.offsetWidth;
-    scoreEl.classList.add('pop');
-    setTimeout(()=>scoreEl.classList.remove('pop'), 180);
-  }
-  bestEl.textContent = best;
-  livesEl.innerHTML = '';
-  for(let i=0;i<3;i++){
-    const l = document.createElement('div');
-    l.className = 'life' + (i<lives?'':' dead');
-    livesEl.appendChild(l);
-  }
-}
-function updateEnergy(){
-  if(player.unlimited > 0){
-    energyFill.style.width = '100%';
-    energyFill.classList.remove('low');
-    energyFill.classList.add('unlimited');
-  } else {
-    energyFill.style.width = (player.energy*100)+'%';
-    energyFill.classList.toggle('low', player.energy < 0.34 && player.chaos<=0);
-    energyFill.classList.remove('unlimited');
-  }
-}
-
-function spawnPredator(){
-  const hidden = Math.random() < Math.min(0.80, 0.55 + level*0.03);
-  const big = Math.random() < .14;
-  const r = big ? 36+Math.random()*16 : 16+Math.random()*12;
-  predators.push({
-    x:40+Math.random()*(W-80), y:-60,
-    vy:55+Math.random()*40+level*9, vx:(Math.random()-.5)*24,
-    size:r, big, hidden, reveal:0,
-    angle:Math.random()*6.28, rot:(Math.random()-.5)*2,
-    pushVx:0, pushVy:0, wobble:Math.random()*6.28
-  });
-}
-function spawnPlankton(){
-  const cluster = Math.random() < .4;
-  if(cluster){
-    const cx = 80+Math.random()*(W-160);
-    const n = 3+Math.floor(Math.random()*3);
-    for(let i=0;i<n;i++) plankton.push(makePlank(cx+(Math.random()-.5)*60, -20-i*20));
-  } else {
-    plankton.push(makePlank(50+Math.random()*(W-100), -20));
-  }
-}
-function makePlank(x,y){
-  return {x,y,
-    vy:40+Math.random()*25, vx:(Math.random()-.5)*12,
-    size:3+Math.random()*2, phase:Math.random()*6.28, px:0, py:0};
-}
-
-function triggerChaos(){
-  player.chaos = Math.min(player.chaos + 4.0, 12);
-  player.energy = 1;
-  SFX.chaos(); shake = .5;
-  for(let i=0;i<60;i++){
-    const a=Math.random()*6.28, sp=3+Math.random()*8;
-    particles.push({x:player.x,y:player.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,
-      life:1.4,size:3+Math.random()*2,hue:GOLD});
-  }
-  pulses.push({x:player.x,y:player.y,r:14,maxR:700,speed:900,life:1,chaos:true});
-  chaosLine.classList.add('show');
-  updateEnergy();
-}
-function triggerShield(){
-  player.shield = Math.min(player.shield + 8.0, 24);
-  SFX.shield();
-  for(let i=0;i<40;i++){
-    const a=Math.random()*6.28, sp=2+Math.random()*5;
-    particles.push({x:player.x,y:player.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,
-      life:1.3,size:2+Math.random()*2,hue:CYAN});
-  }
-  pulses.push({x:player.x,y:player.y,r:14,maxR:380,speed:620,life:1,shield:true});
-}
-function triggerUnlimited(){
-  player.unlimited = Math.min(player.unlimited + 6.0, 20);
-  player.energy = 1;
-  SFX.unlim(); shake = .35;
-  for(let i=0;i<50;i++){
-    const a=Math.random()*6.28, sp=2+Math.random()*6;
-    particles.push({x:player.x,y:player.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,
-      life:1.4,size:2+Math.random()*3,hue:PURPLE});
-  }
-  pulses.push({x:player.x,y:player.y,r:14,maxR:450,speed:700,life:1,unlim:true});
-  unlimLine.classList.add('show');
-  updateEnergy();
-}
-function triggerSlow(){
-  player.slow = Math.min(player.slow + 5.0, 15);
-  SFX.slow();
-  for(let i=0;i<36;i++){
-    const a=Math.random()*6.28, sp=1.5+Math.random()*4;
-    particles.push({x:player.x,y:player.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,
-      life:1.6,size:2+Math.random()*2,hue:EMER});
-  }
-  pulses.push({x:player.x,y:player.y,r:14,maxR:520,speed:500,life:1,slow:true});
-}
-function triggerMagnet(){
-  player.magnet = Math.min(player.magnet + 8.0, 24);
-  SFX.magnet();
-  for(let i=0;i<36;i++){
-    const a=Math.random()*6.28, sp=1.5+Math.random()*4;
-    particles.push({x:player.x,y:player.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,
-      life:1.4,size:2+Math.random()*2,hue:PINK});
-  }
-  pulses.push({x:player.x,y:player.y,r:14,maxR:460,speed:600,life:1,magnet:true});
-}
-function triggerDouble(){
-  player.double = Math.min(player.double + 10.0, 30);
-  SFX.double(); shake = .25;
-  for(let i=0;i<36;i++){
-    const a=Math.random()*6.28, sp=2+Math.random()*5;
-    particles.push({x:player.x,y:player.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,
-      life:1.4,size:2+Math.random()*2,hue:ORANGE});
-  }
-  pulses.push({x:player.x,y:player.y,r:14,maxR:400,speed:650,life:1,dbl:true});
-}
-function triggerFreeze(){
-  player.freeze = Math.min(player.freeze + 2.5, 8);
-  SFX.freeze(); shake = .4;
-  for(let i=0;i<60;i++){
-    const a=Math.random()*6.28, sp=3+Math.random()*7;
-    particles.push({x:player.x,y:player.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,
-      life:1.5,size:2+Math.random()*2,hue:ICE});
-  }
-  pulses.push({x:player.x,y:player.y,r:14,maxR:900,speed:1200,life:1,ice:true});
-}
-
-function emitPulse(){
-  if(state !== 'play') return;
-  const chaos = player.chaos > 0;
-  const unlim = player.unlimited > 0;
-  if(!chaos && !unlim && player.energy < .34) return;
-  if(!chaos && !unlim) player.energy = Math.max(0, player.energy - .34);
-  const maxR = chaos ? 520 + level*10 : 300 + level*8;
-  pulses.push({x:player.x, y:player.y, r:14,
-    maxR:maxR, speed: chaos?720:540, life:1, chaos: chaos});
-  SFX.pulse();
-  const n = chaos ? 18 : 10;
-  for(let i=0;i<n;i++){
-    const a = (i/n)*6.28;
-    particles.push({
-      x:player.x, y:player.y,
-      vx:Math.cos(a)*(chaos?7:4), vy:Math.sin(a)*(chaos?7:4),
-      life:1, size: chaos?3:2,
-      hue: chaos ? GOLD : (unlim ? PURPLE : playerColorRGB)
-    });
-  }
-  updateEnergy();
-}
-
-function isUI(target){
-  if(!target || !target.closest) return false;
-  return !!(target.closest('.shop') ||
-            target.closest('.overlay') ||
-            target.closest('.btn') ||
-            target.closest('.swatch') ||
-            target.closest('.color-picker'));
-}
-
-addEventListener('keydown', e=>{
-  if(e.code==='Space'){ e.preventDefault();
-    if(state!=='play'){ startGame(); return; }
-    emitPulse();
-  }
-  if(e.key==='ArrowLeft'||e.key==='a') keys.left=true;
-  if(e.key==='ArrowRight'||e.key==='d') keys.right=true;
-});
-addEventListener('keyup', e=>{
-  if(e.key==='ArrowLeft'||e.key==='a') keys.left=false;
-  if(e.key==='ArrowRight'||e.key==='d') keys.right=false;
-});
-
-function setPtr(x){ pointerActive=true; pointerX=x; }
-
-addEventListener('mousemove', e=>{
-  if(isUI(e.target)) return;
-  setPtr(e.clientX);
-});
-addEventListener('mousedown', e=>{
-  if(isUI(e.target)) return;
-  if(state==='play') emitPulse();
-});
-
-addEventListener('touchstart', e=>{
-  if(isUI(e.target)) return;
-  if(e.touches.length) setPtr(e.touches[0].clientX);
-  if(state==='play') emitPulse();
-}, {passive:false});
-addEventListener('touchmove', e=>{
-  if(isUI(e.target)) return;
-  e.preventDefault();
-  if(e.touches.length) setPtr(e.touches[0].clientX);
-}, {passive:false});
-
-function update(dt){
-  time += dt;
-
-  for(const d of dust){
-    d.y += d.vy*dt;
-    d.x += d.vx*dt + Math.sin(time + d.phase)*4*dt;
-    d.phase += dt*1.5;
-    if(d.y > H+10){ d.y=-10; d.x=Math.random()*W; }
-  }
-  for(let i=particles.length-1;i>=0;i--){
-    const p = particles[i];
-    p.x += p.vx*dt*60; p.y += p.vy*dt*60;
-    p.vx *= .94; p.vy *= .94;
-    p.life -= dt*1.6;
-    if(p.life<=0) particles.splice(i,1);
-  }
-
-  if(state !== 'play'){ if(shake>0) shake -= dt*2; return; }
-  if(shake>0) shake -= dt*2;
-  if(player.hitCooldown>0) player.hitCooldown -= dt;
-
-  // ── কুলডাউন টাইমার (কোনো লেখা নেই) ──
-  if(cooldownTimer > 0){
-    cooldownTimer -= dt;
-    if(cooldownTimer < 0) cooldownTimer = 0;
-  }
-
-  coinTimer -= dt;
-  if(coinTimer <= 0){
-    addCoins(1);
-    coinTimer = 3;
-  }
-
-  if(player.chaos > 0){
-    player.chaos -= dt;
-    chaosFill.style.width = Math.min(100, player.chaos / chaosTotal * 100) + '%';
-    if(player.chaos <= 0){ player.chaos = 0; chaosLine.classList.remove('show'); }
-  }
-  if(player.shield > 0){ player.shield -= dt; if(player.shield<0) player.shield=0; }
-  if(player.unlimited > 0){
-    player.unlimited -= dt;
-    unlimFill.style.width = Math.min(100, player.unlimited / unlimTotal * 100) + '%';
-    if(player.unlimited <= 0){ player.unlimited = 0; unlimLine.classList.remove('show'); }
-  }
-  if(player.slow > 0){ player.slow -= dt; if(player.slow<0) player.slow=0; }
-  if(player.magnet > 0){ player.magnet -= dt; if(player.magnet<0) player.magnet=0; }
-  if(player.double > 0){ player.double -= dt; if(player.double<0) player.double=0; }
-  if(player.freeze > 0){ player.freeze -= dt; if(player.freeze<0) player.freeze=0; }
-
-  updateEffectsUI();
-  updateShopTimers();
-
-  if(player.chaos > 0 || player.unlimited > 0) player.energy = 1;
-  else player.energy = Math.min(1, player.energy + dt*.42);
-  updateEnergy();
-
-  if(pointerActive) player.targetX = pointerX;
-  else {
-    if(keys.left) player.targetX -= 620*dt;
-    if(keys.right) player.targetX += 620*dt;
-  }
-  player.targetX = Math.max(50, Math.min(W-50, player.targetX));
-  player.x += (player.targetX - player.x) * Math.min(dt*14, 1);
-  player.tentaclePhase += dt*3.5;
-
-  player.trail.unshift({x:player.x, y:player.y, life:.4});
-  if(player.trail.length>12) player.trail.pop();
-  for(let i=player.trail.length-1;i>=0;i--){
-    player.trail[i].life -= dt;
-    if(player.trail[i].life <= 0) player.trail.splice(i,1);
-  }
-
-  spawnP -= dt*60;
-  if(spawnP<=0){ spawnPredator(); spawnP = Math.max(24, 72-level*4) + Math.random()*22; }
-  spawnPl -= dt*60;
-  if(spawnPl<=0){ spawnPlankton(); spawnPl = Math.max(30, 90-level*3) + Math.random()*40; }
-
-  spawnSpecial -= dt;
-  if(spawnSpecial <= 0){
-    spawnNextSpecial();
-    spawnSpecial = 9 + Math.random()*5;
-  }
-
-  for(let i=pulses.length-1;i>=0;i--){
-    const p = pulses[i];
-    p.r += p.speed*dt; p.life -= dt*.9;
-    if(p.life<=0 || p.r>p.maxR) pulses.splice(i,1);
-  }
-
-  depth += dt*.9;
-
-  const hitR = player.size*.85;
-  const chaos = player.chaos > 0;
-  const scoreMul = player.double > 0 ? 2 : 1;
-  const tScale = player.freeze > 0 ? 0 : (player.slow > 0 ? 0.35 : 1);
-
-  function tryPickup(arr, triggerFn){
-    for(let i=arr.length-1;i>=0;i--){
-      const sp = arr[i];
-      sp.phase += dt*3;
-      sp.rot += dt*1.5;
-      sp.y += sp.vy*dt;
-      for(const p of pulses){
-        const dx=sp.x-p.x, dy=sp.y-p.y;
-        const d=Math.hypot(dx,dy);
-        if(d < p.r && d>0.1){
-          const pull = (1-d/p.r)*400;
-          sp.x += dx/d*pull*dt; sp.y += dy/d*pull*dt;
-        }
-      }
-      const dx=player.x-sp.x, dy=player.y-sp.y;
-      const d=Math.hypot(dx,dy);
-      if(d < hitR + sp.r + 16){ triggerFn(); arr.splice(i,1); continue; }
-      if(sp.y > H+40) arr.splice(i,1);
-    }
-  }
-  tryPickup(superPoints, triggerChaos);
-  tryPickup(shieldPoints, triggerShield);
-  tryPickup(unlimPoints, triggerUnlimited);
-  tryPickup(slowPoints, triggerSlow);
-  tryPickup(magnetPoints, triggerMagnet);
-  tryPickup(doublePoints, triggerDouble);
-  tryPickup(freezePoints, triggerFreeze);
-
-  for(let i=predators.length-1;i>=0;i--){
-    const pr = predators[i];
-    pr.wobble += dt*4*tScale;
-    pr.angle += pr.rot*dt*tScale;
-    pr.y += (pr.vy + pr.pushVy)*dt*tScale;
-    pr.x += (pr.vx + pr.pushVx + Math.sin(pr.wobble)*12)*dt*tScale;
-    pr.pushVx *= .9; pr.pushVy *= .9;
-    if(pr.reveal>0) pr.reveal -= dt;
-
-    for(const p of pulses){
-      const dx = pr.x-p.x, dy = pr.y-p.y;
-      const d = Math.hypot(dx,dy);
-      if(Math.abs(d-p.r)<42 && d>.1){
-        const force = (1-p.r/p.maxR)*(p.chaos?1500:900);
-        pr.pushVx += (dx/d)*force*dt;
-        pr.pushVy += (dy/d)*force*dt;
-        if(pr.hidden) pr.reveal = 1.4;
-      }
-    }
-
-    const dx = pr.x-player.x, dy = pr.y-player.y;
-    const d = Math.hypot(dx,dy);
-    const colR = hitR + pr.size*.85;
-
-    if(d < colR){
-      if(chaos){
-        score += 50 * scoreMul;
-        addCoins(4);
-        SFX.smash(); shake = .35;
-        for(let j=0;j<20;j++){
-          const a=Math.random()*6.28, sp=2+Math.random()*6;
-          particles.push({x:pr.x,y:pr.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,
-            life:1.2,size:2+Math.random()*2,hue:Math.random()<0.5?GOLD:DANGER});
-        }
-        predators.splice(i,1);
-        updateHUD();
-        continue;
-      } else if(player.shield > 0){
-        player.shield = 0;
-        player.hitCooldown = 0.8;
-        SFX.block(); shake = .3;
-        for(let j=0;j<26;j++){
-          const a=Math.random()*6.28, sp=3+Math.random()*5;
-          particles.push({x:player.x,y:player.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,
-            life:1.2,size:2.5,hue:CYAN});
-        }
-        pr.pushVx += (dx/(d||1))*700;
-        pr.pushVy += (dy/(d||1))*700;
-        score += 15 * scoreMul;
-        updateHUD();
-      } else if(player.hitCooldown<=0){
-        player.hitCooldown = 1.5;
-        lives--; shake = .45;
-        SFX.hit();
-
-        // ── স্ট্রিক ও কুলডাউন রিসেট ──
-        streak = 0;
-        cooldownTimer = 0;
-
-        for(let j=0;j<20;j++){
-          const a=Math.random()*6.28;
-          particles.push({x:player.x,y:player.y,vx:Math.cos(a)*5,vy:Math.sin(a)*5,
-            life:1,size:2.5,hue:DANGER});
-        }
-        pr.pushVx += (dx/(d||1))*500;
-        pr.pushVy += (dy/(d||1))*500;
-        updateHUD();
-        if(lives<=0){ endGame(); return; }
-      }
-    }
-
-    if(pr.y > H+80 || pr.y < -300 || pr.x < -150 || pr.x > W+150){
-      if(pr.y > H+40) score += 8 * scoreMul;
-      predators.splice(i,1);
-    }
-  }
-
-  for(let i=plankton.length-1;i>=0;i--){
-    const pl = plankton[i];
-    pl.phase += dt*4;
-    pl.y += pl.vy*dt; pl.x += pl.vx*dt;
-
-    for(const p of pulses){
-      const pdx=pl.x-p.x, pdy=pl.y-p.y;
-      const pd=Math.hypot(pdx,pdy);
-      if(pd < p.r){
-        const pull = (1-pd/p.r)*500;
-        pl.px += (p.x-pl.x)/(pd||1)*pull*dt;
-        pl.py += (p.y-pl.y)/(pd||1)*pull*dt;
-      }
-    }
-    if(player.magnet > 0){
-      const dx = player.x - pl.x, dy = player.y - pl.y;
-      const d = Math.hypot(dx,dy);
-      const pull = 480;
-      pl.px += dx/(d||1) * pull * dt;
-      pl.py += dy/(d||1) * pull * dt;
-    }
-
-    pl.x += pl.px*dt*4; pl.y += pl.py*dt*4;
-    pl.px *= .94; pl.py *= .94;
-
-    const dx=player.x-pl.x, dy=player.y-pl.y;
-    const d=Math.hypot(dx,dy);
-    if(d < hitR + pl.size + 14){
-      // ══════ প্লাঙ্কটন ধরা ══════
-      collected++;
-      streak++;
-
-      // ১০টি হলে কুলডাউন শুরু, স্ট্রিক রিসেট
-      if(streak >= STREAK_GOAL){
-        cooldownTimer = COOLDOWN_TIME;
-        streak = 0;
-        SFX.goal();
-      }
-
-      // বেস স্কোর
-      let total = (chaos ? 30 : 12) * scoreMul;
-
-      // কুলডাউন চললে অর্ধেক বোনাস
-      if(cooldownTimer > 0){
-        total = total * (1 + COOLDOWN_BONUS);  // 1.5×
-      }
-
-      score += total;
-      addCoins(2);
-      SFX.collect();
-
-      // পার্টিকেল
-      const hue = (cooldownTimer > 0) ? GOLD : playerColorRGB;
-      const pCount = (cooldownTimer > 0) ? 10 : 6;
-      for(let j=0;j<pCount;j++){
-        const a=Math.random()*6.28;
-        particles.push({x:pl.x,y:pl.y,vx:Math.cos(a)*2.5,vy:Math.sin(a)*2.5,
-          life:1,size:1.8,hue:hue});
-      }
-      plankton.splice(i,1);
-      updateHUD();
-      continue;
-    }
-    if(pl.y > H+40){
-      // মিস → স্ট্রিক রিসেট (কুলডাউন চলতে থাকবে)
-      plankton.splice(i,1);
-      streak = 0;
-      continue;
-    }
-  }
-
-  const nl = 1 + Math.floor(score/300);
-  if(nl > level){
-    level = nl;
-    addCoins(5);
-    for(let j=0;j<24;j++){
-      const a=Math.random()*6.28;
-      particles.push({x:player.x,y:player.y,vx:Math.cos(a)*4,vy:Math.sin(a)*4,
-        life:1,size:2,hue:playerColorRGB});
-    }
-  }
-
-  score += dt*3*scoreMul;
-  updateHUD();
-}
-
-function draw(){
-  const bg = ctx.createRadialGradient(W/2,H*.32,0,W/2,H*.32,Math.max(W,H)*.85);
-  bg.addColorStop(0,'#0e1116');
-  bg.addColorStop(1,'#07080b');
-  ctx.fillStyle = bg; ctx.fillRect(0,0,W,H);
-
-  const chaos = state==='play' && player.chaos > 0;
-  const unlim = state==='play' && player.unlimited > 0;
-
-  if(chaos){
-    const t = ctx.createRadialGradient(W/2,H*.5,0,W/2,H*.5,Math.max(W,H)*.8);
-    t.addColorStop(0, 'rgba('+GOLD+',0.05)');
-    t.addColorStop(1, 'rgba('+GOLD+',0)');
-    ctx.fillStyle = t; ctx.fillRect(0,0,W,H);
-  }
-  if(unlim && !chaos){
-    const t = ctx.createRadialGradient(W/2,H*.5,0,W/2,H*.5,Math.max(W,H)*.8);
-    t.addColorStop(0, 'rgba('+PURPLE+',0.05)');
-    t.addColorStop(1, 'rgba('+PURPLE+',0)');
-    ctx.fillStyle = t; ctx.fillRect(0,0,W,H);
-  }
-  if(state==='play' && player.freeze > 0){
-    const t = ctx.createRadialGradient(W/2,H*.5,0,W/2,H*.5,Math.max(W,H)*.8);
-    t.addColorStop(0, 'rgba('+ICE+',0.06)');
-    t.addColorStop(1, 'rgba('+ICE+',0)');
-    ctx.fillStyle = t; ctx.fillRect(0,0,W,H);
-  }
-
-  ctx.save();
-  if(shake > 0){
-    const s = shake*14;
-    ctx.translate((Math.random()-.5)*s,(Math.random()-.5)*s);
-  }
-
-  const dustRGB = chaos?GOLD:(unlim?PURPLE:playerColorRGB);
-  for(const d of dust){
-    const a = d.alpha * (.6 + Math.sin(d.phase)*.4);
-    ctx.fillStyle = 'rgba('+dustRGB+','+a+')';
-    ctx.beginPath(); ctx.arc(d.x,d.y,d.size,0,6.28); ctx.fill();
-  }
-
-  if(state !== 'menu'){
-    drawPlankton();
-    drawPredators();
-    drawPickupGroup(superPoints, 'star', GOLD);
-    drawPickupGroup(shieldPoints, 'hex', CYAN);
-    drawPickupGroup(unlimPoints, 'diamond', PURPLE);
-    drawPickupGroup(slowPoints, 'target', EMER);
-    drawPickupGroup(magnetPoints, 'infinity', PINK);
-    drawPickupGroup(doublePoints, 'bars', ORANGE);
-    drawPickupGroup(freezePoints, 'snow', ICE);
-    drawPlayer();
-  }
-
-  for(const p of pulses) drawPulse(p);
-
-  for(const p of particles){
-    ctx.globalAlpha = Math.max(0, Math.min(1, p.life));
-    ctx.fillStyle = 'rgba('+(p.hue||playerColorRGB)+',1)';
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size*Math.min(1,p.life), 0, 6.28);
-    ctx.fill();
-  }
-  ctx.globalAlpha = 1;
-  ctx.restore();
-}
-
-function drawPulse(p){
-  const a = p.life*.7;
-  let col = playerColorRGB;
-  if(p.chaos) col = GOLD;
-  else if(p.shield) col = CYAN;
-  else if(p.unlim) col = PURPLE;
-  else if(p.slow) col = EMER;
-  else if(p.magnet) col = PINK;
-  else if(p.dbl) col = ORANGE;
-  else if(p.ice) col = ICE;
-
-  ctx.strokeStyle = 'rgba('+col+','+a+')';
-  ctx.lineWidth = p.chaos ? 6 : 4;
-  ctx.beginPath(); ctx.arc(p.x,p.y,p.r*.98,0,6.28); ctx.stroke();
-  ctx.strokeStyle = 'rgba('+col+','+(a*1.1)+')';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,6.28); ctx.stroke();
-}
-
-function drawPlankton(){
-  const cd = (state==='play' && cooldownTimer > 0);
-  for(const pl of plankton){
-    const pulse = .85 + Math.sin(pl.phase)*.15;
-    if(cd){
-      // কুলডাউনে সোনালী আভা
-      ctx.fillStyle = 'rgba('+GOLD+',0.14)';
-      ctx.beginPath(); ctx.arc(pl.x,pl.y,pl.size*3,0,6.28); ctx.fill();
-      ctx.fillStyle = 'rgba('+GOLD+','+(0.9*pulse)+')';
-      ctx.beginPath(); ctx.arc(pl.x,pl.y,pl.size*pulse,0,6.28); ctx.fill();
-    } else {
-      ctx.fillStyle = 'rgba('+playerColorRGB+',0.10)';
-      ctx.beginPath(); ctx.arc(pl.x,pl.y,pl.size*3,0,6.28); ctx.fill();
-      ctx.fillStyle = 'rgba('+playerColorRGB+','+(0.9*pulse)+')';
-      ctx.beginPath(); ctx.arc(pl.x,pl.y,pl.size*pulse,0,6.28); ctx.fill();
-    }
-  }
-}
-
-function drawPredators(){
-  const frozen = player.freeze > 0;
-  const slowed = player.slow > 0 && !frozen;
-  for(const pr of predators){
-    if(pr.hidden && pr.reveal <= 0){
-      ctx.save();
-      ctx.globalAlpha = 0.05 + Math.sin(time*3 + pr.wobble)*0.03;
-      ctx.translate(pr.x, pr.y); ctx.rotate(pr.angle);
-      ctx.fillStyle = 'rgba('+DANGER+',0.6)';
-      const spikes = pr.big ? 8 : 6;
-      ctx.beginPath();
-      for(let i=0;i<spikes;i++){
-        const a=(i/spikes)*6.28;
-        const noise = 1 + Math.sin(pr.wobble + i*1.7)*.18;
-        const rr = pr.size*noise;
-        const px=Math.cos(a)*rr, py=Math.sin(a)*rr;
-        if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
-      }
-      ctx.closePath(); ctx.fill();
-      ctx.restore();
-      continue;
-    }
-
-    const revealAlpha = pr.hidden ? Math.max(0, pr.reveal) : 1;
-    ctx.save();
-    ctx.globalAlpha = revealAlpha;
-    ctx.translate(pr.x, pr.y); ctx.rotate(pr.angle);
-    ctx.fillStyle = 'rgba(22,16,28,0.95)';
-    const spikes = pr.big ? 8 : 6;
-    ctx.beginPath();
-    for(let i=0;i<spikes;i++){
-      const a=(i/spikes)*6.28;
-      const noise = 1 + Math.sin(pr.wobble + i*1.7)*.18;
-      const rr = pr.size*noise;
-      const px=Math.cos(a)*rr, py=Math.sin(a)*rr;
-      if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
-    }
-    ctx.closePath(); ctx.fill();
-
-    if(frozen){
-      ctx.strokeStyle = 'rgba('+ICE+',0.9)';
-      ctx.lineWidth = 1.5;
-    } else if(slowed){
-      ctx.strokeStyle = 'rgba('+EMER+',0.75)';
-      ctx.lineWidth = 1.3;
-    } else {
-      ctx.strokeStyle = 'rgba('+DANGER+','+(0.4 + Math.sin(time*5)*.15)+')';
-      ctx.lineWidth = 1;
-    }
-    ctx.stroke();
-    ctx.restore();
-  }
-}
-
-function drawPickupGroup(arr, shape, color){
-  for(const sp of arr){
-    const pulse = .8 + Math.sin(sp.phase)*.2;
-    ctx.save();
-    ctx.translate(sp.x, sp.y);
-
-    const g = ctx.createRadialGradient(0,0,0,0,0,sp.r*4.5);
-    g.addColorStop(0, 'rgba('+color+','+(0.55*pulse)+')');
-    g.addColorStop(0.5, 'rgba('+color+','+(0.16*pulse)+')');
-    g.addColorStop(1, 'rgba('+color+',0)');
-    ctx.fillStyle = g;
-    ctx.beginPath(); ctx.arc(0,0,sp.r*4.5,0,6.28); ctx.fill();
-
-    ctx.strokeStyle = 'rgba('+color+','+(0.8*pulse)+')';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath(); ctx.arc(0,0,sp.r*1.8,0,6.28); ctx.stroke();
-
-    ctx.rotate(sp.rot);
-
-    if(shape === 'star'){
-      ctx.fillStyle = 'rgba('+color+',1)';
-      ctx.beginPath();
-      for(let i=0;i<8;i++){
-        const a = (i/8)*6.28 - 1.57;
-        const rr = i%2 === 0 ? sp.r : sp.r*0.42;
-        const px=Math.cos(a)*rr, py=Math.sin(a)*rr;
-        if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
-      }
-      ctx.closePath(); ctx.fill();
-      ctx.fillStyle = 'rgba(255,250,220,1)';
-      ctx.beginPath(); ctx.arc(0,0,sp.r*0.35,0,6.28); ctx.fill();
-    }
-    else if(shape === 'hex'){
-      ctx.strokeStyle = 'rgba('+color+',1)';
-      ctx.lineWidth = 1.8;
-      ctx.beginPath();
-      for(let i=0;i<6;i++){
-        const a = (i/6)*6.28 - 1.57;
-        const px=Math.cos(a)*sp.r, py=Math.sin(a)*sp.r;
-        if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
-      }
-      ctx.closePath(); ctx.stroke();
-      ctx.fillStyle = 'rgba('+color+',0.9)';
-      ctx.beginPath(); ctx.arc(0,0,sp.r*0.32,0,6.28); ctx.fill();
-    }
-    else if(shape === 'diamond'){
-      ctx.fillStyle = 'rgba('+color+',1)';
-      ctx.beginPath();
-      ctx.moveTo(0,-sp.r);
-      ctx.lineTo(sp.r*0.7,0);
-      ctx.lineTo(0,sp.r);
-      ctx.lineTo(-sp.r*0.7,0);
-      ctx.closePath(); ctx.fill();
-      ctx.fillStyle = 'rgba(255,255,255,0.95)';
-      ctx.beginPath(); ctx.arc(-sp.r*0.18,0,sp.r*0.16,0,6.28); ctx.fill();
-      ctx.beginPath(); ctx.arc(sp.r*0.18,0,sp.r*0.16,0,6.28); ctx.fill();
-    }
-    else if(shape === 'target'){
-      ctx.strokeStyle = 'rgba('+color+',1)';
-      ctx.lineWidth = 1.6;
-      ctx.beginPath(); ctx.arc(0,0,sp.r,0,6.28); ctx.stroke();
-      ctx.lineWidth = 1.3;
-      ctx.beginPath(); ctx.arc(0,0,sp.r*0.6,0,6.28); ctx.stroke();
-      ctx.fillStyle = 'rgba('+color+',1)';
-      ctx.beginPath(); ctx.arc(0,0,sp.r*0.22,0,6.28); ctx.fill();
-    }
-    else if(shape === 'infinity'){
-      ctx.strokeStyle = 'rgba('+color+',1)';
-      ctx.lineWidth = 1.7;
-      ctx.beginPath(); ctx.arc(-sp.r*0.42,0,sp.r*0.52,0,6.28); ctx.stroke();
-      ctx.beginPath(); ctx.arc(sp.r*0.42,0,sp.r*0.52,0,6.28); ctx.stroke();
-    }
-    else if(shape === 'bars'){
-      ctx.fillStyle = 'rgba('+color+',1)';
-      ctx.fillRect(-sp.r*0.5, -sp.r*0.75, sp.r*0.32, sp.r*1.5);
-      ctx.fillRect(sp.r*0.18, -sp.r*0.75, sp.r*0.32, sp.r*1.5);
-    }
-    else if(shape === 'snow'){
-      ctx.strokeStyle = 'rgba('+color+',1)';
-      ctx.lineWidth = 1.5;
-      for(let i=0;i<6;i++){
-        const a = (i/6)*6.28;
-        ctx.beginPath();
-        ctx.moveTo(0,0);
-        ctx.lineTo(Math.cos(a)*sp.r, Math.sin(a)*sp.r);
-        ctx.stroke();
-      }
-      ctx.fillStyle = 'rgba('+color+',1)';
-      ctx.beginPath(); ctx.arc(0,0,sp.r*0.2,0,6.28); ctx.fill();
-    }
-
-    ctx.restore();
-  }
-}
-
-function drawPlayer(){
-  const {x,y,size} = player;
-  const blink = player.hitCooldown>0 && player.chaos<=0 && player.shield<=0 && Math.floor(time*20)%2===0;
-  const chaos = player.chaos > 0;
-  const shielded = player.shield > 0;
-  const unlim = player.unlimited > 0;
-  const col = chaos ? GOLD : playerColorRGB;
-  const symColor = chaos ? '#ffeab8' : playerColorHex;
-
-  ctx.save();
-  if(blink) ctx.globalAlpha = .45;
-
-  for(let i=player.trail.length-1;i>=0;i--){
-    const t = player.trail[i];
-    const a = (t.life/.4)*.18;
-    const r = size*(t.life/.4)*1.8;
-    const g = ctx.createRadialGradient(t.x,t.y,0,t.x,t.y,r);
-    g.addColorStop(0,'rgba('+col+','+a+')');
-    g.addColorStop(1,'rgba('+col+',0)');
-    ctx.fillStyle = g;
-    ctx.beginPath(); ctx.arc(t.x,t.y,r,0,6.28); ctx.fill();
-  }
-
-  const breathe = 0.92 + Math.sin(time * 1.6) * 0.08;
-  const glowR = size * (chaos ? 3.0 : 2.4) * breathe;
-  const g = ctx.createRadialGradient(x,y,0,x,y,glowR);
-  g.addColorStop(0,'rgba('+col+','+(chaos?0.5:0.28)+')');
-  g.addColorStop(0.55,'rgba('+col+',0.05)');
-  g.addColorStop(1,'rgba('+col+',0)');
-  ctx.fillStyle = g;
-  ctx.beginPath(); ctx.arc(x,y,glowR,0,6.28); ctx.fill();
-
-  const baseRingA = 0.12 + Math.sin(time * 2) * 0.04;
-  ctx.strokeStyle = 'rgba('+col+','+baseRingA+')';
-  ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.arc(x,y,size*1.6,0,6.28); ctx.stroke();
-
-  if(chaos){
-    ctx.strokeStyle = 'rgba('+GOLD+',0.5)';
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.arc(x,y,size*1.8,0,6.28); ctx.stroke();
-  }
-  if(unlim && !chaos){
-    ctx.strokeStyle = 'rgba('+PURPLE+',0.45)';
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.arc(x,y,size*1.75,0,6.28); ctx.stroke();
-  }
-
-  if(shielded){
-    const sAlpha = Math.min(1, player.shield / 2.5);
-    const sR = size * 1.95;
-    const sg = ctx.createRadialGradient(x,y,size*0.9,x,y,sR);
-    sg.addColorStop(0,'rgba('+CYAN+',0)');
-    sg.addColorStop(0.75,'rgba('+CYAN+','+(0.10*sAlpha)+')');
-    sg.addColorStop(1,'rgba('+CYAN+','+(0.02*sAlpha)+')');
-    ctx.fillStyle = sg;
-    ctx.beginPath(); ctx.arc(x,y,sR,0,6.28); ctx.fill();
-    ctx.strokeStyle = 'rgba('+CYAN+','+(0.42*sAlpha)+')';
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.arc(x,y,sR,0,6.28); ctx.stroke();
-  }
-
-  const symSize = size * 1.55;
-  const bob = Math.sin(time * 2.4) * 0.9;
-
-  ctx.save();
-  ctx.translate(x, y + bob);
-
-  ctx.font = '600 ' + symSize + 'px ' + MONO;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.shadowColor = 'rgba('+col+','+(chaos?0.85:0.55)+')';
-  ctx.shadowBlur = chaos ? 22 : 14;
-  ctx.fillStyle = symColor;
-  ctx.fillText(PLAYER_SYMBOL, 0, 0);
-  ctx.shadowBlur = 0;
-
-  const underW = size * 1.5;
-  const underY = symSize * 0.52;
-  const pulseA = 0.55 + Math.sin(time * 3) * 0.2;
-  ctx.strokeStyle = 'rgba('+col+','+pulseA+')';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(-underW/2, underY);
-  ctx.lineTo(underW/2, underY);
-  ctx.stroke();
-
-  const cycle = (time * 0.4) % 5;
-  if(cycle < 1){
-    const t01 = cycle;
-    const a = Math.sin(t01 * Math.PI);
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(0, 0, size * 1.2, 0, 6.28);
-    ctx.clip();
-    const cx = -size*1.5 + t01 * size * 3;
-    const sh = ctx.createLinearGradient(cx - size*0.5, -size, cx + size*0.5, size);
-    sh.addColorStop(0, 'rgba(255,255,255,0)');
-    sh.addColorStop(0.5, 'rgba(255,255,255,'+(a*0.35)+')');
-    sh.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = sh;
-    ctx.fillRect(-size*1.5, -size*1.5, size*3, size*3);
-    ctx.restore();
-  }
-
-  ctx.restore();
-  ctx.restore();
-}
-
-function loop(t){
-  if(!lastTime) lastTime = t;
-  let dt = (t-lastTime)/1000;
-  lastTime = t;
-  if(dt > .05) dt = .05;
-  update(dt);
-  draw();
-  requestAnimationFrame(loop);
-}
-
-function startGame(){
-  initAudio();
-  initGame();
-  state = 'play';
-  startScreen.classList.remove('show');
-  overScreen.classList.remove('show');
-  shopEl.classList.add('show');
-}
-function endGame(){
-  state = 'over';
-  SFX.over();
-  const isNew = score > best;
-  if(isNew){ best = Math.floor(score); localStorage.setItem('bcodgameBest', best); }
-  animateNumber(finalScoreEl, 0, Math.floor(score), 1000);
-  finalBestEl.innerHTML = 'Best <strong>'+best+'</strong>';
-  statDepth.textContent = Math.floor(depth)+'m';
-  statCol.textContent = collected;
-  statCoins.textContent = coins;
-  effectsEl.innerHTML = '';
-  shopEl.classList.remove('show');
-  setTimeout(()=>overScreen.classList.add('show'), 320);
-}
-function animateNumber(el, from, to, dur){
-  const start = performance.now();
-  function step(now){
-    const t = Math.min((now-start)/dur, 1);
-    const eased = 1 - Math.pow(1-t, 3);
-    el.textContent = Math.floor(from + (to-from)*eased);
-    if(t<1) requestAnimationFrame(step);
-    else el.textContent = to;
-  }
-  requestAnimationFrame(step);
-}
-
-document.getElementById('startBtn').addEventListener('click', startGame);
-document.getElementById('restartBtn').addEventListener('click', startGame);
-
-buildColorPicker();
-buildEffectsUI();
-buildShop();
-initGame();
-state = 'menu';
-requestAnimationFrame(loop);
-
-})();
 </script>
+
 </body>
 </html>
