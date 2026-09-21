@@ -3,49 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Loading...</title>
+    <title>Esports Hub BD</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
 <style>
-    /* --- 1. THEME VARIABLES (Neumorphic / Soft UI) --- */
+    /* --- 1. THEME VARIABLES --- */
     :root {
-        --bg-body: #e6e7eb;
-        --bg-card: #e6e7eb;
-        --bg-input: #e6e7eb;
-        --primary: #3b82f6;
-        --primary-dark: #2563eb;
-        --primary-light: #dce8fd;
-        --accent: #f43f5e;
-        --text-main: #23262b;
-        --text-muted: #767b87;
+        --bg-body: #f8fafc;
+        --bg-card: #ffffff;
+        --bg-input: #f1f5f9;
+        --primary: #4f46e5;
+        --primary-dark: #3730a3;
+        --primary-light: #e0e7ff;
+        --accent: #f43f5e;       
+        --text-main: #0f172a;
+        --text-muted: #64748b;
         --success: #10b981;
         --warning: #f59e0b;
         --danger: #ef4444;
         --nav-height: 65px;
-        --radius: 22px;
-
-        --sh-dist: 6px;
-        --sh-blur: 12px;
-        --shadow-dark: rgba(163, 170, 183, 0.55);
-        --shadow-light: rgba(255, 255, 255, 0.85);
-
-        --neu-out: var(--sh-dist) var(--sh-dist) var(--sh-blur) var(--shadow-dark),
-                   calc(var(--sh-dist) * -1) calc(var(--sh-dist) * -1) var(--sh-blur) var(--shadow-light);
-        --neu-out-sm: 3px 3px 6px var(--shadow-dark), -3px -3px 6px var(--shadow-light);
-        --neu-in: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light);
-        --neu-in-sm: inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light);
+        --radius: 16px;
     }
 
     /* --- 2. GLOBAL RESET --- */
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
     html, body { height: 100%; width: 100%; font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); font-size: 14px; overflow: hidden; }
-
+    
     #app-interface { position: relative; height: 100%; width: 100%; overflow: hidden; }
     #main-view { position: relative; width: 100%; height: 100%; }
-
+    
     .page-section {
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; background: var(--bg-body);
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; background: var(--bg-body); 
         padding-bottom: 80px;
         transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s; opacity: 0; transform: translateX(30px) scale(0.95); pointer-events: none; z-index: 10;
         -webkit-overflow-scrolling: touch; padding-top: 80px;
@@ -55,35 +44,34 @@
 
     /* Utilities */
     .text-primary { color: var(--primary); } .text-success { color: var(--success); } .text-danger { color: var(--danger); } .text-muted { color: var(--text-muted); }
-    .bold { font-weight: 600; } .hidden { display: none !important; }
-
-    .btn-main { width: 100%; padding: 14px; background: var(--bg-card); color: var(--primary-dark); border: none; border-radius: 16px; font-weight: 700; font-size: 1rem; box-shadow: var(--neu-out); letter-spacing: 0.5px; cursor: pointer; transition: 0.15s; }
-    .btn-main:active { box-shadow: var(--neu-in); }
-    .btn-main:disabled { color: #a7abb4; box-shadow: var(--neu-in-sm); cursor: not-allowed; }
-    .btn-sm { padding: 8px 16px; font-size: 0.8rem; border-radius: 12px; }
-
+    .bold { font-weight: 600; } .hidden { display: none !important; } 
+    
+    .btn-main { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4); letter-spacing: 0.5px; cursor: pointer; }
+    .btn-main:disabled { background: #cbd5e1; box-shadow: none; cursor: not-allowed; color: #94a3b8; }
+    .btn-sm { padding: 8px 16px; font-size: 0.8rem; border-radius: 8px; }
+    
     .input-group { position: relative; margin-bottom: 15px; }
     .input-group i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1.1rem; }
-    .input-box { width: 100%; padding: 16px 16px 16px 45px; border: none; background: var(--bg-input); border-radius: 16px; font-size: 0.95rem; color: var(--text-main); transition: 0.3s; font-family: 'Inter'; box-shadow: var(--neu-in-sm); }
-    .input-box:focus { box-shadow: var(--neu-in-sm), 0 0 0 3px var(--primary-light); }
-
-    /* Header */
-    header {
-        position: absolute; top: 0; left: 0; width: 100%; height: 65px; padding: 0 20px;
-        background: var(--bg-card); border-bottom: none; display: flex;
-        justify-content: space-between; align-items: center; z-index: 100;
-        box-shadow: 0 4px 15px rgba(163,170,183,0.35);
-        transition: transform 0.3s ease-in-out;
+    .input-box { width: 100%; padding: 16px 16px 16px 45px; border: 2px solid transparent; background: var(--bg-input); border-radius: 12px; font-size: 0.95rem; color: var(--text-main); transition: 0.3s; font-family: 'Inter'; }
+    .input-box:focus { border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px var(--primary-light); }
+    
+    /* Header - UPDATED FOR SCROLL ANIMATION */
+    header { 
+        position: absolute; top: 0; left: 0; width: 100%; height: 65px; padding: 0 20px; 
+        background: var(--bg-card); border-bottom: 1px solid #f1f5f9; display: flex; 
+        justify-content: space-between; align-items: center; z-index: 100; 
+        box-shadow: 0 2px 10px rgba(0,0,0,0.03); 
+        /* UPDATED: Animation Transition */
+        transition: transform 0.3s ease-in-out; 
     }
     .header-right { display: flex; align-items: center; gap: 12px; }
-    .wallet-pill { background: var(--bg-card); padding: 6px 14px; border-radius: 30px; display: flex; align-items: center; gap: 8px; font-weight: 700; border: none; box-shadow: var(--neu-out-sm); font-size: 0.9rem; transition: 0.2s; cursor: pointer; }
-    .wallet-pill:active { box-shadow: var(--neu-in-sm); }
-
+    .wallet-pill { background: var(--bg-input); padding: 6px 14px; border-radius: 30px; display: flex; align-items: center; gap: 8px; font-weight: 700; border: 1px solid #e2e8f0; font-size: 0.9rem; transition: 0.2s; cursor: pointer; }
+    
     .notification-btn { font-size: 1.2rem; color: var(--text-main); position: relative; cursor: pointer; padding: 5px; }
-    .notif-dot { position: absolute; top: 2px; right: 2px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 1px solid var(--bg-card); display: none; }
-
+    .notif-dot { position: absolute; top: 2px; right: 2px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 1px solid white; display: none; }
+    
     /* Navigation Bar */
-    .nav-bar { position: fixed; bottom: 0; width: 100%; height: var(--nav-height); background: var(--bg-card); border-top: none; display: flex; justify-content: space-around; align-items: center; z-index: 500; box-shadow: 0 -4px 15px rgba(163,170,183,0.3); }
+    .nav-bar { position: fixed; bottom: 0; width: 100%; height: var(--nav-height); background: var(--bg-card); border-top: 1px solid #f1f5f9; display: flex; justify-content: space-around; align-items: center; z-index: 500; box-shadow: 0 -5px 20px rgba(0,0,0,0.03); }
     .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); gap: 5px; padding: 5px; border-radius: 12px; transition: 0.2s; flex: 1; height: 100%; cursor: pointer; }
     .nav-item i { font-size: 1.3rem; margin-bottom: 2px; }
     .nav-item span { font-weight: 500; font-size: 0.75rem; }
@@ -91,118 +79,117 @@
     .nav-item.active i { transform: translateY(-2px); }
 
     /* Drawer */
-    .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(35,38,43,0.35); z-index: 4000; opacity: 0; pointer-events: none; transition: 0.3s; backdrop-filter: blur(2px); }
-    .drawer { position: fixed; top: 0; left: 0; width: 85%; max-width: 320px; height: 100%; background: var(--bg-body); transform: translateX(-100%); transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 4001; display: flex; flex-direction: column; overflow-y: auto; }
+    .drawer-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 4000; opacity: 0; pointer-events: none; transition: 0.3s; backdrop-filter: blur(2px); }
+    .drawer { position: fixed; top: 0; left: 0; width: 85%; max-width: 320px; height: 100%; background: #f8fafc; transform: translateX(-100%); transition: 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 4001; display: flex; flex-direction: column; overflow-y: auto; }
     .drawer-active .drawer-overlay { opacity: 1; pointer-events: all; }
     .drawer-active .drawer { transform: translateX(0); }
-
-    .profile-section { background: var(--bg-body); padding: 30px 20px 20px; border-bottom: none; position: relative; }
+    
+    .profile-section { background: var(--bg-card); padding: 30px 20px 20px; border-bottom: 1px solid #e2e8f0; position: relative; }
     .profile-top { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
-    .p-avatar { width: 60px; height: 60px; border-radius: 50%; padding: 3px; background: var(--bg-card); box-shadow: var(--neu-out-sm); }
+    .p-avatar { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--primary); padding: 2px; }
     .p-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
     .p-info h3 { font-size: 1.1rem; font-weight: 800; color: var(--text-main); }
     .p-info p { font-size: 0.8rem; color: var(--text-muted); }
-    .p-edit-btn { position: absolute; top: 20px; right: 20px; background: var(--bg-card); color: var(--primary); border: none; padding: 6px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; box-shadow: var(--neu-out-sm); }
-
-    .p-game-details { background: var(--bg-card); padding: 12px; border-radius: 14px; display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 15px; box-shadow: var(--neu-in-sm); }
+    .p-edit-btn { position: absolute; top: 20px; right: 20px; background: var(--bg-input); color: var(--primary); border: none; padding: 5px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
+    
+    .p-game-details { background: #f1f5f9; padding: 10px; border-radius: 10px; display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 15px; }
     .pg-item { display: flex; flex-direction: column; }
     .pg-lbl { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; }
     .pg-val { font-weight: 700; color: var(--text-main); }
 
-    .drawer-wallet { background: var(--bg-card); padding: 16px; border-radius: 18px; color: var(--text-main); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--neu-out); }
-    .dw-bal h4 { font-size: 0.7rem; opacity: 0.7; font-weight: 500; }
-    .dw-bal h2 { font-size: 1.4rem; font-weight: 800; color: var(--primary-dark); }
-    .dw-btn { background: var(--bg-card); border: none; color: var(--primary-dark); padding: 8px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 700; box-shadow: var(--neu-out-sm); }
-    .dw-btn:active { box-shadow: var(--neu-in-sm); }
+    .drawer-wallet { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); padding: 15px; border-radius: 14px; color: white; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3); }
+    .dw-bal h4 { font-size: 0.7rem; opacity: 0.8; font-weight: 500; }
+    .dw-bal h2 { font-size: 1.4rem; font-weight: 800; }
+    .dw-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; backdrop-filter: blur(4px); }
 
-    .drawer-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-    .ds-box { background: var(--bg-card); padding: 12px; border-radius: 14px; text-align: center; border: none; box-shadow: var(--neu-out-sm); }
+    .drawer-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
+    .ds-box { background: var(--bg-card); padding: 10px; border-radius: 10px; text-align: center; border: 1px solid #e2e8f0; }
     .ds-val { font-weight: 800; color: var(--text-main); font-size: 1rem; }
     .ds-lbl { font-size: 0.65rem; color: var(--text-muted); font-weight: 600; }
 
     .verify-row { display: flex; gap: 10px; margin-bottom: 20px; }
-    .v-badge { flex: 1; background: var(--bg-card); color: #16a34a; font-size: 0.7rem; padding: 8px; text-align: center; border-radius: 10px; font-weight: 700; border: none; box-shadow: var(--neu-in-sm); display: flex; align-items: center; justify-content: center; gap: 5px; }
-    .v-badge.unverified { color: var(--danger); }
+    .v-badge { flex: 1; background: #dcfce7; color: #16a34a; font-size: 0.7rem; padding: 6px; text-align: center; border-radius: 6px; font-weight: 700; border: 1px solid #bbf7d0; display: flex; align-items: center; justify-content: center; gap: 5px; }
+    .v-badge.unverified { background: #fee2e2; color: #ef4444; border-color: #fecaca; }
 
     .drawer-menu { padding: 10px 20px; }
     .dm-group { margin-bottom: 20px; }
     .dm-title { font-size: 0.7rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
-    .dm-item { display: flex; align-items: center; gap: 15px; padding: 12px 10px; color: var(--text-main); font-weight: 500; border-radius: 12px; transition: 0.2s; }
-    .dm-item:active { box-shadow: var(--neu-in-sm); }
+    .dm-item { display: flex; align-items: center; gap: 15px; padding: 12px 10px; color: var(--text-main); font-weight: 500; border-radius: 10px; transition: 0.2s; }
+    .dm-item:active { background: #f1f5f9; }
     .dm-item i { width: 25px; text-align: center; color: var(--text-muted); font-size: 1.1rem; }
     .dm-item.danger { color: var(--danger); } .dm-item.danger i { color: var(--danger); }
 
     /* AUTH MODAL */
-    #auth-modal-wrapper { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(35,38,43, 0.92); z-index: 6000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 25px; transition: 0.3s; opacity: 0; pointer-events: none; visibility: hidden; backdrop-filter: blur(10px); }
+    #auth-modal-wrapper { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); z-index: 6000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 25px; transition: 0.3s; opacity: 0; pointer-events: none; visibility: hidden; backdrop-filter: blur(10px); }
     #auth-modal-wrapper.active { opacity: 1; pointer-events: all; visibility: visible; }
-    .auth-card { background: var(--bg-card); width: 100%; max-width: 400px; padding: 30px; border-radius: 28px; box-shadow: var(--neu-out); text-align: center; position: relative; }
-    .app-logo-icon { width: 70px; height: 70px; background: var(--bg-card); color: var(--primary); border-radius: 22px; display: inline-flex; align-items: center; justify-content: center; font-size: 2rem; margin-bottom: 15px; box-shadow: var(--neu-out-sm); transform: rotate(-5deg); }
-    .app-title { font-size: 1.8rem; font-weight: 900; color: var(--text-main); margin-bottom: 5px; }
+    .auth-card { background: rgba(255, 255, 255, 0.95); width: 100%; max-width: 400px; padding: 30px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); text-align: center; position: relative; }
+    .app-logo-icon { width: 70px; height: 70px; background: linear-gradient(135deg, var(--primary), var(--accent)); color: white; border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 2rem; margin-bottom: 15px; box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3); transform: rotate(-5deg); }
+    .app-title { font-size: 1.8rem; font-weight: 900; color: var(--text-main); margin-bottom: 5px; background: -webkit-linear-gradient(45deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     .auth-switch-text { margin-top: 20px; font-size: 0.9rem; color: var(--text-muted); }
     .auth-switch-btn { color: var(--primary); font-weight: 700; cursor: pointer; text-decoration: none; }
     .auth-close { position: absolute; top: 20px; right: 20px; font-size: 1.5rem; color: var(--text-muted); cursor: pointer; }
 
     /* Cards & Matches */
-    .match-card { background: var(--bg-card); margin: 0 20px 25px; border-radius: var(--radius); box-shadow: var(--neu-out); border: none; overflow: hidden; position: relative; }
-    .match-banner { height: 140px; width: 100%; position: relative; overflow: hidden; background: #d9dbe0; }
+    .match-card { background: var(--bg-card); margin: 0 20px 25px; border-radius: 20px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.06); border: 1px solid #f1f5f9; overflow: hidden; position: relative; }
+    .match-banner { height: 140px; width: 100%; position: relative; overflow: hidden; background: #eee; }
     .match-banner img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
-    .match-banner::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 60%; background: linear-gradient(to top, rgba(35,38,43,0.75), transparent); }
+    .match-banner::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 60%; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); }
     .card-badge { position: absolute; top: 12px; padding: 5px 12px; border-radius: 30px; font-size: 0.75rem; font-weight: 700; z-index: 2; backdrop-filter: blur(4px); }
-    .badge-live { right: 12px; background: rgba(35,38,43,0.55); color: #34d399; border: 1px solid rgba(52, 211, 153, 0.4); }
-    .badge-type { left: 12px; background: rgba(230,231,235,0.95); color: var(--text-main); box-shadow: var(--neu-out-sm); }
-    .match-info-overlay { position: absolute; bottom: 12px; left: 15px; z-index: 3; color: #fff; width: 90%; }
+    .badge-live { right: 12px; background: rgba(0,0,0,0.6); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .badge-type { left: 12px; background: rgba(255,255,255,0.95); color: var(--text-main); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+    .match-info-overlay { position: absolute; bottom: 12px; left: 15px; z-index: 3; color: white; width: 90%; }
     .match-title { font-size: 1.2rem; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.5); margin-bottom: 2px; }
     .match-meta { font-size: 0.8rem; opacity: 0.9; display: flex; align-items: center; gap: 8px; }
     .match-body { padding: 15px 15px 20px; }
-    .card-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: var(--bg-card); padding: 12px; border-radius: 16px; text-align: center; margin-bottom: 15px; box-shadow: var(--neu-in-sm); }
+    .card-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: #f8fafc; padding: 12px; border-radius: 14px; text-align: center; margin-bottom: 15px; border: 1px solid #e2e8f0; }
     .stat-val { font-weight: 800; color: var(--text-main); font-size: 1.1rem; }
     .stat-lbl { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
     .progress-area { margin-bottom: 15px; }
-    .progress-bar { width: 100%; height: 10px; background: var(--bg-card); border-radius: 10px; overflow: hidden; margin-bottom: 6px; box-shadow: var(--neu-in-sm); }
+    .progress-bar { width: 100%; height: 8px; background: #e2e8f0; border-radius: 10px; overflow: hidden; margin-bottom: 6px; }
     .progress-fill { height: 100%; background: var(--primary); border-radius: 10px; }
     .prog-text { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
-    .countdown-timer { color: #d97706; font-weight: 700; letter-spacing: 0.5px; font-family: monospace; font-size: 0.9rem; }
-    .countdown-ended { color: #dc2626; font-weight: 700; }
+    .countdown-timer { color: #fbbf24; font-weight: 700; letter-spacing: 0.5px; font-family: monospace; font-size: 0.9rem; }
+    .countdown-ended { color: #f87171; font-weight: 700; }
 
     /* Tabs & History */
-    .mm-tabs-wrapper { background: var(--bg-card); padding: 6px; border-radius: 16px; display: flex; margin: 0 20px 20px; border: none; box-shadow: var(--neu-in-sm); }
-    .mm-tab { flex: 1; text-align: center; padding: 12px; border-radius: 12px; font-weight: 600; color: var(--text-muted); transition: 0.3s; font-size: 0.9rem; }
-    .mm-tab.active { background: var(--bg-card); color: var(--primary); font-weight: 700; box-shadow: var(--neu-out-sm); }
-    .mm-card { background: var(--bg-card); margin: 0 20px 15px; border-radius: 18px; border: none; overflow: hidden; box-shadow: var(--neu-out-sm); }
-    .mm-header { padding: 15px; border-bottom: 1px solid rgba(163,170,183,0.25); display: flex; justify-content: space-between; align-items: center; }
+    .mm-tabs-wrapper { background: var(--bg-card); padding: 5px; border-radius: 12px; display: flex; margin: 0 20px 20px; border: 1px solid #f1f5f9; }
+    .mm-tab { flex: 1; text-align: center; padding: 12px; border-radius: 10px; font-weight: 600; color: var(--text-muted); transition: 0.3s; font-size: 0.9rem; }
+    .mm-tab.active { background: var(--primary-light); color: var(--primary); font-weight: 700; }
+    .mm-card { background: var(--bg-card); margin: 0 20px 15px; border-radius: 16px; border: 1px solid #f1f5f9; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
+    .mm-header { padding: 15px; border-bottom: 1px solid #f8fafc; display: flex; justify-content: space-between; align-items: center; }
     .mm-game-info { display: flex; align-items: center; gap: 12px; }
-    .mm-thumb { width: 45px; height: 45px; border-radius: 12px; object-fit: cover; background: #d9dbe0; }
+    .mm-thumb { width: 45px; height: 45px; border-radius: 10px; object-fit: cover; background: #eee; }
     .mm-meta h4 { font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-bottom: 2px; }
     .mm-status { font-size: 0.7rem; padding: 4px 10px; border-radius: 30px; font-weight: 700; }
-    .st-upcoming { background: #fdf1e4; color: #c2660c; border: none; }
-    .st-completed { background: #e1f7ea; color: #0f9d58; border: none; }
-    .room-box { background: var(--bg-card); margin: 15px; padding: 15px; border-radius: 14px; box-shadow: var(--neu-in-sm); text-align: center; }
+    .st-upcoming { background: #fff7ed; color: #ea580c; border: 1px solid #ffedd5; }
+    .st-completed { background: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; }
+    .room-box { background: #f8fafc; margin: 15px; padding: 15px; border-radius: 12px; border: 1px dashed #cbd5e1; text-align: center; }
     .room-wait { color: var(--text-muted); font-size: 0.85rem; font-weight: 500; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
     .room-creds { display: flex; justify-content: space-between; gap: 10px; }
-    .cred-item { flex: 1; background: var(--bg-card); padding: 10px; border-radius: 10px; box-shadow: var(--neu-out-sm); display: flex; flex-direction: column; align-items: center; }
+    .cred-item { flex: 1; background: white; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; align-items: center; }
     .cred-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
     .cred-val { font-size: 1rem; font-weight: 800; font-family: monospace; }
     .btn-copy { font-size: 0.7rem; color: var(--primary); margin-top: 5px; font-weight: 600; cursor: pointer; }
-
+    
     /* Modals - General */
     .modal-wrap { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 5000; opacity: 0; pointer-events: none; transition: 0.3s; visibility: hidden; }
     .modal-wrap.active { opacity: 1; pointer-events: all; visibility: visible; }
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(35,38,43,0.4); }
-
-    /* DEFAULT BOTTOM SHEET MODAL */
-    .modal-sheet { position: absolute; bottom: 0; left: 0; width: 100%; background: var(--bg-body); border-radius: 28px 28px 0 0; padding: 30px; transform: translateY(100%); transition: 0.3s cubic-bezier(0.2, 1, 0.2, 1); max-height: 90vh; overflow-y: auto; box-shadow: 0 -8px 25px rgba(163,170,183,0.35); }
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); }
+    
+    /* DEFAULT BOTTOM SHEET MODAL (Used for Join, Notifications, Wallet etc.) */
+    .modal-sheet { position: absolute; bottom: 0; left: 0; width: 100%; background: var(--bg-card); border-radius: 24px 24px 0 0; padding: 30px; transform: translateY(100%); transition: 0.3s cubic-bezier(0.2, 1, 0.2, 1); max-height: 90vh; overflow-y: auto; }
     .modal-wrap.active .modal-sheet { transform: translateY(0); }
-    .sheet-handle { width: 40px; height: 5px; background: var(--bg-card); box-shadow: var(--neu-in-sm); border-radius: 5px; margin: 0 auto 20px; }
+    .sheet-handle { width: 40px; height: 5px; background: #e2e8f0; border-radius: 5px; margin: 0 auto 20px; }
 
-    /* NOTICE POPUP */
+    /* === SPECIAL STYLES FOR NOTICE POPUP (CENTERED, NO BORDER) === */
     #modal-notice .modal-sheet {
         top: 50%; left: 50%;
-        bottom: auto;
-        transform: translate(-50%, -50%) scale(0.9);
+        bottom: auto; /* Reset bottom */
+        transform: translate(-50%, -50%) scale(0.9); /* Start slightly smaller */
         width: 85%; max-width: 320px;
-        border-radius: var(--radius);
-        border: none;
-        box-shadow: var(--neu-out);
+        border-radius: 24px;
+        border: none; /* No Border as requested */
+        box-shadow: 0 20px 50px rgba(0,0,0,0.15); /* Soft shadow */
         text-align: center;
         padding: 30px 25px;
         opacity: 0;
@@ -213,65 +200,67 @@
         opacity: 1;
         pointer-events: auto;
     }
-    #modal-notice .sheet-handle { display: none; }
-    .notice-icon-box { width: 70px; height: 70px; background: var(--bg-card); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 15px; box-shadow: var(--neu-out-sm); }
+    #modal-notice .sheet-handle { display: none; } /* Hide handle for popup */
+    .notice-icon-box { width: 70px; height: 70px; background: linear-gradient(135deg, var(--primary-light), #f3e8ff); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 15px; }
 
     /* Notification Modal Styles */
-    .notif-card { background: var(--bg-card); padding: 15px; border-radius: 14px; margin-bottom: 12px; border: none; box-shadow: var(--neu-out-sm); position: relative; overflow: hidden; }
+    .notif-card { background: #fff; padding: 15px; border-radius: 12px; margin-bottom: 12px; border: 1px solid #f1f5f9; box-shadow: 0 2px 8px rgba(0,0,0,0.03); position: relative; overflow: hidden; }
     .notif-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--primary); }
     .notif-title { font-weight: 700; margin-bottom: 5px; color: var(--text-main); font-size: 0.95rem; }
     .notif-msg { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
-    .notif-date { font-size: 0.7rem; color: #a7abb4; margin-top: 8px; text-align: right; font-weight: 600; }
+    .notif-date { font-size: 0.7rem; color: #cbd5e1; margin-top: 8px; text-align: right; font-weight: 600; }
 
     /* Wallet */
-    .credit-card { background: var(--bg-card); margin: 20px; padding: 25px; border-radius: var(--radius); color: var(--text-main); position: relative; overflow: hidden; box-shadow: var(--neu-out); min-height: 180px; display: flex; flex-direction: column; justify-content: space-between; }
-    .user-chip { background: var(--bg-card); padding: 5px 12px; border-radius: 50px; font-size: 0.75rem; box-shadow: var(--neu-out-sm); }
+    .credit-card { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); margin: 20px; padding: 25px; border-radius: 24px; color: white; position: relative; overflow: hidden; box-shadow: 0 15px 35px -5px rgba(79, 70, 229, 0.4); min-height: 180px; display: flex; flex-direction: column; justify-content: space-between; }
+    .credit-card::before, .credit-card::after { content: ''; position: absolute; border-radius: 50%; background: rgba(255,255,255,0.1); }
+    .credit-card::before { width: 150px; height: 150px; top: -50px; right: -50px; }
+    .credit-card::after { width: 100px; height: 100px; bottom: -20px; left: -20px; }
+    .user-chip { background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 50px; font-size: 0.75rem; backdrop-filter: blur(5px); }
     .wallet-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; padding: 0 20px; margin-bottom: 25px; }
     .action-btn { display: flex; flex-direction: column; align-items: center; gap: 8px; background: transparent; border: none; cursor: pointer; }
-    .action-icon { width: 50px; height: 50px; background: var(--bg-card); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--primary); box-shadow: var(--neu-out-sm); transition: 0.2s; border: none; }
-    .action-btn:active .action-icon { box-shadow: var(--neu-in-sm); }
-    .trx-item { display: flex; align-items: center; justify-content: space-between; padding: 15px; background: var(--bg-card); border-radius: 18px; margin-bottom: 12px; border: none; box-shadow: var(--neu-out-sm); }
-    .trx-icon-box { width: 45px; height: 45px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; margin-right: 15px; box-shadow: var(--neu-in-sm); }
-    .icon-deposit { color: #16a34a; } .icon-withdraw { color: #dc2626; } .icon-game { color: #4f46e5; }
+    .action-icon { width: 50px; height: 50px; background: var(--bg-card); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--primary); box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: 0.2s; border: 1px solid #f1f5f9; }
+    .trx-item { display: flex; align-items: center; justify-content: space-between; padding: 15px; background: var(--bg-card); border-radius: 16px; margin-bottom: 12px; border: 1px solid #f8fafc; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+    .trx-icon-box { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; margin-right: 15px; }
+    .icon-deposit { background: #dcfce7; color: #16a34a; } .icon-withdraw { background: #fee2e2; color: #dc2626; } .icon-game { background: #e0e7ff; color: #4f46e5; }
     .trx-status { font-size: 0.65rem; padding: 2px 8px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
-    .status-success { background: #e1f7ea; color: #16a34a; } .status-pending { background: #fdf1d6; color: #d97706; }
+    .status-success { background: #dcfce7; color: #16a34a; } .status-pending { background: #fef3c7; color: #d97706; }
 
     /* Payment Specific */
-    .pay-copy-box { display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 12px; border: none; box-shadow: var(--neu-in-sm); border-radius: 14px; margin-bottom: 15px; }
+    .pay-copy-box { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px; border: 1px dashed var(--primary); border-radius: 12px; margin-bottom: 15px; }
     .pay-num { font-weight: 800; font-size: 1.1rem; font-family: monospace; letter-spacing: 1px; color: var(--text-main); }
     .pay-icon { width: 30px; margin-right: 10px; vertical-align: middle; }
     .helper-text { font-size: 0.75rem; color: var(--text-muted); margin-top: 5px; display: flex; justify-content: space-between; }
-    .pay-method-badge { background: var(--accent); color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; margin-right: 5px; font-weight: 700; }
+    .pay-method-badge { background: #e11d48; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; margin-right: 5px; font-weight: 700; }
 
     /* Leaderboard */
-    .lb-header { text-align: center; padding: 20px 20px 0; background: var(--bg-body); }
-    .podium-section { background: var(--bg-body); padding: 20px 20px 40px; display: flex; justify-content: center; align-items: flex-end; gap: 15px; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; box-shadow: 0 10px 25px rgba(163,170,183,0.3); margin-bottom: 20px; }
+    .lb-header { text-align: center; padding: 20px 20px 0; background: var(--bg-card); }
+    .podium-section { background: var(--bg-card); padding: 20px 20px 40px; display: flex; justify-content: center; align-items: flex-end; gap: 15px; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.05); margin-bottom: 20px; }
     .podium-item { text-align: center; position: relative; width: 30%; }
-    .podium-1 { order: 2; transform: translateY(-15px); } .podium-1 .p-img-box { width: 90px; height: 90px; box-shadow: 0 0 0 4px #f59e0b, var(--neu-out-sm); }
-    .podium-2 { order: 1; } .podium-2 .p-img-box { box-shadow: 0 0 0 3px #94a3b8, var(--neu-out-sm); }
-    .podium-3 { order: 3; } .podium-3 .p-img-box { box-shadow: 0 0 0 3px #b45309, var(--neu-out-sm); }
-    .p-img-box { width: 70px; height: 70px; border-radius: 50%; margin: 0 auto; position: relative; background: var(--bg-card); }
-    .p-img-box img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--bg-body); }
+    .podium-1 { order: 2; transform: translateY(-15px); } .podium-1 .p-img-box { width: 90px; height: 90px; border: 4px solid #f59e0b; box-shadow: 0 0 20px rgba(245, 158, 11, 0.4); }
+    .podium-2 { order: 1; } .podium-2 .p-img-box { border: 3px solid #94a3b8; }
+    .podium-3 { order: 3; } .podium-3 .p-img-box { border: 3px solid #b45309; }
+    .p-img-box { width: 70px; height: 70px; border-radius: 50%; margin: 0 auto; position: relative; background: #eee; }
+    .p-img-box img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid white; }
     .crown { position: absolute; top: -25px; left: 50%; transform: translateX(-50%); color: #f59e0b; font-size: 1.5rem; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2)); }
-    .p-rank-badge { position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 22px; height: 22px; border-radius: 50%; color: white; font-size: 0.8rem; font-weight: bold; line-height: 22px; border: 2px solid var(--bg-body); z-index: 5; }
+    .p-rank-badge { position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 22px; height: 22px; border-radius: 50%; color: white; font-size: 0.8rem; font-weight: bold; line-height: 22px; border: 2px solid white; z-index: 5; }
     .podium-1 .p-rank-badge{background:#f59e0b} .podium-2 .p-rank-badge{background:#94a3b8} .podium-3 .p-rank-badge{background:#b45309}
-    .rank-item { display: flex; align-items: center; padding: 12px 15px; background: var(--bg-card); border-radius: 14px; margin-bottom: 10px; box-shadow: var(--neu-out-sm); border: none; }
+    .rank-item { display: flex; align-items: center; padding: 12px 15px; background: var(--bg-card); border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); border: 1px solid #f8fafc; }
     .r-pos { width: 30px; font-weight: 700; color: var(--text-muted); text-align: center; }
-    .r-img { width: 40px; height: 40px; border-radius: 50%; margin: 0 15px 0 10px; background: #d9dbe0; }
+    .r-img { width: 40px; height: 40px; border-radius: 50%; margin: 0 15px 0 10px; background: #eee; }
     .r-val { font-weight: 800; color: var(--text-main); font-size: 1rem; }
 
     /* Chips */
     .filter-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 0 20px 10px; white-space: nowrap; -webkit-overflow-scrolling: touch; }
     .filter-scroll::-webkit-scrollbar { display: none; }
-    .filter-chip { background: var(--bg-card); padding: 8px 18px; border-radius: 50px; border: none; box-shadow: var(--neu-out-sm); white-space: nowrap; color: var(--text-muted); font-weight: 600; cursor: pointer; transition: 0.2s; }
-    .filter-chip.active { background: var(--bg-card); color: var(--primary); box-shadow: var(--neu-in-sm); }
-
+    .filter-chip { background: var(--bg-card); padding: 8px 18px; border-radius: 50px; border: 1px solid #e2e8f0; white-space: nowrap; color: var(--text-muted); font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .filter-chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+    
     /* Toast */
-    #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--text-main); padding: 12px 24px; border-radius: 50px; color: #fff; z-index: 9999; transition: 0.3s; opacity: 0; pointer-events: none; display: flex; align-items: center; gap: 10px; white-space: nowrap; box-shadow: var(--neu-out); }
+    #toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1e293b; padding: 12px 24px; border-radius: 50px; color: white; z-index: 9999; transition: 0.3s; opacity: 0; pointer-events: none; display: flex; align-items: center; gap: 10px; white-space: nowrap; }
     #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
     /* Summary & Result */
-    .modal-summary { background: var(--bg-card); padding: 12px; border-radius: 14px; display: flex; justify-content: space-between; margin-bottom: 15px; box-shadow: var(--neu-in-sm); font-size: 0.8rem; }
+    .modal-summary { background: #f1f5f9; padding: 10px; border-radius: 12px; display: flex; justify-content: space-between; margin-bottom: 15px; border: 1px solid #e2e8f0; font-size: 0.8rem; }
     .sum-item { text-align: center; }
     .sum-val { font-weight: 700; color: var(--primary); display:block; }
     .sum-lbl { font-size: 0.7rem; color: var(--text-muted); }
@@ -279,13 +268,13 @@
     .checkbox-group input { width: 18px; height: 18px; accent-color: var(--primary); }
     .balance-status { text-align: right; font-size: 0.8rem; margin-top: 10px; font-weight: 600; }
     .bal-ok { color: var(--success); } .bal-low { color: var(--danger); }
-    .result-box { margin: 15px; padding: 15px; background: var(--bg-card); box-shadow: var(--neu-out-sm); border-radius: 16px; text-align: center; }
+    .result-box { margin: 15px; padding: 15px; background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 1px solid #fcd34d; border-radius: 12px; text-align: center; }
     .winner-trophy { font-size: 2rem; color: #f59e0b; margin-bottom: 5px; }
     .winner-name { font-size: 1.1rem; font-weight: 800; color: #b45309; }
     .prize-won { font-weight: 700; color: #16a34a; margin-top: 5px; }
-
+    
     /* Instruction Box */
-    .instruction-box { margin: 0 15px 15px; background: var(--bg-card); padding: 12px; border-radius: 14px; box-shadow: var(--neu-in-sm); border-left: 4px solid var(--primary); font-size: 0.8rem; text-align: left; }
+    .instruction-box { margin: 0 15px 15px; background: #f0f9ff; padding: 12px; border-radius: 10px; border-left: 4px solid var(--primary); font-size: 0.8rem; text-align: left; }
     .instruction-box ol { padding-left: 20px; margin-top: 5px; color: var(--text-muted); }
     .instruction-box li { margin-bottom: 3px; }
 
@@ -295,15 +284,15 @@
 
     /* Skeleton Loading */
     .skeleton-anim {
-        background: linear-gradient(90deg, #dcdde2 25%, #cfd1d7 50%, #dcdde2 75%);
+        background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
         background-size: 200% 100%;
         animation: shimmer 1.5s infinite;
         border-radius: 8px; color: transparent !important;
     }
     @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
+    
     /* Skeleton Card Styles */
-    .sk-card { height: 260px; margin: 0 20px 25px; border-radius: var(--radius); background: var(--bg-card); box-shadow: var(--neu-out-sm); border: none; padding: 0; overflow: hidden; }
+    .sk-card { height: 260px; margin: 0 20px 25px; border-radius: 20px; background: white; border: 1px solid #f1f5f9; padding: 0; overflow: hidden; }
     .sk-banner { height: 140px; width: 100%; }
     .sk-body { padding: 15px; }
     .sk-row { display: flex; gap: 10px; margin-bottom: 10px; }
@@ -311,33 +300,6 @@
     .sk-line { height: 10px; margin-bottom: 8px; border-radius: 5px; }
     .sk-btn { height: 45px; width: 100%; border-radius: 12px; margin-top: 10px; }
 
-    /* --- Neumorphic Toggle Switch (from inspiration board) --- */
-    .toggle-switch, input[type="checkbox"].switch, .switch-track {
-        appearance: none; -webkit-appearance: none;
-        width: 54px; height: 30px; border-radius: 30px;
-        background: var(--bg-card); box-shadow: var(--neu-in-sm);
-        position: relative; cursor: pointer; transition: 0.25s; border: none;
-    }
-    .toggle-switch::before, input[type="checkbox"].switch::before {
-        content: ''; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px;
-        border-radius: 50%; background: var(--bg-card); box-shadow: var(--neu-out-sm);
-        transition: 0.25s;
-    }
-    .toggle-switch:checked, input[type="checkbox"].switch:checked { background: var(--bg-card); }
-    .toggle-switch:checked::before, input[type="checkbox"].switch:checked::before {
-        transform: translateX(24px); background: var(--primary); box-shadow: 0 0 0 3px var(--primary-light);
-    }
-
-    /* Slider (range input) */
-    input[type="range"] {
-        -webkit-appearance: none; width: 100%; height: 8px; border-radius: 10px;
-        background: var(--bg-card); box-shadow: var(--neu-in-sm); outline: none;
-    }
-    input[type="range"]::-webkit-slider-thumb {
-        -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%;
-        background: var(--primary); box-shadow: var(--neu-out-sm), 0 0 0 4px var(--bg-card);
-        cursor: pointer;
-    }
 </style>
 
 </head>
@@ -354,7 +316,7 @@
     <div class="modal-sheet">
         <div class="notice-icon-box"><i class="fa-solid fa-bullhorn"></i></div>
         <h3 style="margin-bottom:10px; font-weight:800; font-size:1.4rem;">Announcement</h3>
-        <p id="notice-text" class="text-muted" style="line-height:1.6; margin-bottom:25px;">Welcome! Join matches and win big prizes.</p>
+        <p id="notice-text" class="text-muted" style="line-height:1.6; margin-bottom:25px;">Welcome to Esports Hub BD! Join matches and win big prizes.</p>
         <button class="btn-main" onclick="ui.closeModal()" style="padding:12px; border-radius:50px; box-shadow:none;">Okay, Got it</button>
     </div>
 </div>
@@ -381,7 +343,7 @@
     <div class="auth-card">
         <div class="auth-close" onclick="window.auth.hideAuth()"><i class="fa-solid fa-xmark"></i></div>
         <div class="app-logo-icon"><i class="fa-solid fa-gamepad"></i></div>
-        <h1 class="app-title" id="auth-app-title">Tournament App</h1>
+        <h1 class="app-title">Esports Hub BD</h1>
         <p class="app-tagline" style="color:#64748b; margin-bottom:20px;">Login to play matches & win</p>
 
     <!-- Login Form -->
@@ -484,7 +446,7 @@
             <div class="dm-title">Support & Settings</div>
             <div class="dm-item" onclick="ui.toggleDrawer(); app.checkLogin(() => ui.openModal('modal-settings'))"><i class="fa-solid fa-shield-halved text-muted"></i> Security & Payment</div>
             <div class="dm-item" onclick="app.checkLogin(() => app.openSupport())"><i class="fa-brands fa-whatsapp text-success"></i> Help Center</div>
-            <div class="dm-item" onclick="app.openCommunity()"><i class="fa-brands fa-telegram text-primary"></i> Join Community</div>
+            <div class="dm-item" onclick="ui.toast('Telegram Channel')"><i class="fa-brands fa-telegram text-primary"></i> Join Community</div>
             <div class="dm-item" onclick="ui.openModal('modal-rules')"><i class="fa-solid fa-scroll text-muted"></i> Match Rules</div>
         </div>
 
@@ -500,7 +462,7 @@
 
 <header>
     <div class="btn" style="font-size: 1.4rem;" onclick="ui.toggleDrawer()"><i class="fa-solid fa-bars-staggered"></i></div>
-    <div class="app-title" id="header-app-title" style="font-size: 1.2rem; background:none; -webkit-text-fill-color:var(--text-main);">Tournament App</div>
+    <div class="app-title" style="font-size: 1.2rem; background:none; -webkit-text-fill-color:var(--text-main);">Esports Hub BD</div>
     <div class="header-right">
          <!-- Notification Button Updated -->
          <div class="notification-btn" onclick="app.openNotifications()">
@@ -521,11 +483,8 @@
 <!-- 1. HOME -->
 <div id="page-home" class="page-section">
     <!-- HOME BANNER -->
-    <div id="home-banner-container" style="margin: 20px; border-radius: var(--radius); overflow: hidden; height: 160px; position: relative; background: #d9dbe0; box-shadow: var(--neu-out-sm);">
-        <div id="home-banner-slides" style="width:100%; height:100%; position:relative;">
-            <img src="https://placehold.co/600x300/e6e7eb/999?text=Loading..." style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; opacity:1; transition: opacity 0.6s ease;">
-        </div>
-        <div id="home-banner-dots" style="position:absolute; bottom:10px; left:0; width:100%; display:flex; justify-content:center; gap:6px; z-index:2;"></div>
+    <div id="home-banner-container" style="margin: 20px; border-radius: var(--radius); overflow: hidden; height: 160px; position: relative; background: #eee;">
+        <img id="home-banner-img" src="https://placehold.co/600x300/4f46e5/FFF?text=Loading+Banner..." style="width:100%; height:100%; object-fit:cover;">
     </div>
 
     <!-- Dynamic Category Chips -->
@@ -686,7 +645,7 @@
         <div class="sheet-handle"></div>
         <h2 style="margin-bottom:15px;">Fair Play Rules</h2>
         <div class="instruction-box" style="margin:0; background:white; padding:0;">
-            <ol id="rules-list" style="font-size:0.9rem; line-height:1.6;">
+            <ol style="font-size:0.9rem; line-height:1.6;">
                 <li>No Emulators Allowed (Mobile Only).</li>
                 <li>No Hacks, Scripts, or Team-ups.</li>
                 <li>Level 25+ ID Required.</li>
@@ -739,46 +698,26 @@
     <div class="modal-overlay" onclick="ui.closeModal()"></div>
     <div class="modal-sheet">
         <div class="sheet-handle"></div>
-
-        <div id="dep-form">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h2 style="margin:0">Add Money</h2>
-                <div onclick="ui.closeModal()" style="font-size:1.5rem; cursor:pointer; color:var(--text-muted);"><i class="fa-solid fa-xmark"></i></div>
-            </div>
-            <p class="text-muted" style="margin-bottom:15px; font-size:0.9rem;">
-                Send money via <span class="pay-method-badge" style="background:#e2136e">bKash</span> or <span class="pay-method-badge" style="background:#f7931a">Nagad</span> Personal number below, then submit the info here.
-            </p>
-
-            <label class="input-label">Select method you sent from</label>
-            <div style="margin:5px 0 15px; display:flex; gap:10px;">
-                <div class="filter-chip" id="dep-btn-bkash" onclick="app.selectDepositMethod('bKash')">bKash</div>
-                <div class="filter-chip" id="dep-btn-nagad" onclick="app.selectDepositMethod('Nagad')">Nagad</div>
-            </div>
-
-            <div class="pay-copy-box">
-                <div>
-                    <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Send Money (Personal) to</div>
-                    <div class="pay-num" id="dep-number-display">Select a method above</div>
-                </div>
-                <div onclick="ui.copy(document.getElementById('dep-number-display').innerText)" style="background:var(--bg-input); padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:700; color:var(--primary);">
-                    <i class="fa-regular fa-copy"></i>
-                </div>
-            </div>
-
-            <input type="number" id="dep-amount" class="input-box" placeholder="Amount Sent (e.g. 100)" oninput="app.validateAmount(this)">
-            <input type="text" id="dep-sender" class="input-box" placeholder="Your bKash/Nagad Number (sent from)" style="margin-top:10px;">
-            <input type="text" id="dep-trx" class="input-box" placeholder="TrxID (Required)" style="margin-top:10px;">
-            <button class="btn-main" onclick="app.deposit()" style="margin-top:15px;">Submit Deposit</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h2 style="margin:0">Add Money</h2>
+            <div onclick="ui.closeModal()" style="font-size:1.5rem; cursor:pointer; color:var(--text-muted);"><i class="fa-solid fa-xmark"></i></div>
         </div>
-
-        <div id="dep-success" class="hidden" style="text-align:center; padding:20px 5px;">
-            <div class="notice-icon-box" style="color:var(--success);"><i class="fa-solid fa-clock"></i></div>
-            <h3 style="margin-bottom:10px;">Request Submitted!</h3>
-            <p class="text-muted" style="font-size:0.9rem; line-height:1.6; margin-bottom:20px;">
-                সব তথ্য সঠিক থাকলে <b>১ ঘণ্টার মধ্যে</b> আপনার একাউন্টে টাকা যোগ হয়ে যাবে।
-            </p>
-            <button class="btn-main" onclick="ui.closeModal()">ঠিক আছে</button>
+        <p class="text-muted" style="margin-bottom:15px; font-size:0.9rem;">
+            Send money to the number below via <span class="pay-method-badge" style="background:#e2136e">bKash</span> or <span class="pay-method-badge" style="background:#f7931a">Nagad</span>.
+            <br><span class="bold text-danger">Send Money (Personal) Only.</span>
+        </p>
+        <div class="pay-copy-box">
+            <div>
+                <div style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase;">Personal Number</div>
+                <div class="pay-num" id="admin-phone">01700000000</div>
+            </div>
+            <div onclick="ui.copy(document.getElementById('admin-phone').innerText)" style="background:var(--bg-input); padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:700; color:var(--primary);">
+                <i class="fa-regular fa-copy"></i>
+            </div>
         </div>
+        <input type="number" id="dep-amount" class="input-box" placeholder="Amount Sent (e.g. 100)" oninput="app.validateAmount(this)">
+        <input type="text" id="dep-trx" class="input-box" placeholder="TrxID (Required)" style="margin-top:10px;">
+        <button class="btn-main" onclick="app.deposit()" style="margin-top:15px;">Verify Payment</button>
     </div>
 </div>
 
@@ -786,34 +725,22 @@
     <div class="modal-overlay" onclick="ui.closeModal()"></div>
     <div class="modal-sheet">
         <div class="sheet-handle"></div>
-
-        <div id="wd-form">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h2 style="margin:0">Withdraw</h2>
-                <div onclick="ui.closeModal()" style="font-size:1.5rem; cursor:pointer; color:var(--text-muted);"><i class="fa-solid fa-xmark"></i></div>
-            </div>
-            <div style="background:#f0f9ff; padding:10px; border-radius:8px; text-align:center; margin-bottom:15px; border:1px solid #bae6fd;">
-                <span class="text-muted" style="font-size:0.8rem;">Available Balance</span><br>
-                <span style="font-size:1.2rem; font-weight:800; color:var(--primary);">৳ <span class="live-balance">0.00</span></span>
-            </div>
-            <input type="number" id="wd-amount" class="input-box" placeholder="Amount (min 100)" style="margin-top:10px;" oninput="app.validateAmount(this)">
-            <input type="number" id="wd-number" class="input-box" placeholder="Your bKash/Nagad Number" style="margin-top:15px;">
-            <label class="input-label" style="margin-top:15px;">Select Method</label>
-            <div style="margin:5px 0 20px; display:flex; gap:10px;">
-                <div class="filter-chip" id="btn-bkash" onclick="app.selectMethod('bKash')">bKash</div>
-                <div class="filter-chip" id="btn-nagad" onclick="app.selectMethod('Nagad')">Nagad</div>
-            </div>
-            <button class="btn-main" onclick="app.withdraw()">Submit Request</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <h2 style="margin:0">Withdraw</h2>
+            <div onclick="ui.closeModal()" style="font-size:1.5rem; cursor:pointer; color:var(--text-muted);"><i class="fa-solid fa-xmark"></i></div>
         </div>
-
-        <div id="wd-success" class="hidden" style="text-align:center; padding:20px 5px;">
-            <div class="notice-icon-box" style="color:var(--success);"><i class="fa-solid fa-clock"></i></div>
-            <h3 style="margin-bottom:10px;">Request Submitted!</h3>
-            <p class="text-muted" style="font-size:0.9rem; line-height:1.6; margin-bottom:20px;">
-                সব তথ্য সঠিক থাকলে <b>১ ঘণ্টার মধ্যে</b> আপনার টাকা পাঠিয়ে দেওয়া হবে।
-            </p>
-            <button class="btn-main" onclick="ui.closeModal()">ঠিক আছে</button>
+        <div style="background:#f0f9ff; padding:10px; border-radius:8px; text-align:center; margin-bottom:15px; border:1px solid #bae6fd;">
+            <span class="text-muted" style="font-size:0.8rem;">Available Balance</span><br>
+            <span style="font-size:1.2rem; font-weight:800; color:var(--primary);">৳ <span class="live-balance">0.00</span></span>
         </div>
+        <input type="number" id="wd-amount" class="input-box" placeholder="Amount (min 100)" style="margin-top:10px;" oninput="app.validateAmount(this)">
+        <input type="number" id="wd-number" class="input-box" placeholder="Your bKash/Nagad Number" style="margin-top:15px;">
+        <label class="input-label" style="margin-top:15px;">Select Method</label>
+        <div style="margin:5px 0 20px; display:flex; gap:10px;">
+            <div class="filter-chip" id="btn-bkash" onclick="app.selectMethod('bKash')">bKash</div>
+            <div class="filter-chip" id="btn-nagad" onclick="app.selectMethod('Nagad')">Nagad</div>
+        </div>
+        <button class="btn-main" onclick="app.withdraw()">Submit Request</button>
     </div>
 </div>
 
@@ -857,12 +784,12 @@
     import { getFirestore, collection, getDocs, doc, setDoc, getDoc, updateDoc, arrayUnion, query, orderBy, limit, addDoc, where } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyDqWW3Z-dv6h1gfgkTQhqA6-64mfr6sv0E",
-      authDomain: "tournament-4120a.firebaseapp.com",
-      projectId: "tournament-4120a",
-      storageBucket: "tournament-4120a.firebasestorage.app",
-      messagingSenderId: "824483976695",
-      appId: "1:824483976695:web:e83d5981f4c581b5becaf2"
+      apiKey: "AIzaSyALGscEl6h13UUoYWU-UGTduexUEZJIeCc",
+      authDomain: "esports-hub-bd-d94bf.firebaseapp.com",
+      projectId: "esports-hub-bd-d94bf",
+      storageBucket: "esports-hub-bd-d94bf.firebasestorage.app",
+      messagingSenderId: "451910223098",
+      appId: "1:451910223098:web:f196d6cf6e76ff5e153543"
     };
 
     const appInstance = initializeApp(firebaseConfig);
@@ -1005,7 +932,7 @@
     // --- APP LOGIC ---
     window.app = {
         currentMatch: null, activeTab: 'upcoming', selectedCategory: 'All', tempImage: null,
-        selectedWithdrawMethod: null, recipientVerified: false, config: {},
+        selectedWithdrawMethod: null, recipientVerified: false,
         
         checkLogin: (callback) => {
             if (window.db.user_uid) {
@@ -1033,52 +960,16 @@
                 const docSnap = await getDoc(doc(dbService, "config", "banner")); 
                 if(docSnap.exists()) {
                     const d = docSnap.data();
-                    window.app.config = d; // cache full config for openSupport / community / rules
-                    // Support both the old single "url" field and the new "urls" array.
-                    const urls = Array.isArray(d.urls) && d.urls.length ? d.urls : (d.url ? [d.url] : []);
-                    if (urls.length) window.app.setupBannerSlider(urls);
+                    if(d.url) document.getElementById('home-banner-img').src = d.url;
                     if(d.notice && d.notice.trim() !== "") {
                         document.getElementById('notice-text').innerText = d.notice;
                         setTimeout(() => {
                             window.ui.openModal('modal-notice');
                         }, 2500);
                     }
-                    if(d.appName && d.appName.trim() !== "") {
-                        document.title = d.appName;
-                        document.getElementById('header-app-title').innerText = d.appName;
-                        document.getElementById('auth-app-title').innerText = d.appName;
-                    }
-                    if(d.matchRules && d.matchRules.trim() !== "") {
-                        const list = document.getElementById('rules-list');
-                        list.innerHTML = d.matchRules.split('\n').filter(l => l.trim() !== "").map(l => `<li>${l.trim()}</li>`).join('');
-                    }
+                    if(d.bkash) document.getElementById('admin-phone').innerText = d.bkash;
                 } 
             } catch(e) {} 
-        },
-
-        setupBannerSlider: (urls) => {
-            const slidesBox = document.getElementById('home-banner-slides');
-            const dotsBox = document.getElementById('home-banner-dots');
-            slidesBox.innerHTML = urls.map((u, i) => `
-                <img src="${u}" style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; opacity:${i===0?1:0}; transition: opacity 0.6s ease;">
-            `).join('');
-            dotsBox.innerHTML = urls.length > 1 ? urls.map((_, i) => `
-                <span style="width:${i===0?16:6}px; height:6px; border-radius:4px; background:rgba(255,255,255,${i===0?0.95:0.5}); transition:0.3s;"></span>
-            `).join('') : '';
-
-            if (window.app._bannerInterval) clearInterval(window.app._bannerInterval);
-            if (urls.length <= 1) return;
-
-            let idx = 0;
-            window.app._bannerInterval = setInterval(() => {
-                const imgs = slidesBox.querySelectorAll('img');
-                const dots = dotsBox.querySelectorAll('span');
-                imgs[idx].style.opacity = 0;
-                if (dots[idx]) { dots[idx].style.width = '6px'; dots[idx].style.background = 'rgba(255,255,255,0.5)'; }
-                idx = (idx + 1) % imgs.length;
-                imgs[idx].style.opacity = 1;
-                if (dots[idx]) { dots[idx].style.width = '16px'; dots[idx].style.background = 'rgba(255,255,255,0.95)'; }
-            }, 4000);
         },
 
         fetchNotifications: async () => {
@@ -1275,29 +1166,15 @@
                 window.ui.closeModal(); window.ui.toast("Joined Successfully!"); window.app.fetchUserData(); window.app.fetchMatches();
             } catch(e) { window.ui.toast("Error: " + e.message); }
         },
-        selectDepositMethod: (method) => {
-            window.app.selectedDepositMethod = method;
-            document.querySelectorAll('#dep-btn-bkash, #dep-btn-nagad').forEach(c => c.classList.remove('active'));
-            const num = method === 'bKash' ? (window.app.config.bkash || 'Not set by admin yet') : (window.app.config.nagad || 'Not set by admin yet');
-            document.getElementById('dep-number-display').innerText = num;
-            if(method === 'bKash') document.getElementById('dep-btn-bkash').classList.add('active');
-            if(method === 'Nagad') document.getElementById('dep-btn-nagad').classList.add('active');
-        },
         deposit: async () => { 
             const amt = document.getElementById('dep-amount').value; 
             const trx = document.getElementById('dep-trx').value.trim();
-            const sender = document.getElementById('dep-sender').value.trim();
-            const method = window.app.selectedDepositMethod;
-            if(!method) return window.ui.toast("Select bKash or Nagad");
             if(!amt) return window.ui.toast("Enter amount");
-            if(!sender) return window.ui.toast("Enter your sending number");
             if(!trx) return window.ui.toast("TrxID is Required"); 
             window.ui.toast("Processing..."); 
             try { 
-                await addDoc(collection(dbService, "users", window.db.user_uid, "transactions"), { title: "Add Money Request", amount: `+${amt}`, type: "deposit", status: "pending", method: method, number: sender, trxId: trx, date: new Date().toLocaleDateString() }); 
-                document.getElementById('dep-form').classList.add('hidden');
-                document.getElementById('dep-success').classList.remove('hidden');
-                window.app.fetchTransactions(); 
+                await addDoc(collection(dbService, "users", window.db.user_uid, "transactions"), { title: "Add Money Request", amount: `+${amt}`, type: "deposit", status: "pending", trxId: trx, date: new Date().toLocaleDateString() }); 
+                window.ui.closeModal(); window.ui.toast("Request Submitted"); window.app.fetchTransactions(); 
             } catch(e) { window.ui.toast("Error: " + e.message); } 
         },
         validateAmount: (el) => { if(el.value < 0) el.value = ""; },
@@ -1329,20 +1206,15 @@
             const method = window.app.selectedWithdrawMethod;
             if(!amt || !num) return window.ui.toast("Fill amount and number"); 
             if(!method) return window.ui.toast("Select bKash or Nagad");
-            if(parseFloat(amt) < (window.app.config.minWithdraw || 100)) return window.ui.toast(`Min withdraw ${window.app.config.minWithdraw || 100} Tk`);
+            if(parseFloat(amt) < 100) return window.ui.toast("Min withdraw 100 Tk");
             if(parseFloat(amt) > window.db.balance) return window.ui.toast("Insufficient Balance"); 
             window.ui.toast("Processing..."); 
             try { 
-                // Lock the funds immediately so the same balance can't be withdrawn twice.
-                // If the admin rejects the request, the amount is refunded back (see admin panel).
-                await updateDoc(doc(dbService, "users", window.db.user_uid), { balance: window.db.balance - parseFloat(amt) });
                 await addDoc(collection(dbService, "users", window.db.user_uid, "transactions"), { 
                     title: `Withdraw (${method})`, amount: `-${amt}`, type: "withdraw", status: "pending", 
                     number: num, method: method, date: new Date().toLocaleDateString() 
                 }); 
-                document.getElementById('wd-form').classList.add('hidden');
-                document.getElementById('wd-success').classList.remove('hidden');
-                window.app.fetchUserData(); window.app.fetchTransactions(); 
+                window.ui.closeModal(); window.ui.toast("Withdraw Request Sent"); window.app.fetchTransactions(); 
             } catch(e) { window.ui.toast("Error: " + e.message); } 
         },
         transfer: async () => { 
@@ -1374,15 +1246,7 @@
                 window.app.fetchUserData(); window.app.fetchTransactions(); 
             } catch (e) { window.ui.toast("Failed: " + e.message); } 
         },
-        openSupport: () => {
-            const num = (window.app.config.helpWhatsapp || '8801700000000').replace(/[^0-9]/g, '');
-            window.open(`https://wa.me/${num}?text=Hello%20Help%20Needed`, '_blank');
-        },
-        openCommunity: () => {
-            const link = window.app.config.communityLink;
-            if (link) window.open(link, '_blank');
-            else window.ui.toast('Community link not set yet');
-        },
+        openSupport: () => { window.open(`https://wa.me/8801700000000?text=Hello%20Help%20Needed`, '_blank'); },
         switchTab: (t,e) => { window.app.activeTab = t; document.querySelectorAll('.mm-tab').forEach(x=>x.classList.remove('active')); e.classList.add('active'); window.app.renderMyMatches(); }
     };
 
@@ -1403,18 +1267,6 @@
                 const left = d.nameChangesLeft !== undefined ? d.nameChangesLeft : 2; document.getElementById('changes-left-count').innerText = left; if(left <= 0) document.getElementById('edit-app-name').disabled = true;
             }
             if(id === 'modal-settings') { document.getElementById('set-pay-method').value = d.paymentMethod || ""; document.getElementById('set-pay-name').value = d.paymentName || ""; }
-            if(id === 'modal-deposit') {
-                document.getElementById('dep-form').classList.remove('hidden'); document.getElementById('dep-success').classList.add('hidden');
-                document.getElementById('dep-amount').value = ""; document.getElementById('dep-sender').value = ""; document.getElementById('dep-trx').value = "";
-                window.app.selectedDepositMethod = null; document.getElementById('dep-number-display').innerText = "Select a method above";
-                document.querySelectorAll('#dep-btn-bkash, #dep-btn-nagad').forEach(c => c.classList.remove('active'));
-            }
-            if(id === 'modal-withdraw') {
-                document.getElementById('wd-form').classList.remove('hidden'); document.getElementById('wd-success').classList.add('hidden');
-                document.getElementById('wd-amount').value = ""; document.getElementById('wd-number').value = "";
-                window.app.selectedWithdrawMethod = null;
-                document.querySelectorAll('#btn-bkash, #btn-nagad').forEach(c => c.classList.remove('active'));
-            }
             history.pushState({modal: id}, null, '#'+id); document.getElementById(id).classList.add('active');
         },
         closeModal: (skipHistory = false) => {
