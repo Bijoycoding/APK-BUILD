@@ -280,7 +280,22 @@ body {
 .act.del:hover { color: var(--weak); border-color: var(--weak); }
 .act.load:hover { color: var(--text); }
 .act.flash { color: var(--strong); border-color: var(--strong); }
+.act svg { width: 12px; height: 12px; }
 .empty { padding: 32px 0; text-align: center; color: var(--text-4); font-size: 12.5px; }
+
+/* Note reveal/hide */
+.note-content {
+  white-space: pre-wrap; word-break: break-word;
+  color: var(--text-2); font-family: 'Inter', sans-serif;
+  font-size: 12px; line-height: 1.55;
+  transition: filter 0.18s, color 0.18s;
+}
+.note-content.masked {
+  color: var(--text-4);
+  letter-spacing: 0.08em;
+  font-family: 'JetBrains Mono', monospace;
+  user-select: none;
+}
 
 .chip {
   display: inline-block; font-family: 'JetBrains Mono', monospace;
@@ -641,19 +656,24 @@ textarea.field.mono { font-family: 'JetBrains Mono', monospace; font-size: 11px;
 <script>
 'use strict';
 
-// ═══ Safe storage helpers (Safari private mode safety) ═══
+// ═══ Safe storage ═══
 function lsGet(k) { try { return localStorage.getItem(k); } catch (_) { return null; } }
 function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (_) {} }
 function lsRemove(k) { try { localStorage.removeItem(k); } catch (_) {} }
 function ssGet(k) { try { return sessionStorage.getItem(k); } catch (_) { return null; } }
 function ssSet(k, v) { try { sessionStorage.setItem(k, v); } catch (_) {} }
 
-// ═══ COPY (with fallback) ═══
+// ═══ COPY (robust, works on http/file too) ═══
 async function copyText(text) {
   if (!text) return false;
-  if (navigator.clipboard && window.isSecureContext) {
-    try { await navigator.clipboard.writeText(text); return true; } catch (_) {}
-  }
+  // Try modern clipboard first
+  try {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+  } catch (_) { /* fall through */ }
+  // Fallback: hidden textarea + execCommand
   try {
     const ta = document.createElement('textarea');
     ta.value = text;
@@ -663,11 +683,14 @@ async function copyText(text) {
     ta.style.left = '-9999px';
     ta.style.opacity = '0';
     document.body.appendChild(ta);
+    const sel = document.getSelection();
+    const prevRange = sel && sel.rangeCount > 0 ? sel.getRangeAt(0) : null;
     ta.focus();
     ta.select();
     try { ta.setSelectionRange(0, text.length); } catch (_) {}
     const ok = document.execCommand('copy');
     document.body.removeChild(ta);
+    if (prevRange && sel) { sel.removeAllRanges(); sel.addRange(prevRange); }
     return ok;
   } catch (_) { return false; }
 }
@@ -748,6 +771,9 @@ function makeEmpty(text) {
   return d;
 }
 
+// Set of revealed note timestamps (in-memory only, not persisted)
+const revealedNotes = new Set();
+
 // ═══ TABS ═══
 document.querySelectorAll('.tab').forEach(function (tab) {
   tab.addEventListener('click', function () {
@@ -759,7 +785,7 @@ document.querySelectorAll('.tab').forEach(function (tab) {
   });
 });
 
-// ═══ TOGGLE VISIBILITY ═══
+// ═══ TOGGLE MAIN VISIBILITY ═══
 let visible = false;
 toggleBtn.addEventListener('click', function () {
   visible = !visible;
@@ -1070,9 +1096,8 @@ function ensureVault(action) {
 }
 async function persistVault() {
   if (!vaultKey) return;
-  try {
-    lsSet(K_BLOB, await encryptK(vaultKey, vaultData));
-  } catch (e) { console.error('persist failed', e); }
+  try { lsSet(K_BLOB, await encryptK(vaultKey, vaultData)); }
+  catch (e) { console.error('persist failed', e); }
 }
 async function createVault(pass) {
   const salt = crypto.getRandomValues(new Uint8Array(16));
@@ -1120,7 +1145,8 @@ document.getElementById('vault-submit').addEventListener('click', async function
       showToast('আনলক হয়েছে');
     }
   } catch (e) {
-    err.textContent = 'সমস্যা হয়েছে'; err.classList.add('show');
+    err.textContent = 'সমস্যা হয়েছে';
+    err.classList.add('show');
     return;
   }
   closeVaultModal();
@@ -1157,6 +1183,10 @@ function dotColor(pw) {
   if (pw.length >= 16) s++;
   return tiers[Math.min(s, 4)].color;
 }
+function maskContent(content) {
+  const len = Math.max(1, Math.min(String(content || '').length, 40));
+  return '•'.repeat(len);
+}
 
 // ═══ RENDER PASSWORDS ═══
 function renderPw(highlight) {
@@ -1181,7 +1211,7 @@ function renderPw(highlight) {
       '<div class="item-acts">' +
         '<button type="button" class="act load">লোড</button>' +
         '<button type="button" class="act copy-saved">কপি</button>' +
-        '<button type="button" class="act del"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>' +
+        '<button type="button" class="act del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>' +
       '</div>';
     div.querySelector('.item-name').textContent = item.name;
     div.querySelector('.item-val').textContent = masked;
@@ -1263,7 +1293,7 @@ function renderApi(highlight) {
       '</div>' +
       '<div class="item-acts">' +
         '<button type="button" class="act copy-saved">কপি</button>' +
-        '<button type="button" class="act del"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>' +
+        '<button type="button" class="act del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>' +
       '</div>';
     div.querySelector('.item-name').textContent = item.name;
     div.querySelector('.item-val').textContent = maskKey(item.key);
@@ -1315,7 +1345,7 @@ document.getElementById('do-save-api').addEventListener('click', function () {
   });
 });
 
-// ═══ RENDER NOTES ═══
+// ═══ RENDER NOTES (masked by default; eye toggle to reveal) ═══
 function renderNotes(highlight) {
   const list = document.getElementById('notes-list');
   document.getElementById('badge-note').textContent = vaultData.notes.length;
@@ -1325,41 +1355,102 @@ function renderNotes(highlight) {
     return;
   }
   vaultData.notes.forEach(function (item, i) {
+    const revealed = revealedNotes.has(item.time);
     const div = document.createElement('div');
     div.className = 'item' + (highlight && i === 0 ? ' just' : '');
     div.style.flexDirection = 'column';
     div.style.alignItems = 'stretch';
     div.style.gap = '6px';
-    div.innerHTML =
-      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">' +
-        '<div class="item-name" style="margin:0;flex:1;"></div>' +
-        '<div class="item-acts">' +
-          '<button type="button" class="act copy-saved">কপি</button>' +
-          '<button type="button" class="act del"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>' +
-        '</div>' +
-      '</div>' +
-      '<div class="item-meta content" style="white-space:pre-wrap;word-break:break-word;color:var(--text-2);font-family:Inter,sans-serif;font-size:12px;line-height:1.5;"></div>';
-    div.querySelector('.item-name').textContent = item.title;
-    div.querySelector('.content').textContent = item.content;
-    div.querySelector('.copy-saved').addEventListener('click', async function () {
+
+    // Header row
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;justify-content:space-between;align-items:center;gap:8px;';
+    const title = document.createElement('div');
+    title.className = 'item-name';
+    title.style.cssText = 'margin:0;flex:1;';
+    title.textContent = item.title;
+    const acts = document.createElement('div');
+    acts.className = 'item-acts';
+
+    // Eye toggle button
+    const eyeBtn = document.createElement('button');
+    eyeBtn.type = 'button';
+    eyeBtn.className = 'act toggle-eye';
+    eyeBtn.title = revealed ? 'লুকান' : 'দেখুন';
+    eyeBtn.setAttribute('aria-label', revealed ? 'নোট লুকান' : 'নোট দেখুন');
+    eyeBtn.innerHTML = revealed
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+
+    // Copy button
+    const copyBtnN = document.createElement('button');
+    copyBtnN.type = 'button';
+    copyBtnN.className = 'act copy-saved';
+    copyBtnN.textContent = 'কপি';
+
+    // Delete button
+    const delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'act del';
+    delBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>';
+
+    acts.appendChild(eyeBtn);
+    acts.appendChild(copyBtnN);
+    acts.appendChild(delBtn);
+    header.appendChild(title);
+    header.appendChild(acts);
+
+    // Content (masked or revealed)
+    const content = document.createElement('div');
+    content.className = 'note-content' + (revealed ? '' : ' masked');
+    content.textContent = revealed ? item.content : maskContent(item.content);
+
+    div.appendChild(header);
+    div.appendChild(content);
+
+    // Wire up eye toggle
+    eyeBtn.addEventListener('click', function () {
+      const nowRevealed = revealedNotes.has(item.time);
+      if (nowRevealed) {
+        revealedNotes.delete(item.time);
+        content.classList.add('masked');
+        content.textContent = maskContent(item.content);
+        eyeBtn.title = 'দেখুন';
+        eyeBtn.setAttribute('aria-label', 'নোট দেখুন');
+        eyeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+      } else {
+        revealedNotes.add(item.time);
+        content.classList.remove('masked');
+        content.textContent = item.content;
+        eyeBtn.title = 'লুকান';
+        eyeBtn.setAttribute('aria-label', 'নোট লুকান');
+        eyeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+      }
+    });
+
+    // Copy (always copies the actual content, regardless of visibility)
+    copyBtnN.addEventListener('click', async function () {
       const ok = await copyText(item.content);
       if (ok) {
-        const b = div.querySelector('.copy-saved');
-        b.classList.add('flash');
+        copyBtnN.classList.add('flash');
         showToast('কপি হয়েছে');
-        setTimeout(function () { b.classList.remove('flash'); }, 1200);
+        setTimeout(function () { copyBtnN.classList.remove('flash'); }, 1200);
       } else showToast('কপি ব্যর্থ', 'warn');
     });
-    div.querySelector('.del').addEventListener('click', function () {
+
+    // Delete
+    delBtn.addEventListener('click', function () {
       div.style.opacity = '0';
       div.style.transition = 'opacity 0.18s';
       setTimeout(function () {
         const idx = vaultData.notes.indexOf(item);
         if (idx !== -1) vaultData.notes.splice(idx, 1);
+        revealedNotes.delete(item.time);
         persistVault();
         renderNotes();
       }, 160);
     });
+
     list.appendChild(div);
   });
 }
@@ -1446,6 +1537,7 @@ document.getElementById('import-pass-submit').addEventListener('click', async fu
       notes: Array.isArray(data.notes) ? data.notes : []
     };
     vaultReady = true;
+    revealedNotes.clear();
     renderAll();
     document.getElementById('import-input').value = '';
     pendingImport = null;
@@ -1485,7 +1577,6 @@ document.querySelectorAll('.modal').forEach(function (m) {
   });
 });
 
-// Escape closes top-most modal
 document.addEventListener('keydown', function (e) {
   if (e.key !== 'Escape') return;
   const importOverlay = document.getElementById('import-pass-overlay');
