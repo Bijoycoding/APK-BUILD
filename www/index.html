@@ -1,1369 +1,787 @@
 <!DOCTYPE html>
-<html lang="bn" data-theme="dark">
+<html lang="bn" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>পাসওয়ার্ড শক্তি পরীক্ষক</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<title>পাসওয়ার্ড চেকার</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-html {
-  -webkit-tap-highlight-color: transparent;
-  -webkit-tap-highlight-color: rgba(0,0,0,0);
-}
-button, a, input, [role="button"], .boost-tip, .check-item, .saved-item, .theme-btn {
+html { -webkit-tap-highlight-color: transparent; }
+button, .chk, .item, .tab {
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
 }
-input { -webkit-user-select: text; user-select: text; }
-
+input, textarea { -webkit-user-select: text; user-select: text; }
 button {
-  font: inherit;
-  outline: none;
-  -webkit-appearance: none;
-  appearance: none;
+  font: inherit; outline: none;
+  -webkit-appearance: none; appearance: none;
+  border: none; background: none;
+  cursor: pointer; color: inherit;
 }
-button:focus,
-button:focus-visible {
-  outline: none;
-}
-button:focus-visible {
-  box-shadow: 0 0 0 2px var(--accent-glow), 0 0 0 3.5px var(--accent);
-}
-input:focus,
-input:focus-visible { outline: none; }
+button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+input:focus, textarea:focus { outline: none; }
 
-/* ─── THEME TOKENS ─── */
 [data-theme="dark"] {
-  --bg: #0C0E14;
-  --bg2: #12151E;
-  --surface: #181C27;
-  --surface2: #1E2333;
-  --border: #262D40;
-  --border2: #303852;
-  --text: #E8EDF8;
-  --text2: #C2CBDF;
-  --muted: #6B7499;
-  --accent: #6C8EFA;
-  --accent-glow: rgba(108,142,250,0.18);
-  --weak: #F4645A;
-  --fair: #F5A742;
-  --good: #B48EF5;
-  --strong: #4CC87A;
-  --vstrong: #34D9B5;
-  --orb-op: 0.13;
-  --shadow: 0 32px 80px rgba(0,0,0,0.6);
-  --card-glow: 0 0 0 1px rgba(255,255,255,0.04);
-  --save-bg: #1E2333;
-  --save-border: #262D40;
-  --save-item: #181C27;
-  --transition-theme: background 0.35s, color 0.35s, border-color 0.35s, box-shadow 0.35s;
+  --bg: #09090B; --surface: #121214; --surface-2: #18181B; --surface-3: #1F1F23;
+  --border: #26262B; --border-2: #35353C;
+  --text: #EDEDEF; --text-2: #9C9CA6; --text-3: #6C6C75; --text-4: #4A4A52;
+  --btn-bg: #EDEDEF; --btn-fg: #09090B;
+  --weak: #EF4444; --fair: #F59E0B; --good: #A78BFA; --strong: #34D399; --vstrong: #22D3EE;
+  --overlay: rgba(0,0,0,0.7);
 }
-
 [data-theme="light"] {
-  --bg: #F0F4FF;
-  --bg2: #E6ECFA;
-  --surface: #FFFFFF;
-  --surface2: #F5F8FF;
-  --border: #D4DBF0;
-  --border2: #BDC8E8;
-  --text: #1A1F35;
-  --text2: #343B5A;
-  --muted: #7180A8;
-  --accent: #4A6EF0;
-  --accent-glow: rgba(74,110,240,0.12);
-  --weak: #E53935;
-  --fair: #E07B20;
-  --good: #7B55D4;
-  --strong: #2E9E55;
-  --vstrong: #1BA88A;
-  --orb-op: 0.08;
-  --shadow: 0 16px 60px rgba(100,120,200,0.18);
-  --card-glow: 0 0 0 1px rgba(100,130,220,0.12);
-  --save-bg: #F0F4FF;
-  --save-border: #D4DBF0;
-  --save-item: #FFFFFF;
-  --transition-theme: background 0.35s, color 0.35s, border-color 0.35s, box-shadow 0.35s;
+  --bg: #FAFAFA; --surface: #FFFFFF; --surface-2: #F4F4F5; --surface-3: #EBEBED;
+  --border: #E4E4E7; --border-2: #D4D4D8;
+  --text: #18181B; --text-2: #52525B; --text-3: #71717A; --text-4: #A1A1AA;
+  --btn-bg: #18181B; --btn-fg: #FAFAFA;
+  --weak: #DC2626; --fair: #D97706; --good: #7C3AED; --strong: #059669; --vstrong: #0891B2;
+  --overlay: rgba(15,15,20,0.5);
 }
 
-/* ─── BASE ─── */
 body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Space Grotesk', sans-serif;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 32px 16px 60px;
-  overflow-x: hidden;
-  position: relative;
-  transition: var(--transition-theme);
+  background: var(--bg); color: var(--text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 13.5px; line-height: 1.45; min-height: 100vh;
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  transition: background 0.2s, color 0.2s;
 }
+.shell { max-width: 640px; margin: 0 auto; padding: 24px 20px 80px; }
 
-/* ─── ORBS ─── */
-.orb {
-  position: fixed;
-  border-radius: 50%;
-  filter: blur(90px);
-  opacity: var(--orb-op);
-  pointer-events: none;
-  z-index: 0;
-  transition: all 1.4s cubic-bezier(0.4,0,0.2,1);
+.head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--border);
 }
-.orb-1 { width: 560px; height: 560px; background: #5B7FFA; top: -220px; right: -120px; }
-.orb-2 { width: 440px; height: 440px; background: #B06EF5; bottom: -160px; left: -100px; }
-.orb-3 { width: 320px; height: 320px; background: #F4645A; top: 50%; left: 40%; transform: translate(-50%,-50%); opacity: calc(var(--orb-op)*0.5); }
-
-/* ─── TOPBAR ─── */
-.topbar {
-  width: 100%;
-  max-width: 560px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  position: relative;
-  z-index: 10;
+.logo {
+  font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 600;
+  letter-spacing: -0.02em; color: var(--text);
 }
-.brand {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  color: var(--accent);
-  opacity: 0.85;
-}
+.logo span { color: var(--text-4); font-weight: 400; }
 .theme-btn {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 50px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0;
-  padding: 4px;
-  transition: var(--transition-theme), transform 0.2s;
-  position: relative;
-  width: 62px;
-  height: 32px;
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text-2); transition: all 0.14s;
 }
-.theme-btn:hover { transform: scale(1.05); }
-.theme-btn:active { transform: scale(0.94); }
-.theme-btn { transition: var(--transition-theme), transform 0.15s cubic-bezier(0.34,1.56,0.64,1); }
-.theme-thumb {
-  position: absolute;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: left 0.35s cubic-bezier(0.34,1.56,0.64,1), background 0.35s;
-  left: 4px;
-  box-shadow: 0 2px 8px rgba(108,142,250,0.4);
-}
-[data-theme="light"] .theme-thumb { left: 34px; }
-.theme-thumb svg { width: 13px; height: 13px; color: #fff; }
+.theme-btn:hover { border-color: var(--border-2); color: var(--text); }
+.theme-btn:active { background: var(--surface-2); }
+.theme-btn svg { width: 14px; height: 14px; }
 
-/* ─── CARD ─── */
-.card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 22px;
-  padding: 40px 40px 36px;
-  width: 100%;
-  max-width: 560px;
-  position: relative;
-  z-index: 1;
-  box-shadow: var(--card-glow), var(--shadow);
-  transition: var(--transition-theme);
-  margin-bottom: 16px;
+.pw-field {
+  display: flex; align-items: stretch;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; transition: border-color 0.14s, box-shadow 0.14s;
+  height: 52px; overflow: hidden;
 }
-
-/* ─── HEADER ─── */
-.eyebrow {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 10.5px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--accent);
-  margin-bottom: 8px;
-  opacity: 0.85;
-}
-h1 {
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: -0.025em;
-  line-height: 1.2;
-  margin-bottom: 5px;
-  color: var(--text);
-}
-.subtitle { color: var(--muted); font-size: 13.5px; margin-bottom: 28px; line-height: 1.55; }
-
-/* ─── INPUT ROW ─── */
-.input-row { display: flex; gap: 10px; margin-bottom: 20px; align-items: flex-end; }
-.input-wrap { position: relative; flex: 1; }
-.input-wrap label {
-  display: block;
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--muted);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  margin-bottom: 8px;
+.pw-field:focus-within {
+  border-color: var(--text-3);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--text) 6%, transparent);
 }
 #pw-input {
-  width: 100%;
-  background: var(--bg2);
-  border: 1.5px solid var(--border);
-  border-radius: 11px;
-  padding: 13px 46px 13px 14px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 17px;
-  font-weight: 600;
+  flex: 1; background: none; border: none; padding: 0 16px;
+  font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 500;
+  color: var(--text); letter-spacing: 0.02em; caret-color: var(--text); min-width: 0;
+}
+#pw-input::placeholder { color: var(--text-4); font-weight: 400; letter-spacing: 0.04em; }
+.icon-btn {
+  width: 46px; display: flex; align-items: center; justify-content: center;
+  color: var(--text-3); border-left: 1px solid var(--border);
+  transition: color 0.14s, background 0.14s; flex-shrink: 0;
+}
+.icon-btn:hover { color: var(--text); background: var(--surface-2); }
+.icon-btn.copied { color: var(--strong); }
+
+.meter-head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin: 16px 0 8px; font-size: 12.5px;
+}
+.meter-strength { font-weight: 600; color: var(--text-3); transition: color 0.2s; }
+.meter-strength.c-weak { color: var(--weak); }
+.meter-strength.c-fair { color: var(--fair); }
+.meter-strength.c-good { color: var(--good); }
+.meter-strength.c-strong { color: var(--strong); }
+.meter-strength.c-vstrong { color: var(--vstrong); }
+.meter-time {
+  font-family: 'JetBrains Mono', monospace; font-size: 11.5px;
+  color: var(--text-3); font-weight: 400;
+}
+.meter-bar { height: 3px; background: var(--border); border-radius: 99px; overflow: hidden; }
+.meter-fill {
+  height: 100%; width: 0%; background: var(--text-4); border-radius: 99px;
+  transition: width 0.45s cubic-bezier(0.4,0,0.2,1), background 0.3s;
+}
+
+.stats {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  margin-top: 20px; border: 1px solid var(--border);
+  border-radius: 8px; background: var(--surface); overflow: hidden;
+}
+.stat { padding: 14px 16px; border-right: 1px solid var(--border); }
+.stat:last-child { border-right: none; }
+.stat-k {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500;
+  color: var(--text-4); letter-spacing: 0.06em; text-transform: uppercase;
+  margin-bottom: 6px; display: block;
+}
+.stat-v {
+  font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 500;
+  color: var(--text); letter-spacing: -0.01em;
+}
+
+.checks { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 16px; }
+.chk {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 5px 11px 5px 9px;
+  border: 1px solid var(--border); border-radius: 100px;
+  font-size: 11.5px; font-weight: 500;
+  color: var(--text-4); transition: all 0.18s;
+}
+.chk::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--text-4); transition: background 0.18s; flex-shrink: 0;
+}
+.chk.pass {
   color: var(--text);
-  outline: none;
-  letter-spacing: 0.08em;
-  transition: var(--transition-theme), box-shadow 0.3s;
-  caret-color: var(--accent);
+  border-color: color-mix(in srgb, var(--strong) 35%, transparent);
+  background: color-mix(in srgb, var(--strong) 7%, transparent);
 }
-#pw-input::placeholder { color: var(--muted); opacity: 0.45; letter-spacing: 0.04em; font-weight: 400; }
-#pw-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--accent-glow), 0 0 20px var(--accent-glow);
-}
-.toggle-btn {
-  position: absolute; right: 13px; bottom: 13px;
-  background: none; border: none; cursor: pointer;
-  color: var(--muted); padding: 2px; transition: color 0.2s; line-height: 1;
-}
-.toggle-btn:hover { color: var(--text); }
-.toggle-btn:active { transform: scale(0.88); }
-.toggle-btn { transition: color 0.2s, transform 0.15s; }
+.chk.pass::before { background: var(--strong); }
 
-.copy-btn {
-  background: var(--surface2);
-  border: 1.5px solid var(--border);
-  border-radius: 11px;
-  padding: 13px 16px;
-  cursor: pointer;
-  color: var(--muted);
-  font-size: 13px;
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 600;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: var(--transition-theme), color 0.2s, border-color 0.2s, transform 0.15s;
-  height: 48px;
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+.btn {
+  height: 42px; padding: 0 16px; border-radius: 6px;
+  font-size: 13px; font-weight: 500;
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 7px; transition: all 0.14s; white-space: nowrap;
 }
-.copy-btn:hover { border-color: var(--accent); color: var(--accent); transform: scale(1.03); }
-.copy-btn:active { transform: scale(0.96); }
-.copy-btn.copied { border-color: var(--strong); color: var(--strong); }
+.btn-primary { background: var(--btn-bg); color: var(--btn-fg); }
+.btn-primary:hover { opacity: 0.9; }
+.btn-primary:disabled { opacity: 0.3; cursor: not-allowed; }
+.btn-ghost { border: 1px solid var(--border); color: var(--text-2); background: var(--surface); }
+.btn-ghost:hover { border-color: var(--border-2); color: var(--text); }
+.btn-ghost:active { background: var(--surface-2); }
+.btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+.btn-full { width: 100%; }
 
-/* ─── STRENGTH BAR ─── */
-.strength-section { margin-bottom: 18px; }
-.strength-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
+.tips {
+  margin-top: 20px; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--surface); overflow: hidden;
 }
-.strength-label { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
-.strength-name {
-  font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-  opacity: 0; transform: translateX(10px);
-  transition: color 0.4s, opacity 0.3s, transform 0.3s;
-}
-.strength-name.visible { opacity: 1; transform: translateX(0); }
-
-.bar-track { display: flex; gap: 5px; height: 7px; margin-bottom: 0; }
-.bar-seg {
-  flex: 1; height: 100%;
-  background: var(--border);
-  border-radius: 99px; overflow: hidden; position: relative;
-  transition: background 0.3s;
-}
-.bar-fill {
-  position: absolute; inset: 0; border-radius: 99px; width: 0%;
-  transition: width 0.55s cubic-bezier(0.34,1.56,0.64,1), background 0.4s;
-}
-
-/* ─── SCORE RING ─── */
-.score-row {
+.tips summary {
+  padding: 12px 16px; cursor: pointer; list-style: none;
   display: flex; align-items: center; justify-content: space-between;
-  margin: 16px 0 20px; gap: 16px;
+  font-size: 12.5px; font-weight: 500; color: var(--text-2); transition: color 0.14s;
 }
-.ring-wrap {
-  position: relative; width: 72px; height: 72px; flex-shrink: 0;
-}
-.ring-wrap svg { transform: rotate(-90deg); }
-.ring-bg { fill: none; stroke: var(--border); stroke-width: 6; }
-.ring-fg {
-  fill: none; stroke-width: 6; stroke-linecap: round;
-  stroke-dasharray: 188.5;
-  stroke-dashoffset: 188.5;
-  transition: stroke-dashoffset 0.7s cubic-bezier(0.34,1.2,0.64,1), stroke 0.4s;
-}
-.ring-label {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  font-family: 'JetBrains Mono', monospace;
-}
-.ring-num { font-size: 18px; font-weight: 700; color: var(--text); line-height: 1; }
-.ring-unit { font-size: 8px; color: var(--muted); letter-spacing: 0.06em; margin-top: 2px; }
-
-.score-details { flex: 1; display: flex; flex-direction: column; gap: 8px; }
-.detail-row { display: flex; justify-content: space-between; align-items: center; }
-.detail-key { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
-.detail-val {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px; font-weight: 600; color: var(--text);
-  transition: color 0.4s;
-}
-
-/* ─── ENTROPY BAR ─── */
-.entropy-wrap { margin-bottom: 20px; }
-.entropy-header { display: flex; justify-content: space-between; margin-bottom: 7px; }
-.entropy-label { font-size: 11px; color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; font-weight: 600; }
-.entropy-value { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); }
-.entropy-bar { height: 3px; background: var(--border); border-radius: 99px; overflow: hidden; }
-.entropy-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent), var(--good));
-  border-radius: 99px; width: 0%;
-  transition: width 0.65s cubic-bezier(0.34,1.56,0.64,1);
-}
-
-/* ─── CHECKS ─── */
-.checks-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-bottom: 20px;
-}
-.check-item {
-  display: flex; align-items: center; gap: 8px;
-  padding: 8px 11px;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  transition: var(--transition-theme), border-color 0.3s, background 0.3s;
-  cursor: default;
-}
-.check-item.pass {
-  border-color: rgba(76,200,122,0.35);
-  background: rgba(76,200,122,0.06);
-}
-.check-icon {
-  width: 16px; height: 16px; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-}
-.check-icon svg { width: 14px; height: 14px; }
-.check-dot-svg .dot-circle { fill: var(--border2); transition: fill 0.3s, r 0.4s; }
-.check-item.pass .check-dot-svg .dot-circle { fill: var(--strong); }
-.check-item.pass .check-dot-svg { filter: drop-shadow(0 0 4px rgba(76,200,122,0.5)); }
-.check-mark-svg { display: none; }
-.check-item.pass .check-dot-svg { display: none; }
-.check-item.pass .check-mark-svg { display: block; color: var(--strong); }
-.check-text { font-size: 11.5px; color: var(--muted); font-weight: 500; transition: color 0.3s; }
-.check-item.pass .check-text { color: var(--text2); }
-
-/* ─── BOOST SECTION ─── */
-.boost-section {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  overflow: hidden;
-  margin-bottom: 20px;
-  transition: var(--transition-theme);
-}
-.boost-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 13px 16px;
-  cursor: pointer;
-  user-select: none;
-  transition: background 0.2s;
-}
-.boost-header:hover { background: rgba(108,142,250,0.05); }
-.boost-header:active { background: rgba(108,142,250,0.09); }
-.boost-title {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 13px; font-weight: 600; color: var(--text2);
-}
-.boost-arrow { transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); color: var(--muted); }
-.boost-section.open .boost-arrow { transform: rotate(180deg); }
-.boost-body {
-  max-height: 0; overflow: hidden;
-  transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1);
-  border-top: 0px solid var(--border);
-}
-.boost-section.open .boost-body {
-  max-height: 320px;
-  border-top: 1px solid var(--border);
-}
-.boost-inner { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 9px; }
-.boost-tip {
-  display: flex; align-items: flex-start; gap: 10px;
-  padding: 10px 12px;
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-radius: 9px;
-  transition: var(--transition-theme), border-color 0.2s;
-  cursor: pointer;
-  text-align: left;
-  width: 100%;
-}
-.boost-tip:hover { border-color: var(--accent); }
-.boost-tip:active { transform: scale(0.99); }
-.boost-tip { transition: var(--transition-theme), border-color 0.2s, transform 0.15s; }
-.boost-tip.done { border-color: rgba(76,200,122,0.4); background: rgba(76,200,122,0.05); }
-.boost-tip-icon { font-size: 16px; line-height: 1; flex-shrink: 0; margin-top: 1px; }
-.boost-tip-text { font-size: 12px; color: var(--muted); line-height: 1.5; }
-.boost-tip.done .boost-tip-text { color: var(--text2); }
-.boost-tip strong { color: var(--text); display: block; font-size: 12.5px; margin-bottom: 2px; }
-.apply-btn {
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 8px 13px;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 11.5px;
-  font-weight: 700;
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-  align-self: flex-start;
-  margin-top: 2px;
-  transition: opacity 0.2s, transform 0.15s;
-  letter-spacing: 0.02em;
-}
-.apply-btn:hover { opacity: 0.88; transform: scale(1.04); }
-.apply-btn:active { transform: scale(0.95); }
-.apply-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
-
-/* ─── GENERATE ─── */
-.gen-row { display: flex; gap: 8px; margin-bottom: 20px; }
-.gen-btn {
-  flex: 1;
-  background: var(--surface2);
-  border: 1.5px solid var(--border);
-  border-radius: 11px;
-  padding: 11px 14px;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: var(--muted);
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center; gap: 7px;
-  transition: var(--transition-theme), border-color 0.2s, color 0.2s, transform 0.15s;
-}
-.gen-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
-.gen-btn:active { transform: translateY(0) scale(0.97); }
-
-/* ─── SAVE SECTION (now a modal opened via FAB) ─── */
-.save-section {
-  display: none;
-}
-.save-section.open {
-  display: flex !important;
-  position: fixed !important;
-  inset: 0;
-  align-items: center;
-  justify-content: center;
-  background: rgba(4,6,12,0.72);
-  z-index: 700;
-  padding: 20px;
-  animation: overlayFade 0.2s ease;
-}
-.feature-card {
-  background: var(--save-bg);
-  border: 1px solid var(--save-border);
-  border-radius: 18px;
-  width: 100%;
-  max-width: 420px;
-  max-height: 86vh;
-  overflow-y: auto;
-  box-shadow: var(--shadow);
-  transition: var(--transition-theme);
-  animation: modalPop 0.3s cubic-bezier(0.34,1.56,0.64,1);
-}
-.save-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 15px 16px;
-  cursor: pointer;
-  user-select: none;
-  position: sticky; top: 0;
-  background: var(--save-bg);
-  border-bottom: 1px solid var(--save-border);
-  transition: background 0.2s, var(--transition-theme);
-}
-.save-header:hover { background: rgba(108,142,250,0.05); }
-.save-header:active { background: rgba(108,142,250,0.09); }
-.save-title {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 13px; font-weight: 600; color: var(--text2);
-}
-.save-badge {
-  background: var(--accent);
-  color: #fff;
-  font-size: 10px;
-  font-weight: 700;
-  border-radius: 99px;
-  padding: 1px 7px;
-  font-family: 'JetBrains Mono', monospace;
-  min-width: 20px;
-  text-align: center;
-}
-.save-arrow { transition: color 0.2s; color: var(--muted); }
-.save-header:hover .save-arrow { color: var(--weak); }
-.save-body { overflow: visible; }
-.save-inner { padding: 14px 16px 18px; display: flex; flex-direction: column; gap: 8px; }
-
-/* ─── DATA PANEL (always-visible accordion lists below the card) ─── */
-.data-panel {
-  background: var(--save-bg);
-  border: 1px solid var(--save-border);
-  border-radius: 14px;
-  overflow: hidden;
-  transition: var(--transition-theme);
-  width: 100%;
-  max-width: 560px;
-}
-.panel-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 13px 16px;
-  cursor: pointer;
-  user-select: none;
-  transition: background 0.2s;
-}
-.panel-header:hover { background: rgba(108,142,250,0.05); }
-.panel-header:active { background: rgba(108,142,250,0.09); }
-.panel-arrow { transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); color: var(--muted); }
-.data-panel.open .panel-arrow { transform: rotate(180deg); }
-.panel-body {
-  max-height: 0; overflow: hidden;
-  transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1);
-  border-top: 0px solid var(--border);
-}
-.data-panel.open .panel-body {
-  max-height: 600px;
-  border-top: 1px solid var(--save-border);
-}
-.panel-inner { padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 8px; }
-
-.save-action-row {
-  display: flex; gap: 8px; margin-bottom: 4px;
-}
-.save-name-input {
-  flex: 1;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 9px 12px;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 13px;
-  color: var(--text);
-  outline: none;
-  transition: var(--transition-theme), border-color 0.2s;
-}
-.save-name-input::placeholder { color: var(--muted); opacity: 0.5; }
-.save-name-input:focus { border-color: var(--accent); }
-.do-save-btn {
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  padding: 9px 16px;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: opacity 0.2s, transform 0.15s;
-  white-space: nowrap;
-}
-.do-save-btn:hover { opacity: 0.88; transform: scale(1.03); }
-.do-save-btn:active { transform: scale(0.95); }
-.do-save-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
-.save-empty {
-  text-align: center;
-  color: var(--muted);
-  font-size: 12.5px;
-  padding: 12px 0 4px;
-}
-.saved-item {
+.tips summary::-webkit-details-marker { display: none; }
+.tips summary:hover { color: var(--text); }
+.tips[open] summary { border-bottom: 1px solid var(--border); }
+.tips summary svg { transition: transform 0.2s; color: var(--text-4); }
+.tips[open] summary svg { transform: rotate(180deg); }
+.tips-body { padding: 8px 12px 12px; display: flex; flex-direction: column; gap: 4px; }
+.tip {
   display: flex; align-items: center; gap: 10px;
-  background: var(--save-item);
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  padding: 10px 12px;
-  transition: var(--transition-theme);
-  animation: slideIn 0.3s cubic-bezier(0.34,1.4,0.64,1);
+  padding: 9px 10px; border-radius: 6px;
+  text-align: left; width: 100%; transition: background 0.14s;
 }
-@keyframes slideIn {
-  from { opacity: 0; transform: translateY(-8px) scale(0.97); }
-  to   { opacity: 1; transform: translateY(0) scale(1); }
+.tip:hover { background: var(--surface-2); }
+.tip-text { flex: 1; font-size: 12.5px; color: var(--text-2); min-width: 0; }
+.tip-apply {
+  font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 500;
+  color: var(--text-4); letter-spacing: 0.04em; text-transform: uppercase;
+  flex-shrink: 0; padding: 3px 8px;
+  border: 1px solid var(--border); border-radius: 4px; transition: all 0.14s;
 }
-.saved-dot {
-  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-}
-.saved-info { flex: 1; min-width: 0; }
-.saved-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.saved-pw {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px; color: var(--muted);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.saved-actions { display: flex; gap: 5px; flex-shrink: 0; }
-.saved-btn {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 5px 8px;
-  cursor: pointer;
-  color: var(--muted);
-  font-size: 11px;
-  transition: color 0.2s, border-color 0.2s, transform 0.15s;
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 600;
-  display: flex; align-items: center; gap: 4px;
-}
-.saved-btn:hover { color: var(--text); border-color: var(--border2); transform: scale(1.05); }
-.saved-btn:active { transform: scale(0.93); }
-.saved-btn.del:hover { color: var(--weak); border-color: var(--weak); }
-.saved-btn.load:hover { color: var(--accent); border-color: var(--accent); }
+.tip:hover .tip-apply { color: var(--text); border-color: var(--border-2); }
 
-/* ─── STRENGTH COLORS ─── */
-.c-weak { color: var(--weak); }
-.c-fair { color: var(--fair); }
-.c-good { color: var(--good); }
-.c-strong { color: var(--strong); }
-.c-vstrong { color: var(--vstrong); }
-.f-weak { background: var(--weak); }
-.f-fair { background: var(--fair); }
-.f-good { background: var(--good); }
-.f-strong { background: var(--strong); }
-.f-vstrong { background: linear-gradient(90deg, #3FC87A, #34D9B5); }
-
-/* ─── ANIMATIONS ─── */
-@keyframes pulse-card {
-  0% { box-shadow: var(--card-glow), var(--shadow), 0 0 0 0 var(--accent-glow); }
-  60% { box-shadow: var(--card-glow), var(--shadow), 0 0 0 14px transparent; }
-  100% { box-shadow: var(--card-glow), var(--shadow); }
+.vault { margin-top: 40px; }
+.vault-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
 }
-.pulsing { animation: pulse-card 0.55s ease-out; }
-
-.char-float {
-  position: fixed;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  color: var(--accent);
-  opacity: 0;
-  pointer-events: none;
-  z-index: 0;
-  animation: floatUp 1.1s ease-out forwards;
+.vault-title {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 500;
+  color: var(--text-4); letter-spacing: 0.08em; text-transform: uppercase;
 }
-@keyframes floatUp {
-  0%   { opacity: 0.7; transform: translateY(0) scale(1); }
-  100% { opacity: 0; transform: translateY(-55px) scale(0.5); }
+.tabs {
+  display: flex; gap: 4px; padding: 3px;
+  background: var(--surface-2); border-radius: 7px; margin-bottom: 14px;
 }
-
-/* sparkle burst */
-.spark {
-  position: fixed;
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 99;
-  animation: sparkBurst 0.6s ease-out forwards;
-}
-@keyframes sparkBurst {
-  0%   { opacity: 1; transform: translate(0,0) scale(1); }
-  100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0); }
-}
-
-/* hint */
-.hint-text {
-  margin-top: 14px;
-  font-size: 12.5px; color: var(--muted);
-  min-height: 18px;
-  line-height: 1.55;
-  transition: color 0.3s, opacity 0.3s;
-}
-
-/* ─── VAULT LOCK MODAL ─── */
-@keyframes overlayFade { from { opacity: 0; } to { opacity: 1; } }
-@keyframes modalPop {
-  from { opacity: 0; transform: scale(0.9) translateY(10px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
-}
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-.vault-overlay {
-  position: fixed; inset: 0;
-  background: rgba(4,6,12,0.72);
-  backdrop-filter: blur(3px);
-  display: none; align-items: center; justify-content: center;
-  z-index: 999;
-  padding: 20px;
-}
-.vault-overlay.show {
-  display: flex;
-  animation: overlayFade 0.2s ease;
-}
-.vault-modal {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 26px 24px;
-  width: 100%; max-width: 340px;
-  box-shadow: var(--shadow);
-  transition: var(--transition-theme);
-  animation: modalPop 0.3s cubic-bezier(0.34,1.56,0.64,1);
-}
-.vault-modal h3 { font-size: 17px; margin-bottom: 6px; color: var(--text); }
-.vault-modal-desc { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin-bottom: 16px; }
-.vault-error {
-  color: var(--weak); font-size: 12px; margin: -4px 0 10px; display: none; line-height: 1.4;
-}
-.vault-error.show-msg { display: block; animation: fadeInUp 0.3s ease; }
-.vault-lock-icon {
-  width: 40px; height: 40px; border-radius: 50%;
-  background: var(--accent-glow);
+.tab {
+  flex: 1; padding: 7px 10px; border-radius: 5px;
+  font-size: 12px; font-weight: 500; color: var(--text-3);
   display: flex; align-items: center; justify-content: center;
-  color: var(--accent); margin-bottom: 14px;
+  gap: 6px; transition: all 0.14s; min-width: 0;
 }
+.tab:hover { color: var(--text-2); }
+.tab.active {
+  background: var(--surface); color: var(--text);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+}
+.tab-n {
+  font-family: 'JetBrains Mono', monospace; font-size: 10.5px; font-weight: 500;
+  color: var(--text-4); transition: color 0.14s;
+}
+.tab.active .tab-n { color: var(--text-2); }
 
-/* ─── TEXTAREA ─── */
-.save-note-textarea {
-  width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 9px 12px;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 13px;
-  color: var(--text);
-  outline: none;
-  resize: vertical;
-  min-height: 64px;
-  transition: var(--transition-theme), border-color 0.2s;
-}
-.save-note-textarea::placeholder { color: var(--muted); opacity: 0.5; }
-.save-note-textarea:focus { border-color: var(--accent); }
-@keyframes flashHighlight {
-  0%   { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
-  100% { border-color: var(--border); box-shadow: none; }
-}
-.flash-highlight { animation: flashHighlight 1s ease; }
+.panel { display: none; }
+.panel.active { display: block; animation: fade 0.2s ease; }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
 
-/* ─── EXPIRY / STATUS BADGES ─── */
-.field-label-sm {
-  font-size: 10.5px; color: var(--muted); letter-spacing: 0.04em;
-  margin: 2px 0 -2px 2px;
+.list-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 4px; padding: 4px 0;
 }
-.status-chip {
-  display: inline-block;
-  font-size: 10px; font-weight: 700;
-  padding: 2px 7px; border-radius: 99px;
-  margin-top: 3px; letter-spacing: 0.02em;
+.add-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 11px; border: 1px dashed var(--border-2); border-radius: 6px;
+  font-size: 12px; font-weight: 500; color: var(--text-3); transition: all 0.14s;
 }
-.status-ok      { background: rgba(76,200,122,0.12); color: var(--strong); }
-.status-soon    { background: rgba(245,167,66,0.15); color: var(--fair); }
-.status-expired { background: rgba(244,100,90,0.15); color: var(--weak); }
-.note-preview {
-  white-space: pre-wrap; word-break: break-word;
-  font-size: 12px; color: var(--text2); line-height: 1.5;
-}
+.add-btn:hover { border-color: var(--text-3); color: var(--text); border-style: solid; }
+.add-btn svg { width: 12px; height: 12px; }
 
-/* ─── FAB (floating action button) ─── */
-.fab-wrap {
-  position: fixed;
-  right: 16px;
-  bottom: max(16px, env(safe-area-inset-bottom, 0px) + 12px);
-  z-index: 400;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
+#saved-list, #api-list, #notes-list { display: flex; flex-direction: column; }
+.item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+  animation: itemIn 0.22s ease;
 }
-.fab-main {
-  width: 46px; height: 46px; border-radius: 50%;
-  background: var(--accent);
-  color: #fff;
-  border: none;
+@keyframes itemIn { from { opacity: 0; } to { opacity: 1; } }
+.item.just { animation: itemIn 0.22s ease, flash 1.6s ease; }
+@keyframes flash {
+  0% { background: color-mix(in srgb, var(--text) 6%, transparent); }
+  100% { background: transparent; }
+}
+.item-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.item-info { flex: 1; min-width: 0; }
+.item-name {
+  font-size: 13px; font-weight: 500; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px;
+}
+.item-val {
+  font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-3);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: 0.02em;
+}
+.item-meta {
+  font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--text-4);
+  white-space: normal; margin-top: 3px; letter-spacing: 0.02em;
+}
+.item-acts { display: flex; gap: 3px; flex-shrink: 0; }
+.act {
+  padding: 4px 9px; border: 1px solid var(--border); border-radius: 4px;
+  font-size: 11px; font-weight: 500; color: var(--text-3);
+  transition: all 0.14s; font-family: 'Inter', sans-serif;
+  height: 26px; display: inline-flex; align-items: center; justify-content: center;
+}
+.act:hover { color: var(--text); border-color: var(--border-2); }
+.act.del:hover { color: var(--weak); border-color: var(--weak); }
+.act.load:hover { color: var(--text); }
+.act.flash { color: var(--strong); border-color: var(--strong); }
+.empty { padding: 32px 0; text-align: center; color: var(--text-4); font-size: 12.5px; }
+
+.chip {
+  display: inline-block; font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 500; padding: 2px 7px;
+  border-radius: 100px; margin-top: 5px;
+  letter-spacing: 0.02em; text-transform: uppercase;
+}
+.chip.ok { background: color-mix(in srgb, var(--strong) 12%, transparent); color: var(--strong); }
+.chip.soon { background: color-mix(in srgb, var(--fair) 14%, transparent); color: var(--fair); }
+.chip.exp { background: color-mix(in srgb, var(--weak) 12%, transparent); color: var(--weak); }
+
+.vault-foot {
+  margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border);
+  display: flex; gap: 8px;
+}
+.vault-foot .btn { flex: 1; height: 38px; font-size: 12.5px; }
+
+.modal {
+  display: none; position: fixed; inset: 0;
+  background: var(--overlay); z-index: 800;
+  align-items: center; justify-content: center; padding: 20px;
+  animation: overlayIn 0.16s ease;
+}
+.modal.open { display: flex; }
+#vault-overlay, #import-pass-overlay { z-index: 950; }
+@keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+.dialog {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  width: 100%; max-width: 400px; max-height: 88vh; overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.35);
+  animation: dialogIn 0.2s cubic-bezier(0.16,1,0.3,1);
+}
+@keyframes dialogIn {
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.dialog-head {
+  padding: 14px 18px; display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.dialog-title { font-size: 14px; font-weight: 600; color: var(--text); }
+.dialog-x {
+  width: 26px; height: 26px;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.4), 0 0 0 3px var(--accent-glow);
-  cursor: pointer;
-  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), background 0.3s;
+  border-radius: 4px; color: var(--text-3); transition: all 0.14s;
 }
-.fab-main:active { transform: scale(0.92); }
-.fab-main svg { transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); }
-.fab-wrap.open .fab-main svg { transform: rotate(45deg); }
-.fab-wrap.open .fab-main { background: var(--surface2); color: var(--text); }
-.fab-menu { display: flex; flex-direction: column; align-items: center; gap: 9px; }
-.fab-item {
-  position: relative;
-  width: 38px; height: 38px; border-radius: 50%;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text2);
+.dialog-x:hover { color: var(--text); background: var(--surface-2); }
+.dialog-x svg { width: 14px; height: 14px; }
+.dialog-body { padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.field {
+  width: 100%; height: 40px; padding: 0 12px;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: 6px;
+  font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text);
+  transition: border-color 0.14s, background 0.14s;
+}
+.field::placeholder { color: var(--text-4); }
+.field:focus { border-color: var(--text-3); background: var(--surface); }
+.field.mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.02em; }
+textarea.field {
+  height: auto; padding: 10px 12px; min-height: 72px;
+  resize: vertical; line-height: 1.5; font-family: 'Inter', sans-serif;
+}
+textarea.field.mono { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+.field-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 10.5px;
+  color: var(--text-4); letter-spacing: 0.04em; text-transform: uppercase;
+  margin: 2px 0 -4px 2px;
+}
+.err {
+  font-size: 12px; color: var(--weak);
+  background: color-mix(in srgb, var(--weak) 10%, transparent);
+  padding: 7px 10px; border-radius: 5px; display: none; line-height: 1.4;
+}
+.err.show { display: block; }
+.dialog-acts { display: flex; gap: 8px; margin-top: 2px; }
+.dialog-acts .btn { flex: 1; height: 40px; }
+.lock-badge {
+  width: 36px; height: 36px; border-radius: 8px;
+  background: var(--surface-2); border: 1px solid var(--border);
   display: flex; align-items: center; justify-content: center;
-  box-shadow: var(--shadow);
-  cursor: pointer;
-  opacity: 0;
-  transform: translateY(14px) scale(0.5);
-  pointer-events: none;
-  transition: opacity 0.2s ease, transform 0.28s cubic-bezier(0.34,1.56,0.64,1), border-color 0.2s, color 0.2s, var(--transition-theme);
-}
-.fab-wrap.open .fab-item { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
-.fab-wrap.open .fab-item:nth-child(1) { transition-delay: 0.02s; }
-.fab-wrap.open .fab-item:nth-child(2) { transition-delay: 0.06s; }
-.fab-wrap.open .fab-item:nth-child(3) { transition-delay: 0.10s; }
-.fab-wrap.open .fab-item:nth-child(4) { transition-delay: 0.14s; }
-.fab-item:hover { border-color: var(--accent); color: var(--accent); }
-.fab-item:active { transform: scale(0.9); }
-.fab-label {
-  position: absolute; right: 46px; top: 50%; transform: translateY(-50%);
-  background: var(--surface); border: 1px solid var(--border);
-  padding: 4px 10px; border-radius: 8px; font-size: 11px; white-space: nowrap;
-  color: var(--text2); box-shadow: var(--shadow);
-  opacity: 0; pointer-events: none; transition: opacity 0.15s;
-}
-.fab-item:hover .fab-label { opacity: 1; }
-
-@media (max-width: 560px) {
-  .card { padding: 28px 20px 24px; }
-  h1 { font-size: 21px; }
-  .checks-grid { grid-template-columns: 1fr; }
-  .gen-row { flex-direction: column; }
-  .score-row { flex-direction: column; align-items: flex-start; }
+  color: var(--text-2); margin-bottom: 4px;
 }
 
+.toast {
+  position: fixed; bottom: 20px; left: 50%;
+  transform: translate(-50%, 16px);
+  padding: 9px 14px; background: var(--btn-bg); color: var(--btn-fg);
+  border-radius: 6px; font-size: 12.5px; font-weight: 500;
+  z-index: 1300; opacity: 0; pointer-events: none;
+  transition: transform 0.22s cubic-bezier(0.16,1,0.3,1), opacity 0.18s;
+  display: flex; align-items: center; gap: 8px;
+  max-width: calc(100vw - 32px); box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--strong); flex-shrink: 0;
+}
+.toast.warn::before { background: var(--fair); }
+
+@media (max-width: 520px) {
+  .shell { padding: 18px 14px 80px; }
+  #pw-input { font-size: 15px; }
+  .pw-field { height: 50px; }
+  .icon-btn { width: 42px; }
+  .stat { padding: 12px; }
+  .stat-v { font-size: 14px; }
+  .actions { grid-template-columns: 1fr; }
+  .item { flex-wrap: wrap; }
+  .item-acts { margin-left: auto; }
+}
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation: none !important; transition: none !important; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 </style>
 </head>
 <body>
 
-<!-- Vault lock/unlock modal -->
-<div class="vault-overlay" id="vault-overlay">
-  <div class="vault-modal">
-    <div class="vault-lock-icon">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-    </div>
-    <h3 id="vault-modal-title">মাস্টার পাসওয়ার্ড তৈরি করুন</h3>
-    <p class="vault-modal-desc" id="vault-modal-desc">সেভ করা পাসওয়ার্ড, API কী ও নোট এই পাসওয়ার্ড দিয়ে এনক্রিপ্ট হয়ে থাকবে। এটি ভুলে গেলে ডেটা ফিরে পাওয়া যাবে না।</p>
-    <input type="password" id="vault-pass-input" class="save-name-input" style="width:100%;margin-bottom:8px;" placeholder="মাস্টার পাসওয়ার্ড" autocomplete="off">
-    <input type="password" id="vault-pass-confirm" class="save-name-input" style="width:100%;margin-bottom:8px;display:none;" placeholder="আবার লিখুন" autocomplete="off">
-    <div class="vault-error" id="vault-error"></div>
-    <button class="do-save-btn" id="vault-submit-btn" style="width:100%;justify-content:center;">তৈরি করুন</button>
-    <button class="saved-btn" id="vault-reset-btn" style="margin-top:10px;width:100%;justify-content:center;display:none;">পাসওয়ার্ড ভুলে গেছেন? রিসেট করুন (সব ডেটা মুছে যাবে)</button>
-  </div>
-</div>
+<div class="shell">
 
-<div class="orb orb-1" id="orb1"></div>
-<div class="orb orb-2" id="orb2"></div>
-<div class="orb orb-3" id="orb3"></div>
-
-<div class="topbar">
-  <span class="brand">// bcoding · password checker</span>
-  <button class="theme-btn" id="theme-btn" title="থিম পরিবর্তন">
-    <div class="theme-thumb" id="theme-thumb">
-      <!-- moon icon (dark mode) / sun icon (light mode) -->
-      <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+  <header class="head">
+    <div class="logo">pw<span>/</span>checker</div>
+    <button class="theme-btn" id="theme-btn" title="থিম" type="button" aria-label="থিম পরিবর্তন">
+      <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
       </svg>
-    </div>
-  </button>
-</div>
+    </button>
+  </header>
 
-<div class="card" id="card">
-  <div class="eyebrow">// security tool v2</div>
-  <h1>পাসওয়ার্ড শক্তি পরীক্ষক</h1>
-  <p class="subtitle">রিয়েল-টাইমে শক্তি বিশ্লেষণ, শক্তিশালী করার পরামর্শ ও সেভ সুবিধা।</p>
-
-  <!-- Input -->
-  <div class="input-row">
-    <div class="input-wrap">
-      <label for="pw-input">পাসওয়ার্ড লিখুন বা তৈরি করুন</label>
-      <input type="password" id="pw-input" placeholder="••••••••••••" autocomplete="off" spellcheck="false">
-      <button class="toggle-btn" id="toggle-btn" title="দেখুন / লুকান">
-        <svg id="eye-icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-          <circle cx="12" cy="12" r="3"/>
-        </svg>
-      </button>
-    </div>
-    <button class="copy-btn" id="copy-btn" title="কপি করুন">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+  <div class="pw-field">
+    <input type="password" id="pw-input" placeholder="পাসওয়ার্ড লিখুন" autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off">
+    <button class="icon-btn" id="toggle-btn" title="দেখুন" type="button" aria-label="পাসওয়ার্ড দেখান বা লুকান">
+      <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+    </button>
+    <button class="icon-btn" id="copy-btn" title="কপি" type="button" aria-label="কপি">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
       </svg>
-      <span id="copy-label">কপি</span>
     </button>
   </div>
 
-  <!-- Strength bar -->
-  <div class="strength-section">
-    <div class="strength-header">
-      <span class="strength-label">শক্তির মাত্রা</span>
-      <span class="strength-name" id="strength-name">—</span>
+  <div class="meter-head">
+    <span class="meter-strength" id="strength-name">অপেক্ষা করছে</span>
+    <span class="meter-time" id="crack-time">—</span>
+  </div>
+  <div class="meter-bar"><div class="meter-fill" id="meter-fill"></div></div>
+
+  <div class="stats">
+    <div class="stat">
+      <span class="stat-k">নম্বর</span>
+      <span class="stat-v" id="score-val">0</span>
     </div>
-    <div class="bar-track">
-      <div class="bar-seg"><div class="bar-fill" id="seg0"></div></div>
-      <div class="bar-seg"><div class="bar-fill" id="seg1"></div></div>
-      <div class="bar-seg"><div class="bar-fill" id="seg2"></div></div>
-      <div class="bar-seg"><div class="bar-fill" id="seg3"></div></div>
-      <div class="bar-seg"><div class="bar-fill" id="seg4"></div></div>
+    <div class="stat">
+      <span class="stat-k">এনট্রপি</span>
+      <span class="stat-v" id="entropy-val">0</span>
+    </div>
+    <div class="stat">
+      <span class="stat-k">দৈর্ঘ্য</span>
+      <span class="stat-v" id="len-val">0</span>
     </div>
   </div>
 
-  <!-- Score ring + details -->
-  <div class="score-row">
-    <div class="ring-wrap">
-      <svg width="72" height="72" viewBox="0 0 72 72">
-        <circle class="ring-bg" cx="36" cy="36" r="30"/>
-        <circle class="ring-fg" id="ring-fg" cx="36" cy="36" r="30"/>
-      </svg>
-      <div class="ring-label">
-        <span class="ring-num" id="ring-num">0</span>
-        <span class="ring-unit">SCORE</span>
-      </div>
-    </div>
-    <div class="score-details">
-      <div class="detail-row">
-        <span class="detail-key">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          ভাঙতে লাগবে
-        </span>
-        <span class="detail-val" id="crack-time">—</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-key">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-          এনট্রপি
-        </span>
-        <span class="detail-val" id="entropy-mini">0 bits</span>
-      </div>
-      <div class="detail-row">
-        <span class="detail-key">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
-          দৈর্ঘ্য
-        </span>
-        <span class="detail-val" id="len-val">0 অক্ষর</span>
-      </div>
-    </div>
+  <div class="checks">
+    <div class="chk" id="chk-len">৮+</div>
+    <div class="chk" id="chk-upper">A-Z</div>
+    <div class="chk" id="chk-lower">a-z</div>
+    <div class="chk" id="chk-num">0-9</div>
+    <div class="chk" id="chk-sym">!@#</div>
+    <div class="chk" id="chk-long">১৬+</div>
   </div>
 
-  <!-- Entropy bar -->
-  <div class="entropy-wrap">
-    <div class="entropy-header">
-      <span class="entropy-label">এনট্রপি (বিটস)</span>
-      <span class="entropy-value" id="entropy-val">0 / 128+</span>
-    </div>
-    <div class="entropy-bar"><div class="entropy-fill" id="entropy-fill"></div></div>
-  </div>
-
-  <!-- Checks -->
-  <div class="checks-grid">
-    <div class="check-item" id="chk-len">
-      <div class="check-icon">
-        <svg class="check-dot-svg" viewBox="0 0 14 14"><circle class="dot-circle" cx="7" cy="7" r="5"/></svg>
-        <svg class="check-mark-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <span class="check-text">৮+ অক্ষর</span>
-    </div>
-    <div class="check-item" id="chk-upper">
-      <div class="check-icon">
-        <svg class="check-dot-svg" viewBox="0 0 14 14"><circle class="dot-circle" cx="7" cy="7" r="5"/></svg>
-        <svg class="check-mark-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <span class="check-text">বড় হাতের অক্ষর (A–Z)</span>
-    </div>
-    <div class="check-item" id="chk-lower">
-      <div class="check-icon">
-        <svg class="check-dot-svg" viewBox="0 0 14 14"><circle class="dot-circle" cx="7" cy="7" r="5"/></svg>
-        <svg class="check-mark-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <span class="check-text">ছোট হাতের অক্ষর (a–z)</span>
-    </div>
-    <div class="check-item" id="chk-num">
-      <div class="check-icon">
-        <svg class="check-dot-svg" viewBox="0 0 14 14"><circle class="dot-circle" cx="7" cy="7" r="5"/></svg>
-        <svg class="check-mark-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <span class="check-text">সংখ্যা (০–৯)</span>
-    </div>
-    <div class="check-item" id="chk-sym">
-      <div class="check-icon">
-        <svg class="check-dot-svg" viewBox="0 0 14 14"><circle class="dot-circle" cx="7" cy="7" r="5"/></svg>
-        <svg class="check-mark-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <span class="check-text">বিশেষ চিহ্ন (!@#…)</span>
-    </div>
-    <div class="check-item" id="chk-long">
-      <div class="check-icon">
-        <svg class="check-dot-svg" viewBox="0 0 14 14"><circle class="dot-circle" cx="7" cy="7" r="5"/></svg>
-        <svg class="check-mark-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <span class="check-text">১৬+ অক্ষর</span>
-    </div>
-  </div>
-
-  <!-- Boost section -->
-  <div class="boost-section" id="boost-section">
-    <div class="boost-header" id="boost-header">
-      <div class="boost-title">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-        </svg>
-        আরও শক্তিশালী করুন
-      </div>
-      <svg class="boost-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-    </div>
-    <div class="boost-body">
-      <div class="boost-inner" id="boost-inner">
-        <!-- dynamically filled -->
-      </div>
-    </div>
-  </div>
-
-  <!-- Generate buttons -->
-  <div class="gen-row" style="margin-top:14px;">
-    <button class="gen-btn" id="gen-strong">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      শক্তিশালী পাসওয়ার্ড তৈরি
+  <div class="actions">
+    <button class="btn btn-ghost" id="gen-strong" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/><path d="M15.5 7.5L18 5l3 3-2.5 2.5"/></svg>
+      পাসওয়ার্ড
     </button>
-    <button class="gen-btn" id="gen-pass">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-      মনে রাখার মতো পাসফ্রেজ
+    <button class="btn btn-ghost" id="gen-pass" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      পাসফ্রেজ
     </button>
   </div>
 
-  <p class="hint-text" id="hint-text">পাসওয়ার্ড টাইপ শুরু করুন বা তৈরি করুন…</p>
+  <details class="tips" id="tips">
+    <summary>
+      <span id="tips-label">পরামর্শ</span>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </summary>
+    <div class="tips-body" id="tips-body"></div>
+  </details>
+
+  <section class="vault">
+    <div class="vault-head">
+      <span class="vault-title">ভল্ট</span>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="passwords" type="button">
+        পাসওয়ার্ড <span class="tab-n" id="badge-pw">0</span>
+      </button>
+      <button class="tab" data-tab="apis" type="button">
+        API <span class="tab-n" id="badge-api">0</span>
+      </button>
+      <button class="tab" data-tab="notes" type="button">
+        নোট <span class="tab-n" id="badge-note">0</span>
+      </button>
+    </div>
+
+    <div class="panel active" data-panel="passwords">
+      <div class="list-head">
+        <button class="add-btn" id="add-pw-btn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          নতুন
+        </button>
+      </div>
+      <div id="saved-list"></div>
+    </div>
+
+    <div class="panel" data-panel="apis">
+      <div class="list-head">
+        <button class="add-btn" id="add-api-btn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          নতুন
+        </button>
+      </div>
+      <div id="api-list"></div>
+    </div>
+
+    <div class="panel" data-panel="notes">
+      <div class="list-head">
+        <button class="add-btn" id="add-note-btn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          নতুন
+        </button>
+      </div>
+      <div id="notes-list"></div>
+    </div>
+
+    <div class="vault-foot">
+      <button class="btn btn-ghost" id="backup-btn" type="button">ব্যাকআপ</button>
+      <button class="btn btn-ghost" id="import-open-btn" type="button">ইম্পোর্ট</button>
+    </div>
+  </section>
+
 </div>
 
-<!-- Saved passwords (always visible below, like before) -->
-<div class="data-panel" id="saved-list-panel">
-  <div class="panel-header" id="saved-list-header">
-    <div class="save-title">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-        <polyline points="17 21 17 13 7 13 7 21"/>
-        <polyline points="7 3 7 8 15 8"/>
-      </svg>
-      সংরক্ষিত পাসওয়ার্ড
-      <span class="save-badge" id="save-badge">0</span>
-    </div>
-    <svg class="panel-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-  </div>
-  <div class="panel-body">
-    <div class="panel-inner">
-      <div id="saved-list">
-        <div class="save-empty" id="save-empty">এখনো কোনো পাসওয়ার্ড সেভ করা হয়নি।</div>
-      </div>
-    </div>
-  </div>
-</div>
+<div class="toast" id="toast"><span id="toast-msg">কপি হয়েছে</span></div>
 
-<!-- Saved API keys (always visible below, like before) -->
-<div class="data-panel" id="api-list-panel" style="margin-top:14px;">
-  <div class="panel-header" id="api-list-header">
-    <div class="save-title">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="7.5" cy="15.5" r="5.5"/>
-        <path d="M21 2l-9.6 9.6"/>
-        <path d="M15.5 7.5L18 5l3 3-2.5 2.5"/>
-      </svg>
-      সংরক্ষিত API কী
-      <span class="save-badge" id="api-badge">0</span>
-    </div>
-    <svg class="panel-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-  </div>
-  <div class="panel-body">
-    <div class="panel-inner">
-      <div id="api-list">
-        <div class="save-empty" id="api-empty">এখনো কোনো API কী সেভ করা হয়নি।</div>
+<div class="modal" id="vault-overlay">
+  <div class="dialog">
+    <div class="dialog-body">
+      <div class="lock-badge">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
       </div>
-    </div>
-  </div>
-</div>
-
-<!-- Secure notes (always visible below, like before) -->
-<div class="data-panel" id="notes-list-panel" style="margin-top:14px;">
-  <div class="panel-header" id="notes-list-header">
-    <div class="save-title">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-        <polyline points="14 2 14 8 20 8"/>
-        <line x1="9" y1="13" x2="15" y2="13"/>
-        <line x1="9" y1="17" x2="13" y2="17"/>
-      </svg>
-      সিকিউর নোট
-      <span class="save-badge" id="notes-badge">0</span>
-    </div>
-    <svg class="panel-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-  </div>
-  <div class="panel-body">
-    <div class="panel-inner">
-      <div id="notes-list">
-        <div class="save-empty" id="notes-empty">এখনো কোনো নোট সেভ করা হয়নি।</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- FAB modal: add a new password -->
-<div class="save-section" id="add-password-modal">
-  <div class="feature-card">
-    <div class="save-header" id="add-password-header">
-      <div class="save-title">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-        নতুন পাসওয়ার্ড সেভ
-      </div>
-      <svg class="save-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </div>
-    <div class="save-body">
-      <div class="save-inner">
-        <p style="font-size:12px;color:var(--muted);line-height:1.5;">উপরের বক্সে যে পাসওয়ার্ডটি লেখা আছে সেটিই সেভ হবে — শুধু একটা নাম দিন।</p>
-        <div class="save-action-row">
-          <input type="text" class="save-name-input" id="save-name" placeholder="একটি নাম দিন (যেমন: ইমেইল, ব্যাংক…)">
-          <button class="do-save-btn" id="do-save-btn" disabled>সেভ</button>
-        </div>
-      </div>
+      <div class="dialog-title" id="vault-title" style="font-size:15px;">মাস্টার পাসওয়ার্ড</div>
+      <input type="password" id="vault-pass-input" class="field" placeholder="পাসওয়ার্ড" autocomplete="off">
+      <input type="password" id="vault-pass-confirm" class="field" placeholder="আবার লিখুন" autocomplete="off" style="display:none;">
+      <div class="err" id="vault-error"></div>
+      <button class="btn btn-primary btn-full" id="vault-submit" type="button">তৈরি করুন</button>
+      <button class="btn btn-ghost btn-full" id="vault-reset" type="button" style="display:none;font-size:12px;height:36px;">রিসেট (সব মুছবে)</button>
     </div>
   </div>
 </div>
 
-<!-- FAB modal: add a new API key -->
-<div class="save-section" id="add-api-modal">
-  <div class="feature-card">
-    <div class="save-header" id="add-api-header">
-      <div class="save-title">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5L18 5l3 3-2.5 2.5"/></svg>
-        নতুন API কী সেভ
-      </div>
-      <svg class="save-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+<div class="modal" id="add-pw-modal">
+  <div class="dialog">
+    <div class="dialog-head">
+      <div class="dialog-title">নতুন পাসওয়ার্ড</div>
+      <button class="dialog-x" data-close="add-pw-modal" type="button" aria-label="বন্ধ">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
-    <div class="save-body">
-      <div class="save-inner">
-        <input type="text" class="save-name-input" id="api-name" placeholder="API-এর নাম (যেমন: OpenAI, Stripe…)" style="width:100%;">
-        <input type="text" class="save-name-input" id="api-key" placeholder="API Key পেস্ট করুন" style="width:100%;font-family:'JetBrains Mono',monospace;">
-        <div class="save-action-row">
-          <input type="text" class="save-name-input" id="api-note" placeholder="নোট (ঐচ্ছিক)">
-          <button class="do-save-btn" id="do-save-api-btn">সেভ</button>
-        </div>
-        <span class="field-label-sm">মেয়াদ শেষের তারিখ (ঐচ্ছিক)</span>
-        <input type="date" class="save-name-input" id="api-expiry" style="width:100%;">
-      </div>
+    <div class="dialog-body">
+      <input type="text" class="field" id="save-name" placeholder="নাম">
+      <button class="btn btn-primary btn-full" id="do-save-pw" type="button" disabled>সেভ</button>
     </div>
   </div>
 </div>
 
-<!-- FAB modal: add a new secure note -->
-<div class="save-section" id="add-note-modal">
-  <div class="feature-card">
-    <div class="save-header" id="add-note-header">
-      <div class="save-title">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
-        নতুন সিকিউর নোট
-      </div>
-      <svg class="save-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+<div class="modal" id="add-api-modal">
+  <div class="dialog">
+    <div class="dialog-head">
+      <div class="dialog-title">নতুন API কী</div>
+      <button class="dialog-x" data-close="add-api-modal" type="button" aria-label="বন্ধ">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
-    <div class="save-body">
-      <div class="save-inner">
-        <input type="text" class="save-name-input" id="note-title" placeholder="নোটের শিরোনাম" style="width:100%;">
-        <textarea class="save-note-textarea" id="note-content" placeholder="নোট লিখুন…"></textarea>
-        <button class="do-save-btn" id="do-save-note-btn" style="align-self:flex-end;">সেভ</button>
-      </div>
+    <div class="dialog-body">
+      <input type="text" class="field" id="api-name" placeholder="নাম">
+      <input type="text" class="field mono" id="api-key" placeholder="API Key" autocomplete="off" spellcheck="false">
+      <input type="text" class="field" id="api-note" placeholder="নোট (ঐচ্ছিক)">
+      <input type="date" class="field" id="api-expiry">
+      <button class="btn btn-primary btn-full" id="do-save-api" type="button">সেভ</button>
     </div>
   </div>
 </div>
 
-<!-- FAB modal: encrypted backup -->
-<div class="save-section" id="backup-modal">
-  <div class="feature-card">
-    <div class="save-header" id="backup-header">
-      <div class="save-title">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="7 10 12 15 17 10"/>
-          <line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>
-        এনক্রিপ্টেড ব্যাকআপ
-      </div>
-      <svg class="save-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+<div class="modal" id="add-note-modal">
+  <div class="dialog">
+    <div class="dialog-head">
+      <div class="dialog-title">নতুন নোট</div>
+      <button class="dialog-x" data-close="add-note-modal" type="button" aria-label="বন্ধ">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
-    <div class="save-body">
-      <div class="save-inner">
-        <p style="font-size:12px;color:var(--muted);line-height:1.5;">আপনার সব ডেটা এনক্রিপ্ট করা টেক্সট হিসেবে কপি করুন, যেকোনো নোট অ্যাপ বা ক্লাউডে রেখে দিন। ফাইল ডাউনলোড হয় না।</p>
-        <button class="do-save-btn" id="export-btn" style="align-self:flex-start;">এক্সপোর্ট টেক্সট তৈরি করুন</button>
-        <textarea class="save-note-textarea" id="export-output" placeholder="এখানে এনক্রিপ্টেড টেক্সট দেখাবে…" readonly style="min-height:80px;font-family:'JetBrains Mono',monospace;font-size:11px;"></textarea>
-        <button class="saved-btn" id="export-copy-btn" style="align-self:flex-start;">কপি করুন</button>
-        <div style="height:1px;background:var(--border);margin:6px 0;"></div>
-        <span class="field-label-sm">পুরনো ব্যাকআপ ইম্পোর্ট করুন (বর্তমান ডেটা প্রতিস্থাপিত হবে)</span>
-        <textarea class="save-note-textarea" id="import-input" placeholder="এনক্রিপ্টেড ব্যাকআপ টেক্সট পেস্ট করুন…"></textarea>
-        <button class="saved-btn" id="import-btn" style="align-self:flex-start;">ইম্পোর্ট করুন</button>
-        <div class="vault-error" id="backup-msg"></div>
-      </div>
+    <div class="dialog-body">
+      <input type="text" class="field" id="note-title" placeholder="শিরোনাম">
+      <textarea class="field" id="note-content" placeholder="নোট…"></textarea>
+      <button class="btn btn-primary btn-full" id="do-save-note" type="button">সেভ</button>
     </div>
   </div>
 </div>
 
-<!-- Import passphrase modal (replaces the plain browser prompt) -->
-<div class="vault-overlay" id="import-pass-overlay">
-  <div class="vault-modal">
-    <div class="vault-lock-icon">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+<div class="modal" id="backup-modal">
+  <div class="dialog">
+    <div class="dialog-head">
+      <div class="dialog-title">ব্যাকআপ</div>
+      <button class="dialog-x" data-close="backup-modal" type="button" aria-label="বন্ধ">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
-    <h3>ব্যাকআপ আনলক করুন</h3>
-    <p class="vault-modal-desc">এই ব্যাকআপ যে মাস্টার পাসওয়ার্ড দিয়ে তৈরি হয়েছিল, সেটি দিন। এতে বর্তমান সব সেভ করা ডেটা প্রতিস্থাপিত হবে।</p>
-    <input type="password" id="import-pass-input" class="save-name-input" style="width:100%;margin-bottom:8px;" placeholder="মাস্টার পাসওয়ার্ড" autocomplete="off">
-    <div class="vault-error" id="import-pass-error"></div>
-    <div style="display:flex;gap:8px;">
-      <button class="saved-btn" id="import-pass-cancel" style="flex:1;justify-content:center;">বাতিল</button>
-      <button class="do-save-btn" id="import-pass-submit" style="flex:1;justify-content:center;">ইম্পোর্ট করুন</button>
+    <div class="dialog-body">
+      <button class="btn btn-ghost btn-full" id="export-btn" type="button">এক্সপোর্ট</button>
+      <textarea class="field mono" id="export-output" placeholder="এনক্রিপ্টেড টেক্সট" readonly style="min-height:80px;font-size:11px;"></textarea>
+      <button class="btn btn-ghost btn-full" id="export-copy" type="button">কপি</button>
+      <div style="height:1px;background:var(--border);margin:4px 0;"></div>
+      <span class="field-label">ইম্পোর্ট</span>
+      <textarea class="field mono" id="import-input" placeholder="ব্যাকআপ পেস্ট করুন" style="font-size:11px;"></textarea>
+      <button class="btn btn-ghost btn-full" id="import-btn" type="button">ইম্পোর্ট</button>
+      <div class="err" id="backup-msg"></div>
     </div>
   </div>
 </div>
 
-<!-- Floating Action Button: quick menu — only for adding new items + backup -->
-<div class="fab-wrap" id="fab-wrap">
-  <div class="fab-menu" id="fab-menu">
-    <button class="fab-item" id="fab-backup" title="এনক্রিপ্টেড ব্যাকআপ">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      <span class="fab-label">ব্যাকআপ</span>
-    </button>
-    <button class="fab-item" id="fab-notes" title="নতুন সিকিউর নোট">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg>
-      <span class="fab-label">নতুন নোট</span>
-    </button>
-    <button class="fab-item" id="fab-apis" title="নতুন API কী">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="5.5"/><path d="M21 2l-9.6 9.6"/><path d="M15.5 7.5L18 5l3 3-2.5 2.5"/></svg>
-      <span class="fab-label">নতুন API কী</span>
-    </button>
-    <button class="fab-item" id="fab-passwords" title="নতুন পাসওয়ার্ড">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-      <span class="fab-label">নতুন পাসওয়ার্ড</span>
-    </button>
+<div class="modal" id="import-pass-overlay">
+  <div class="dialog">
+    <div class="dialog-body">
+      <div class="lock-badge">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <div class="dialog-title" style="font-size:15px;">মাস্টার পাসওয়ার্ড</div>
+      <input type="password" id="import-pass-input" class="field" placeholder="পাসওয়ার্ড" autocomplete="off">
+      <div class="err" id="import-pass-error"></div>
+      <div class="dialog-acts">
+        <button class="btn btn-ghost" id="import-pass-cancel" type="button">বাতিল</button>
+        <button class="btn btn-primary" id="import-pass-submit" type="button">ইম্পোর্ট</button>
+      </div>
+    </div>
   </div>
-  <button class="fab-main" id="fab-main" title="মেনু খুলুন">
-    <svg id="fab-main-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-  </button>
 </div>
 
 <script>
-// ─── THEME ───
+'use strict';
+
+// ═══ Safe storage helpers (Safari private mode safety) ═══
+function lsGet(k) { try { return localStorage.getItem(k); } catch (_) { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (_) {} }
+function lsRemove(k) { try { localStorage.removeItem(k); } catch (_) {} }
+function ssGet(k) { try { return sessionStorage.getItem(k); } catch (_) { return null; } }
+function ssSet(k, v) { try { sessionStorage.setItem(k, v); } catch (_) {} }
+
+// ═══ COPY (with fallback) ═══
+async function copyText(text) {
+  if (!text) return false;
+  if (navigator.clipboard && window.isSecureContext) {
+    try { await navigator.clipboard.writeText(text); return true; } catch (_) {}
+  }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.top = '0';
+    ta.style.left = '-9999px';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try { ta.setSelectionRange(0, text.length); } catch (_) {}
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    return ok;
+  } catch (_) { return false; }
+}
+
+// ═══ BASE64 UTF-8 ═══
+function utf8ToB64(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin);
+}
+function b64ToUtf8(b64) {
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+
+// ═══ TOAST ═══
+let toastTimer = null;
+function showToast(msg, type) {
+  const t = document.getElementById('toast');
+  document.getElementById('toast-msg').textContent = msg;
+  t.classList.remove('warn');
+  if (type === 'warn') t.classList.add('warn');
+  t.classList.remove('show');
+  void t.offsetWidth;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { t.classList.remove('show'); }, 1800);
+}
+
+// ═══ THEME — default LIGHT ═══
 const html = document.documentElement;
-let isDark = localStorage.getItem('pw-theme') === 'dark';
+let isDark = lsGet('pw-theme') === 'dark';
 function applyTheme() {
   html.setAttribute('data-theme', isDark ? 'dark' : 'light');
-  localStorage.setItem('pw-theme', isDark ? 'dark' : 'light');
-  const icon = document.getElementById('theme-icon');
-  icon.innerHTML = isDark
+  lsSet('pw-theme', isDark ? 'dark' : 'light');
+  document.getElementById('theme-icon').innerHTML = isDark
     ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
     : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
 }
 applyTheme();
-document.getElementById('theme-btn').addEventListener('click', () => {
+document.getElementById('theme-btn').addEventListener('click', function () {
   isDark = !isDark;
   applyTheme();
-  // spark burst
-  const btn = document.getElementById('theme-btn');
-  const rect = btn.getBoundingClientRect();
-  for (let i = 0; i < 8; i++) spawnSpark(rect.left + rect.width/2, rect.top + rect.height/2);
 });
 
-// ─── DOM ───
-const input      = document.getElementById('pw-input');
-const toggleBtn  = document.getElementById('toggle-btn');
-const eyeIcon    = document.getElementById('eye-icon');
-const copyBtn    = document.getElementById('copy-btn');
-const copyLabel  = document.getElementById('copy-label');
+// ═══ DOM REFS ═══
+const input = document.getElementById('pw-input');
+const toggleBtn = document.getElementById('toggle-btn');
+const eyeIcon = document.getElementById('eye-icon');
+const copyBtn = document.getElementById('copy-btn');
 const strengthName = document.getElementById('strength-name');
-const entropyVal   = document.getElementById('entropy-val');
-const entropyMini  = document.getElementById('entropy-mini');
-const entropyFill  = document.getElementById('entropy-fill');
-const crackTime    = document.getElementById('crack-time');
-const ringFg       = document.getElementById('ring-fg');
-const ringNum      = document.getElementById('ring-num');
-const lenVal       = document.getElementById('len-val');
-const hintText     = document.getElementById('hint-text');
-const card         = document.getElementById('card');
-const orb3         = document.getElementById('orb3');
-const boostSection = document.getElementById('boost-section');
-const boostHeader  = document.getElementById('boost-header');
-const boostInner   = document.getElementById('boost-inner');
-const segs         = [0,1,2,3,4].map(i => document.getElementById(`seg${i}`));
+const crackTime = document.getElementById('crack-time');
+const meterFill = document.getElementById('meter-fill');
+const scoreVal = document.getElementById('score-val');
+const entropyVal = document.getElementById('entropy-val');
+const lenVal = document.getElementById('len-val');
+const tipsBody = document.getElementById('tips-body');
+const tipsLabel = document.getElementById('tips-label');
 const checks = {
-  len:   document.getElementById('chk-len'),
+  len: document.getElementById('chk-len'),
   upper: document.getElementById('chk-upper'),
   lower: document.getElementById('chk-lower'),
-  num:   document.getElementById('chk-num'),
-  sym:   document.getElementById('chk-sym'),
-  long:  document.getElementById('chk-long'),
+  num: document.getElementById('chk-num'),
+  sym: document.getElementById('chk-sym'),
+  long: document.getElementById('chk-long'),
 };
 
-// ─── TOGGLE VIS ───
-let visible = false;
-toggleBtn.addEventListener('click', () => {
-  visible = !visible;
-  input.type = visible ? 'text' : 'password';
-  eyeIcon.innerHTML = visible
-    ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
-    : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
-});
+const EYE_OPEN = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+const EYE_CLOSED = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
 
-// ─── COPY ───
-copyBtn.addEventListener('click', () => {
-  const pw = input.value;
-  if (!pw) return;
-  navigator.clipboard.writeText(pw).then(() => {
-    copyBtn.classList.add('copied');
-    copyLabel.textContent = 'কপি ✓';
-    setTimeout(() => { copyBtn.classList.remove('copied'); copyLabel.textContent = 'কপি'; }, 1800);
-    const rect = copyBtn.getBoundingClientRect();
-    for (let i = 0; i < 6; i++) spawnSpark(rect.left + rect.width/2, rect.top + rect.height/2);
+function makeEmpty(text) {
+  const d = document.createElement('div');
+  d.className = 'empty';
+  d.textContent = text;
+  return d;
+}
+
+// ═══ TABS ═══
+document.querySelectorAll('.tab').forEach(function (tab) {
+  tab.addEventListener('click', function () {
+    document.querySelectorAll('.tab').forEach(function (t) { t.classList.remove('active'); });
+    document.querySelectorAll('.panel').forEach(function (p) { p.classList.remove('active'); });
+    tab.classList.add('active');
+    const panel = document.querySelector('.panel[data-panel="' + tab.dataset.tab + '"]');
+    if (panel) panel.classList.add('active');
   });
 });
 
-// ─── PARTICLES ───
-function spawnChar(char) {
-  const el = document.createElement('span');
-  el.className = 'char-float';
-  el.textContent = char;
-  const rect = input.getBoundingClientRect();
-  el.style.left = (rect.left + Math.random() * rect.width) + 'px';
-  el.style.top  = (rect.top - 8) + 'px';
-  document.body.appendChild(el);
-  el.addEventListener('animationend', () => el.remove());
-}
-function spawnSpark(cx, cy) {
-  const el = document.createElement('div');
-  el.className = 'spark';
-  el.style.left = cx + 'px';
-  el.style.top  = cy + 'px';
-  const angle = Math.random() * Math.PI * 2;
-  const dist  = 20 + Math.random() * 30;
-  el.style.setProperty('--dx', Math.cos(angle) * dist + 'px');
-  el.style.setProperty('--dy', Math.sin(angle) * dist + 'px');
-  el.style.background = ['#6C8EFA','#B48EF5','#4CC87A','#34D9B5','#F5A742'][Math.floor(Math.random()*5)];
-  document.body.appendChild(el);
-  el.addEventListener('animationend', () => el.remove());
-}
+// ═══ TOGGLE VISIBILITY ═══
+let visible = false;
+toggleBtn.addEventListener('click', function () {
+  visible = !visible;
+  input.type = visible ? 'text' : 'password';
+  eyeIcon.innerHTML = visible ? EYE_CLOSED : EYE_OPEN;
+});
 
-// ─── CALC ───
+// ═══ MAIN COPY ═══
+copyBtn.addEventListener('click', async function () {
+  const pw = input.value;
+  if (!pw) { showToast('পাসওয়ার্ড দিন', 'warn'); return; }
+  const ok = await copyText(pw);
+  if (ok) {
+    copyBtn.classList.add('copied');
+    showToast('কপি হয়েছে');
+    setTimeout(function () { copyBtn.classList.remove('copied'); }, 1400);
+  } else {
+    showToast('কপি ব্যর্থ', 'warn');
+  }
+});
+
+// ═══ CALC ═══
 function calcEntropy(pw) {
   let pool = 0;
   if (/[a-z]/.test(pw)) pool += 26;
@@ -1372,829 +790,723 @@ function calcEntropy(pw) {
   if (/[^a-zA-Z0-9]/.test(pw)) pool += 32;
   return pool > 0 ? Math.floor(pw.length * Math.log2(pool)) : 0;
 }
-
-function crackEstimate(entropy) {
-  const secs = Math.pow(2, entropy) / 1e10;
-  if (secs < 1)        return 'তাৎক্ষণিক';
-  if (secs < 60)       return `${Math.ceil(secs)} সেকেন্ড`;
-  if (secs < 3600)     return `${Math.ceil(secs/60)} মিনিট`;
-  if (secs < 86400)    return `${Math.ceil(secs/3600)} ঘণ্টা`;
-  if (secs < 2592000)  return `${Math.ceil(secs/86400)} দিন`;
-  if (secs < 31536000) return `${Math.ceil(secs/2592000)} মাস`;
-  const y = secs/31536000;
-  if (y < 1e3)  return `${Math.ceil(y)} বছর`;
-  if (y < 1e6)  return `${(y/1e3).toFixed(1)}K বছর`;
-  if (y < 1e9)  return `${(y/1e6).toFixed(1)}M বছর`;
-  return 'শত কোটি বছর+';
+function crackEstimate(e) {
+  const s = Math.pow(2, e) / 1e10;
+  if (s < 1) return 'সঙ্গে সঙ্গে';
+  if (s < 60) return Math.ceil(s) + ' সেকেন্ড';
+  if (s < 3600) return Math.ceil(s / 60) + ' মিনিট';
+  if (s < 86400) return Math.ceil(s / 3600) + ' ঘণ্টা';
+  if (s < 2592000) return Math.ceil(s / 86400) + ' দিন';
+  if (s < 31536000) return Math.ceil(s / 2592000) + ' মাস';
+  const y = s / 31536000;
+  if (y < 1e3) return Math.ceil(y) + ' বছর';
+  if (y < 1e6) return (y / 1e3).toFixed(1) + 'K বছর';
+  if (y < 1e9) return (y / 1e6).toFixed(1) + 'M বছর';
+  return 'শত কোটি+';
 }
 
 const tiers = [
-  { label:'অত্যন্ত দুর্বল', cls:'c-weak',    fill:'f-weak',    segs:1, color:'#F4645A', hint:'পাসওয়ার্ডটি একদম সহজ — যেকেউ মুহূর্তে ভাঙতে পারবে।' },
-  { label:'দুর্বল',          cls:'c-weak',    fill:'f-weak',    segs:2, color:'#F4645A', hint:'আরও শক্তিশালী করুন — বড় হাতের অক্ষর ও সংখ্যা যোগ করুন।' },
-  { label:'মোটামুটি',        cls:'c-fair',    fill:'f-fair',    segs:3, color:'#F5A742', hint:'ভালো শুরু! কিছু বিশেষ চিহ্ন যোগ করলে আরও ভালো হবে।' },
-  { label:'শক্তিশালী',       cls:'c-good',    fill:'f-good',    segs:4, color:'#B48EF5', hint:'ভালো পাসওয়ার্ড! আরও দীর্ঘ করলে নিরাপত্তা বাড়বে।' },
-  { label:'অত্যন্ত শক্তিশালী', cls:'c-vstrong', fill:'f-vstrong', segs:5, color:'#34D9B5', hint:'🎉 অসাধারণ! এটি একটি খুবই শক্তিশালী পাসওয়ার্ড।' },
+  { l:'দুর্বল', c:'c-weak', color:'var(--weak)' },
+  { l:'দুর্বল', c:'c-weak', color:'var(--weak)' },
+  { l:'মাঝারি', c:'c-fair', color:'var(--fair)' },
+  { l:'শক্তিশালী', c:'c-strong', color:'var(--strong)' },
+  { l:'চমৎকার', c:'c-vstrong', color:'var(--vstrong)' },
 ];
 
-const RING_CIRC = 188.5;
-let prevScore = -1;
+// ═══ SECURE RANDOM ═══
+function secureRandomInt(max) {
+  if (max <= 0) return 0;
+  const maxU32 = 4294967296;
+  const range = maxU32 - (maxU32 % max);
+  const arr = new Uint32Array(1);
+  let v;
+  do { crypto.getRandomValues(arr); v = arr[0]; } while (v >= range);
+  return v % max;
+}
+function secureShuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = secureRandomInt(i + 1);
+    const tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+  }
+  return arr;
+}
 
-// ─── BOOST TIPS ───
+// ═══ TIPS ═══
 const randChars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-function randSuffix(len) {
+function randSuffix(n) {
   let s = '';
-  for (let i = 0; i < len; i++) s += randChars[secureRandomInt(randChars.length)];
+  for (let i = 0; i < n; i++) s += randChars[secureRandomInt(randChars.length)];
   return s;
 }
 const allTips = [
-  { id:'upper', test: pw => /[A-Z]/.test(pw), icon:'🔠', title:'বড় হাতের অক্ষর যোগ করুন', desc:'A, B, C ধরনের বড় হাতের অক্ষর নিরাপত্তা বাড়ায়।', apply: pw => pw + 'ABCDEF'[secureRandomInt(6)] },
-  { id:'lower', test: pw => /[a-z]/.test(pw), icon:'🔡', title:'ছোট হাতের অক্ষর যোগ করুন', desc:'মিক্স কেস পাসওয়ার্ড আরও শক্তিশালী।', apply: pw => pw + 'abcde'[secureRandomInt(5)] },
-  { id:'num',   test: pw => /[0-9]/.test(pw), icon:'🔢', title:'একটি সংখ্যা যোগ করুন', desc:'সংখ্যা যোগ করলে অনুমান করা কঠিন হয়।', apply: pw => pw + (secureRandomInt(90) + 10) },
-  { id:'sym',   test: pw => /[^a-zA-Z0-9]/.test(pw), icon:'✳️', title:'বিশেষ চিহ্ন যোগ করুন', desc:'! @ # $ % & * ধরনের চিহ্ন শক্তি অনেক বাড়ায়।', apply: pw => pw + '!@#$%&*'[secureRandomInt(7)] },
-  { id:'len',   test: pw => pw.length >= 12, icon:'📏', title:'দৈর্ঘ্য বাড়ান', desc:'প্রতিটি অতিরিক্ত অক্ষর হ্যাক করা কঠিন করে।', apply: pw => pw + randSuffix(3) },
-  { id:'norepeat', test: pw => !/(.).*\1{2}/.test(pw), icon:'🔄', title:'পুনরাবৃত্তি এড়ান', desc:'aaa বা 111 ধরনের পুনরাবৃত্তি পাসওয়ার্ড দুর্বল করে।', apply: pw => pw.replace(/(.)\1+/g, '$1') + randSuffix(2) },
+  { t: function (pw) { return /[A-Z]/.test(pw); }, label:'বড় হাতের অক্ষর যোগ করুন', apply: function (pw) { return pw + 'ABCDEF'[secureRandomInt(6)]; } },
+  { t: function (pw) { return /[a-z]/.test(pw); }, label:'ছোট হাতের অক্ষর যোগ করুন', apply: function (pw) { return pw + 'abcde'[secureRandomInt(5)]; } },
+  { t: function (pw) { return /[0-9]/.test(pw); }, label:'সংখ্যা যোগ করুন', apply: function (pw) { return pw + (secureRandomInt(90) + 10); } },
+  { t: function (pw) { return /[^a-zA-Z0-9]/.test(pw); }, label:'বিশেষ চিহ্ন যোগ করুন', apply: function (pw) { return pw + '!@#$%&*'[secureRandomInt(7)]; } },
+  { t: function (pw) { return pw.length >= 12; }, label:'দৈর্ঘ্য বাড়ান', apply: function (pw) { return pw + randSuffix(3); } },
+  { t: function (pw) { return !/(.).*\1{2}/.test(pw); }, label:'পুনরাবৃত্তি সরান', apply: function (pw) { return pw.replace(/(.)\1+/g, '$1') + randSuffix(2); } },
 ];
-
-function updateBoostTips(pw) {
-  const tips = allTips.filter(t => !t.test(pw));
-  boostInner.innerHTML = '';
-  if (tips.length === 0) {
-    boostInner.innerHTML = '<div class="save-empty" style="text-align:center;padding:10px 0">✅ সব মানদণ্ড পূরণ হয়েছে!</div>';
+function updateTips(pw) {
+  const tips = allTips.filter(function (x) { return !x.t(pw); });
+  tipsBody.innerHTML = '';
+  if (pw.length === 0) {
+    tipsLabel.textContent = 'পরামর্শ';
+    const d = document.createElement('div');
+    d.style.cssText = 'padding:16px;text-align:center;color:var(--text-4);font-size:12.5px;';
+    d.textContent = 'পাসওয়ার্ড দিন';
+    tipsBody.appendChild(d);
     return;
   }
-  tips.slice(0,4).forEach(tip => {
-    const btn = document.createElement('button');
-    btn.className = 'boost-tip';
-    btn.innerHTML = `<span class="boost-tip-icon">${tip.icon}</span>
-      <div class="boost-tip-text"><strong>${tip.title}</strong>${tip.desc}</div>
-      <button class="apply-btn">প্রয়োগ করুন</button>`;
-    btn.querySelector('.apply-btn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      const newPw = tip.apply(input.value || '');
-      input.value = newPw;
-      input.type = 'text'; visible = true;
-      eyeIcon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+  if (tips.length === 0) {
+    tipsLabel.textContent = 'পরামর্শ';
+    const d = document.createElement('div');
+    d.style.cssText = 'padding:16px;text-align:center;color:var(--text-4);font-size:12.5px;';
+    d.textContent = 'সব মানদণ্ড পূরণ';
+    tipsBody.appendChild(d);
+    return;
+  }
+  tipsLabel.textContent = 'পরামর্শ · ' + tips.length;
+  tips.slice(0, 4).forEach(function (tip) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tip';
+    const text = document.createElement('span');
+    text.className = 'tip-text';
+    text.textContent = tip.label;
+    const apply = document.createElement('span');
+    apply.className = 'tip-apply';
+    apply.textContent = 'যোগ';
+    b.appendChild(text);
+    b.appendChild(apply);
+    b.addEventListener('click', function () {
+      const nw = tip.apply(input.value || '');
+      input.value = nw;
+      input.type = 'text';
+      visible = true;
+      eyeIcon.innerHTML = EYE_CLOSED;
       input.focus();
-      evaluate(newPw);
-      // spark burst from input
-      const r = input.getBoundingClientRect();
-      for (let i = 0; i < 10; i++) spawnSpark(r.left + Math.random()*r.width, r.top + r.height/2);
+      evaluate(nw);
     });
-    boostInner.appendChild(btn);
+    tipsBody.appendChild(b);
   });
 }
 
-// ─── COLLAPSE PANELS ───
-boostHeader.addEventListener('click', () => boostSection.classList.toggle('open'));
-
-// ─── EVALUATE ───
+// ═══ EVALUATE ═══
 function evaluate(pw) {
   const has = {
-    len:   pw.length >= 8,
+    len: pw.length >= 8,
     upper: /[A-Z]/.test(pw),
     lower: /[a-z]/.test(pw),
-    num:   /[0-9]/.test(pw),
-    sym:   /[^a-zA-Z0-9]/.test(pw),
-    long:  pw.length >= 16,
+    num: /[0-9]/.test(pw),
+    sym: /[^a-zA-Z0-9]/.test(pw),
+    long: pw.length >= 16,
   };
-  Object.keys(has).forEach(k => checks[k].classList.toggle('pass', has[k]));
+  Object.keys(has).forEach(function (k) { checks[k].classList.toggle('pass', has[k]); });
 
   let score = -1;
   if (pw.length > 0) {
     score = 0;
-    if (has.len)              score++;
+    if (has.len) score++;
     if (has.upper && has.lower) score++;
-    if (has.num)              score++;
-    if (has.sym)              score++;
-    if (has.long)             score++;
+    if (has.num) score++;
+    if (has.sym) score++;
+    if (has.long) score++;
     score = Math.min(score, 4);
   }
 
   const entropy = calcEntropy(pw);
-  lenVal.textContent = pw.length + ' অক্ষর';
-  entropyMini.textContent = entropy + ' bits';
-  entropyVal.textContent  = entropy + ' / 128+ bits';
-  entropyFill.style.width = Math.min(100, (entropy / 128) * 100) + '%';
+  lenVal.textContent = pw.length;
+  entropyVal.textContent = entropy;
 
   if (pw.length === 0) {
-    segs.forEach(s => { s.style.width = '0%'; s.className = 'bar-fill'; });
-    strengthName.textContent = '—';
-    strengthName.className   = 'strength-name';
-    crackTime.textContent    = '—';
-    ringFg.style.strokeDashoffset = RING_CIRC;
-    ringFg.style.stroke = 'var(--border)';
-    ringNum.textContent = '0';
-    hintText.textContent = 'পাসওয়ার্ড টাইপ শুরু করুন বা তৈরি করুন…';
-    orb3.style.opacity   = '0.04';
-    orb3.style.transform = 'translate(-50%,-50%) scale(0.9)';
-    boostInner.innerHTML = '<div class="save-empty" style="text-align:center;padding:10px 0">পাসওয়ার্ড লিখলে পরামর্শ দেখাবে।</div>';
-    document.getElementById('do-save-btn').disabled = true;
-    prevScore = -1;
+    scoreVal.textContent = '0';
+    strengthName.textContent = 'অপেক্ষা করছে';
+    strengthName.className = 'meter-strength';
+    crackTime.textContent = '—';
+    meterFill.style.width = '0%';
+    meterFill.style.background = 'var(--text-4)';
+    document.getElementById('do-save-pw').disabled = true;
+    updateTips('');
     return;
   }
 
-  document.getElementById('do-save-btn').disabled = false;
-
+  document.getElementById('do-save-pw').disabled = false;
   const tier = tiers[score];
+  const pct = ((score + 1) / 5) * 100;
 
-  // Segments
-  segs.forEach((s, i) => setTimeout(() => {
-    s.style.width = i < tier.segs ? '100%' : '0%';
-    s.className = `bar-fill ${i < tier.segs ? tier.fill : ''}`;
-  }, i * 55));
-
-  // Strength name
-  strengthName.classList.remove('visible');
-  setTimeout(() => {
-    strengthName.textContent = tier.label;
-    strengthName.className = `strength-name visible ${tier.cls}`;
-  }, 80);
-
-  // Ring
-  const scorePercent = (score + 1) / 5;
-  ringFg.style.strokeDashoffset = RING_CIRC * (1 - scorePercent);
-  ringFg.style.stroke = tier.color;
-  ringNum.textContent = Math.round(scorePercent * 100);
-
-  // Crack time
+  meterFill.style.width = pct + '%';
+  meterFill.style.background = tier.color;
+  strengthName.textContent = tier.l;
+  strengthName.className = 'meter-strength ' + tier.c;
+  scoreVal.textContent = Math.round(pct);
   crackTime.textContent = crackEstimate(entropy);
-
-  // Hint
-  hintText.textContent = tier.hint;
-
-  // Boost tips
-  updateBoostTips(pw);
-
-  // Orb & card pulse on tier change
-  if (score !== prevScore) {
-    prevScore = score;
-    orb3.style.background = tier.color;
-    orb3.style.opacity   = (0.04 + score * 0.025).toFixed(3);
-    orb3.style.transform = `translate(-50%,-50%) scale(${0.85 + score * 0.15})`;
-    card.classList.remove('pulsing');
-    void card.offsetWidth;
-    card.classList.add('pulsing');
-    card.addEventListener('animationend', () => card.classList.remove('pulsing'), { once: true });
-  }
+  updateTips(pw);
 }
+input.addEventListener('input', function () { evaluate(input.value); });
 
-// ─── INPUT ───
-let lastLen = 0;
-input.addEventListener('input', () => {
-  const pw = input.value;
-  if (pw.length > lastLen && Math.random() > 0.55) spawnChar(pw[pw.length-1] || '·');
-  lastLen = pw.length;
-  evaluate(pw);
-});
-
-// ─── CRYPTOGRAPHICALLY SECURE RANDOMNESS ───
-// crypto.getRandomValues ব্যবহার করে সত্যিকারের অননুমেয় র‍্যান্ডম সংখ্যা তৈরি হয় (OS-level entropy source থেকে)।
-// Math.random() এর বদলে এটা ব্যবহার করলে দুটি ডিভাইসে একই পাসওয়ার্ড তৈরি হওয়ার সম্ভাবনা ব্যবহারিকভাবে শূন্য —
-// ১৬ অক্ষরের র‍্যান্ডম পাসওয়ার্ডে সম্ভাব্য কম্বিনেশন ৯৫^১৬ (প্রায় ৪৪ x ১০^৩০), যা মহাবিশ্বের বয়সের চেয়েও
-// বেশি সময় লাগবে দুটো মিলে যেতে — এমনকি কোটি কোটি ডিভাইস একসাথে জেনারেট করলেও।
-function secureRandomInt(max) {
-  // Uint32Array ব্যবহার করা হচ্ছে (Uint8Array সর্বোচ্চ ২৫৫ পর্যন্ত যায়, যা max>255 হলে
-  // অসীম লুপ তৈরি করত)। Rejection sampling দিয়ে bias-free random integer [0, max) পাওয়া যায়।
-  const maxUint32 = 4294967296; // 2^32
-  const range = maxUint32 - (maxUint32 % max);
-  const arr = new Uint32Array(1);
-  let val;
-  do {
-    crypto.getRandomValues(arr);
-    val = arr[0];
-  } while (val >= range);
-  return val % max;
-}
-
-function secureShuffle(arr) {
-  // Fisher-Yates shuffle with crypto randomness
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = secureRandomInt(i + 1);
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
-function secureRandomBytes(n) {
-  const arr = new Uint8Array(n);
-  crypto.getRandomValues(arr);
-  return arr;
-}
-
-// ─── GENERATORS ───
+// ═══ GENERATORS ═══
 const symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
 const words = ['mango','river','light','tiger','moon','storm','ocean','cloud','flame','swift','brave','gold','iron','echo','nova','blaze','frost','dawn','peak','sage','coral','delta','ember','fable','glide','haven','ivory','jolt','karma','lunar','maple','north','onyx','pixel','quartz','ridge','solar','trace','umber','vapor'];
 
-// সাম্প্রতিক জেনারেট করা পাসওয়ার্ড মনে রেখে এই সেশনে ডুপ্লিকেট এড়ানো হয়
-const recentGenerated = JSON.parse(sessionStorage.getItem('recent-generated') || '[]');
-function rememberGenerated(pw) {
-  recentGenerated.push(pw);
-  if (recentGenerated.length > 30) recentGenerated.shift();
-  sessionStorage.setItem('recent-generated', JSON.stringify(recentGenerated));
+let recentGen = [];
+try {
+  const stored = ssGet('recent-gen');
+  const parsed = stored ? JSON.parse(stored) : [];
+  recentGen = Array.isArray(parsed) ? parsed : [];
+} catch (_) { recentGen = []; }
+
+function rememberGen(pw) {
+  recentGen.push(pw);
+  if (recentGen.length > 30) recentGen.shift();
+  ssSet('recent-gen', JSON.stringify(recentGen));
 }
-
-function generateStrongPassword() {
-  const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const lower = 'abcdefghijklmnopqrstuvwxyz';
-  const digits = '0123456789';
-  const all = upper + lower + digits + symbols;
-
-  let pw;
-  let attempts = 0;
+function genStrong() {
+  const U = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', L = 'abcdefghijklmnopqrstuvwxyz', D = '0123456789';
+  const all = U + L + D + symbols;
+  let pw, a = 0;
   do {
-    const chars = [
-      upper[secureRandomInt(upper.length)],
-      lower[secureRandomInt(lower.length)],
-      digits[secureRandomInt(digits.length)],
-      symbols[secureRandomInt(symbols.length)],
+    const c = [
+      U[secureRandomInt(U.length)], L[secureRandomInt(L.length)],
+      D[secureRandomInt(D.length)], symbols[secureRandomInt(symbols.length)]
     ];
-    for (let i = 0; i < 12; i++) chars.push(all[secureRandomInt(all.length)]);
-    pw = secureShuffle(chars).join('');
-    attempts++;
-  } while (recentGenerated.includes(pw) && attempts < 5);
-
-  rememberGenerated(pw);
+    for (let i = 0; i < 12; i++) c.push(all[secureRandomInt(all.length)]);
+    pw = secureShuffle(c).join('');
+    a++;
+  } while (recentGen.indexOf(pw) !== -1 && a < 5);
+  rememberGen(pw);
   return pw;
 }
-
-function generatePassphrase() {
-  const pick = arr => arr[secureRandomInt(arr.length)];
-  let pw, attempts = 0;
+function genPass() {
+  function p(a) { return a[secureRandomInt(a.length)]; }
+  let pw, a = 0;
   do {
-    const w1 = pick(words);
-    const w2 = pick(words.filter(w => w !== w1));
-    const w3 = pick(words.filter(w => w !== w1 && w !== w2));
-    const num = secureRandomInt(900) + 100;
-    const sym = symbols[secureRandomInt(symbols.length)];
-    pw = w1.charAt(0).toUpperCase() + w1.slice(1) + '-' + w2 + sym + num + w3.charAt(0).toUpperCase() + w3.slice(1);
-    attempts++;
-  } while (recentGenerated.includes(pw) && attempts < 5);
-
-  rememberGenerated(pw);
+    const w1 = p(words);
+    const w2 = p(words.filter(function (x) { return x !== w1; }));
+    const w3 = p(words.filter(function (x) { return x !== w1 && x !== w2; }));
+    pw = w1.charAt(0).toUpperCase() + w1.slice(1) + '-' + w2 + p(symbols.split('')) + (secureRandomInt(900) + 100) + w3.charAt(0).toUpperCase() + w3.slice(1);
+    a++;
+  } while (recentGen.indexOf(pw) !== -1 && a < 5);
+  rememberGen(pw);
   return pw;
 }
-
-document.getElementById('gen-strong').addEventListener('click', () => {
-  const pw = generateStrongPassword();
-  input.value = pw; input.type = 'text'; visible = true;
-  eyeIcon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+function setPassword(pw) {
+  input.value = pw;
+  input.type = 'text';
+  visible = true;
+  eyeIcon.innerHTML = EYE_CLOSED;
   evaluate(pw);
-  const r = input.getBoundingClientRect();
-  for (let i = 0; i < 12; i++) spawnSpark(r.left + secureRandomInt(Math.floor(r.width)), r.top + r.height/2);
-});
+}
+document.getElementById('gen-strong').addEventListener('click', function () { setPassword(genStrong()); });
+document.getElementById('gen-pass').addEventListener('click', function () { setPassword(genPass()); });
 
-document.getElementById('gen-pass').addEventListener('click', () => {
-  const pw = generatePassphrase();
-  input.value = pw; input.type = 'text'; visible = true;
-  eyeIcon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
-  evaluate(pw);
-  const r = input.getBoundingClientRect();
-  for (let i = 0; i < 12; i++) spawnSpark(r.left + secureRandomInt(Math.floor(r.width)), r.top + r.height/2);
-});
-
-// ═══════════════════════════════════════════════
-// ─── ENCRYPTED VAULT (Web Crypto: PBKDF2 + AES-GCM 256) ───
-// সবকিছু (পাসওয়ার্ড, API কী, নোট) একটি মাস্টার পাসওয়ার্ড দিয়ে
-// এনক্রিপ্ট করে localStorage-এ রাখা হয়। মাস্টার পাসওয়ার্ড কখনো
-// সংরক্ষণ করা হয় না, শুধু একটি র‍্যান্ডম সল্ট + একটি ভেরিফায়ার
-// (যাচাইয়ের জন্য এনক্রিপ্ট করা ছোট স্ট্রিং) রাখা হয়।
-// ═══════════════════════════════════════════════
-const VAULT_SALT_KEY = 'bcoding-vault-salt';
-const VAULT_VERIFIER_KEY = 'bcoding-vault-verifier';
-const VAULT_BLOB_KEY = 'bcoding-vault-blob';
-
+// ═══ VAULT CRYPTO ═══
+const K_SALT = 'bcoding-vault-salt';
+const K_VER = 'bcoding-vault-verifier';
+const K_BLOB = 'bcoding-vault-blob';
 let vaultKey = null;
 let vaultData = { passwords: [], apis: [], notes: [] };
 let vaultReady = false;
 let pendingAction = null;
-let vaultModalMode = 'create';
+let vaultMode = 'create';
 
-function bytesToBase64(bytes) {
-  let bin = '';
-  bytes.forEach(b => bin += String.fromCharCode(b));
-  return btoa(bin);
-}
-function base64ToBytes(b64) {
+function bytesToB64(b) { let s = ''; b.forEach(function (x) { s += String.fromCharCode(x); }); return btoa(s); }
+function b64ToBytes(b64) {
   const bin = atob(b64);
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return bytes;
+  const a = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i);
+  return a;
 }
-async function deriveKey(passphrase, salt) {
+async function deriveKey(pass, salt) {
   const enc = new TextEncoder();
-  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+  const km = await crypto.subtle.importKey('raw', enc.encode(pass), 'PBKDF2', false, ['deriveKey']);
   return crypto.subtle.deriveKey(
-    { name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' },
-    keyMaterial,
-    { name: 'AES-GCM', length: 256 },
-    false,
-    ['encrypt', 'decrypt']
+    { name: 'PBKDF2', salt: salt, iterations: 150000, hash: 'SHA-256' },
+    km, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
   );
 }
-async function encryptWithKey(key, obj) {
+async function encryptK(key, obj) {
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const enc = new TextEncoder();
-  const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(JSON.stringify(obj)));
-  return bytesToBase64(iv) + '.' + bytesToBase64(new Uint8Array(ciphertext));
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, enc.encode(JSON.stringify(obj)));
+  return bytesToB64(iv) + '.' + bytesToB64(new Uint8Array(ct));
 }
-async function decryptWithKey(key, blob) {
-  const [ivB64, ctB64] = blob.split('.');
-  const plaintext = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: base64ToBytes(ivB64) }, key, base64ToBytes(ctB64));
-  return JSON.parse(new TextDecoder().decode(plaintext));
+async function decryptK(key, blob) {
+  const parts = blob.split('.');
+  if (parts.length !== 2) throw new Error('bad blob');
+  const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBytes(parts[0]) }, key, b64ToBytes(parts[1]));
+  return JSON.parse(new TextDecoder().decode(pt));
 }
-
-function hasVault() { return localStorage.getItem(VAULT_SALT_KEY) !== null; }
+function hasVault() { return lsGet(K_SALT) !== null; }
 
 function openVaultModal(mode) {
-  vaultModalMode = mode;
-  const title = document.getElementById('vault-modal-title');
-  const desc = document.getElementById('vault-modal-desc');
-  const confirmInput = document.getElementById('vault-pass-confirm');
-  const submitBtn = document.getElementById('vault-submit-btn');
-  const resetBtn = document.getElementById('vault-reset-btn');
-  document.getElementById('vault-error').classList.remove('show-msg');
+  vaultMode = mode;
+  const title = document.getElementById('vault-title');
+  const confirm = document.getElementById('vault-pass-confirm');
+  const submit = document.getElementById('vault-submit');
+  const reset = document.getElementById('vault-reset');
+  document.getElementById('vault-error').classList.remove('show');
   document.getElementById('vault-pass-input').value = '';
-  confirmInput.value = '';
+  confirm.value = '';
   if (mode === 'create') {
     title.textContent = 'মাস্টার পাসওয়ার্ড তৈরি করুন';
-    desc.textContent = 'সেভ করা পাসওয়ার্ড, API কী ও নোট এই পাসওয়ার্ড দিয়ে এনক্রিপ্ট হয়ে থাকবে। এটি ভুলে গেলে ডেটা ফিরে পাওয়া যাবে না।';
-    confirmInput.style.display = 'block';
-    submitBtn.textContent = 'তৈরি করুন';
-    resetBtn.style.display = 'none';
+    confirm.style.display = 'block';
+    submit.textContent = 'তৈরি করুন';
+    reset.style.display = 'none';
   } else {
     title.textContent = 'আনলক করুন';
-    desc.textContent = 'আপনার সেভ করা ডেটা এনক্রিপ্ট করা আছে। আনলক করতে মাস্টার পাসওয়ার্ড দিন।';
-    confirmInput.style.display = 'none';
-    submitBtn.textContent = 'আনলক করুন';
-    resetBtn.style.display = 'block';
+    confirm.style.display = 'none';
+    submit.textContent = 'আনলক';
+    reset.style.display = 'block';
   }
-  document.getElementById('vault-overlay').classList.add('show');
-  setTimeout(() => document.getElementById('vault-pass-input').focus(), 50);
+  document.getElementById('vault-overlay').classList.add('open');
+  setTimeout(function () { document.getElementById('vault-pass-input').focus(); }, 60);
 }
-function closeVaultModal() { document.getElementById('vault-overlay').classList.remove('show'); }
+function closeVaultModal() { document.getElementById('vault-overlay').classList.remove('open'); }
 
-function ensureVaultReady(action) {
+function ensureVault(action) {
   if (vaultReady) { action(); return; }
   pendingAction = action;
   openVaultModal(hasVault() ? 'unlock' : 'create');
 }
-
 async function persistVault() {
   if (!vaultKey) return;
-  localStorage.setItem(VAULT_BLOB_KEY, await encryptWithKey(vaultKey, vaultData));
+  try {
+    lsSet(K_BLOB, await encryptK(vaultKey, vaultData));
+  } catch (e) { console.error('persist failed', e); }
 }
-
-async function createVaultWithPassphrase(passphrase) {
+async function createVault(pass) {
   const salt = crypto.getRandomValues(new Uint8Array(16));
-  const key = await deriveKey(passphrase, salt);
-  localStorage.setItem(VAULT_SALT_KEY, bytesToBase64(salt));
-  localStorage.setItem(VAULT_VERIFIER_KEY, await encryptWithKey(key, { ok: true }));
+  const key = await deriveKey(pass, salt);
+  lsSet(K_SALT, bytesToB64(salt));
+  lsSet(K_VER, await encryptK(key, { ok: 1 }));
   vaultKey = key;
   vaultData = { passwords: [], apis: [], notes: [] };
-  // পুরনো (আনএনক্রিপ্টেড) ডেটা থাকলে ভল্টে নিয়ে আসা হচ্ছে
-  try { const old = JSON.parse(localStorage.getItem('bcoding-saved-pws') || '[]'); if (Array.isArray(old)) vaultData.passwords = old; } catch {}
-  try { const old = JSON.parse(localStorage.getItem('bcoding-saved-apis') || '[]'); if (Array.isArray(old)) vaultData.apis = old; } catch {}
-  localStorage.removeItem('bcoding-saved-pws');
-  localStorage.removeItem('bcoding-saved-apis');
   await persistVault();
   vaultReady = true;
 }
-
-async function unlockVaultWithPassphrase(passphrase) {
-  const salt = base64ToBytes(localStorage.getItem(VAULT_SALT_KEY));
-  const key = await deriveKey(passphrase, salt);
-  await decryptWithKey(key, localStorage.getItem(VAULT_VERIFIER_KEY)); // ভুল পাসওয়ার্ডে এখানেই throw করবে
-  const blob = localStorage.getItem(VAULT_BLOB_KEY);
-  const data = blob ? await decryptWithKey(key, blob) : { passwords: [], apis: [], notes: [] };
+async function unlockVault(pass) {
+  const saltB64 = lsGet(K_SALT);
+  if (!saltB64) throw new Error('no salt');
+  const salt = b64ToBytes(saltB64);
+  const key = await deriveKey(pass, salt);
+  const ver = lsGet(K_VER);
+  if (!ver) throw new Error('no verifier');
+  await decryptK(key, ver);
+  const blob = lsGet(K_BLOB);
+  const data = blob ? await decryptK(key, blob) : { passwords: [], apis: [], notes: [] };
   vaultKey = key;
-  vaultData = { passwords: data.passwords || [], apis: data.apis || [], notes: data.notes || [] };
+  vaultData = {
+    passwords: Array.isArray(data.passwords) ? data.passwords : [],
+    apis: Array.isArray(data.apis) ? data.apis : [],
+    notes: Array.isArray(data.notes) ? data.notes : []
+  };
   vaultReady = true;
 }
 
-document.getElementById('vault-submit-btn').addEventListener('click', async () => {
-  const pass1 = document.getElementById('vault-pass-input').value;
-  const errorEl = document.getElementById('vault-error');
-  errorEl.classList.remove('show-msg');
-  if (vaultModalMode === 'create') {
-    const pass2 = document.getElementById('vault-pass-confirm').value;
-    if (!pass1 || pass1.length < 4) { flashMessage(errorEl, 'কমপক্ষে ৪ অক্ষরের পাসওয়ার্ড দিন।', false); return; }
-    if (pass1 !== pass2) { flashMessage(errorEl, 'দুটি পাসওয়ার্ড মিলছে না।', false); return; }
-    await createVaultWithPassphrase(pass1);
-  } else {
-    try { await unlockVaultWithPassphrase(pass1); }
-    catch (e) { flashMessage(errorEl, 'ভুল পাসওয়ার্ড, আবার চেষ্টা করুন।', false); return; }
+document.getElementById('vault-submit').addEventListener('click', async function () {
+  const p1 = document.getElementById('vault-pass-input').value;
+  const err = document.getElementById('vault-error');
+  err.classList.remove('show');
+  try {
+    if (vaultMode === 'create') {
+      const p2 = document.getElementById('vault-pass-confirm').value;
+      if (!p1 || p1.length < 4) { err.textContent = 'কমপক্ষে ৪ অক্ষর'; err.classList.add('show'); return; }
+      if (p1 !== p2) { err.textContent = 'মিলছে না'; err.classList.add('show'); return; }
+      await createVault(p1);
+      showToast('ভল্ট তৈরি হয়েছে');
+    } else {
+      try { await unlockVault(p1); }
+      catch (_) { err.textContent = 'ভুল পাসওয়ার্ড'; err.classList.add('show'); return; }
+      showToast('আনলক হয়েছে');
+    }
+  } catch (e) {
+    err.textContent = 'সমস্যা হয়েছে'; err.classList.add('show');
+    return;
   }
   closeVaultModal();
-  renderSaved(); renderApiList(); renderNotes();
-  if (pendingAction) { const fn = pendingAction; pendingAction = null; fn(); }
+  renderAll();
+  if (pendingAction) {
+    const fn = pendingAction;
+    pendingAction = null;
+    try { fn(); } catch (e) { console.error(e); }
+  }
 });
-
-document.getElementById('vault-reset-btn').addEventListener('click', () => {
-  if (confirm('সব সেভ করা পাসওয়ার্ড, API কী ও নোট মুছে যাবে। নিশ্চিত?')) {
-    localStorage.removeItem(VAULT_SALT_KEY);
-    localStorage.removeItem(VAULT_VERIFIER_KEY);
-    localStorage.removeItem(VAULT_BLOB_KEY);
+document.getElementById('vault-reset').addEventListener('click', function () {
+  if (confirm('সব ডেটা মুছে যাবে?')) {
+    lsRemove(K_SALT);
+    lsRemove(K_VER);
+    lsRemove(K_BLOB);
     location.reload();
   }
 });
 
-// ─── SHARED HELPERS ───
-const strengthDotColor = score => tiers[Math.max(0,Math.min(score,4))].color;
-function getScore(pw) {
+// ═══ HELPERS ═══
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function maskKey(k) {
+  if (typeof k !== 'string') k = String(k || '');
+  return k.length > 8 ? k.slice(0,4) + '••••' + k.slice(-4) : '••••••••';
+}
+function dotColor(pw) {
   let s = 0;
-  if (pw.length >= 8)                      s++;
+  if (pw.length >= 8) s++;
   if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) s++;
-  if (/[0-9]/.test(pw))                    s++;
-  if (/[^a-zA-Z0-9]/.test(pw))             s++;
-  if (pw.length >= 16)                     s++;
-  return Math.min(s, 4);
-}
-function escapeHTML(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function maskKey(key) {
-  return key.length > 8 ? key.slice(0,4) + '••••' + key.slice(-4) : '••••••••';
+  if (/[0-9]/.test(pw)) s++;
+  if (/[^a-zA-Z0-9]/.test(pw)) s++;
+  if (pw.length >= 16) s++;
+  return tiers[Math.min(s, 4)].color;
 }
 
-// ─── SAVED PASSWORDS ───
-function renderSaved() {
+// ═══ RENDER PASSWORDS ═══
+function renderPw(highlight) {
   const list = document.getElementById('saved-list');
-  const empty = document.getElementById('save-empty');
-  document.getElementById('save-badge').textContent = vaultData.passwords.length;
-  if (vaultData.passwords.length === 0) { list.innerHTML = ''; list.appendChild(empty); return; }
+  document.getElementById('badge-pw').textContent = vaultData.passwords.length;
   list.innerHTML = '';
-  vaultData.passwords.forEach((item, idx) => {
-    const score = getScore(item.pw);
-    const color = strengthDotColor(score);
+  if (!vaultData.passwords.length) {
+    list.appendChild(makeEmpty('কিছু সেভ করা হয়নি'));
+    return;
+  }
+  vaultData.passwords.forEach(function (item, i) {
+    const color = dotColor(item.pw);
     const masked = item.pw.length > 8 ? item.pw.slice(0,4) + '••••' + item.pw.slice(-2) : '••••••••';
     const div = document.createElement('div');
-    div.className = 'saved-item';
-    div.innerHTML = `
-      <div class="saved-dot" style="background:${color};box-shadow:0 0 6px ${color}55;"></div>
-      <div class="saved-info">
-        <div class="saved-name">${escapeHTML(item.name)}</div>
-        <div class="saved-pw" style="font-family:'JetBrains Mono',monospace;">${masked}</div>
-      </div>
-      <div class="saved-actions">
-        <button class="saved-btn load" title="লোড করুন">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.21"/></svg>
-          লোড
-        </button>
-        <button class="saved-btn copy-saved" title="কপি করুন">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          কপি
-        </button>
-        <button class="saved-btn del" title="মুছে ফেলুন">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-        </button>
-      </div>
-    `;
-    div.querySelector('.load').addEventListener('click', () => {
-      input.value = item.pw; input.type = 'text'; visible = true;
-      eyeIcon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
-      evaluate(item.pw); input.focus();
+    div.className = 'item' + (highlight && i === 0 ? ' just' : '');
+    div.innerHTML =
+      '<div class="item-dot" style="background:' + color + ';"></div>' +
+      '<div class="item-info">' +
+        '<div class="item-name"></div>' +
+        '<div class="item-val"></div>' +
+      '</div>' +
+      '<div class="item-acts">' +
+        '<button type="button" class="act load">লোড</button>' +
+        '<button type="button" class="act copy-saved">কপি</button>' +
+        '<button type="button" class="act del"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>' +
+      '</div>';
+    div.querySelector('.item-name').textContent = item.name;
+    div.querySelector('.item-val').textContent = masked;
+    div.querySelector('.load').addEventListener('click', function () { setPassword(item.pw); input.focus(); });
+    div.querySelector('.copy-saved').addEventListener('click', async function () {
+      const ok = await copyText(item.pw);
+      if (ok) {
+        const b = div.querySelector('.copy-saved');
+        b.classList.add('flash');
+        showToast('কপি হয়েছে');
+        setTimeout(function () { b.classList.remove('flash'); }, 1200);
+      } else showToast('কপি ব্যর্থ', 'warn');
     });
-    div.querySelector('.copy-saved').addEventListener('click', () => {
-      navigator.clipboard.writeText(item.pw);
-      const btn = div.querySelector('.copy-saved');
-      btn.style.color = 'var(--strong)'; btn.style.borderColor = 'var(--strong)';
-      setTimeout(() => { btn.style.color = ''; btn.style.borderColor = ''; }, 1500);
-    });
-    div.querySelector('.del').addEventListener('click', () => {
-      div.style.opacity = '0'; div.style.transform = 'scale(0.95)'; div.style.transition = 'all 0.25s';
-      setTimeout(() => { vaultData.passwords.splice(idx,1); persistVault(); renderSaved(); }, 240);
+    div.querySelector('.del').addEventListener('click', function () {
+      div.style.opacity = '0';
+      div.style.transition = 'opacity 0.18s';
+      setTimeout(function () {
+        const idx = vaultData.passwords.indexOf(item);
+        if (idx !== -1) vaultData.passwords.splice(idx, 1);
+        persistVault();
+        renderPw();
+      }, 160);
     });
     list.appendChild(div);
   });
 }
-
-document.getElementById('add-password-header').addEventListener('click', () => {
-  document.getElementById('add-password-modal').classList.remove('open');
-});
-
-document.getElementById('do-save-btn').addEventListener('click', () => {
+document.getElementById('do-save-pw').addEventListener('click', function () {
   const pw = input.value;
-  if (!pw) return;
-  const name = document.getElementById('save-name').value.trim() || 'পাসওয়ার্ড ' + (vaultData.passwords.length+1);
-  ensureVaultReady(async () => {
-    vaultData.passwords.unshift({ name, pw, time: Date.now() });
+  if (!pw) { showToast('পাসওয়ার্ড দিন', 'warn'); return; }
+  const name = document.getElementById('save-name').value.trim() || ('পাসওয়ার্ড ' + (vaultData.passwords.length + 1));
+  ensureVault(async function () {
+    vaultData.passwords.unshift({ name: name, pw: pw, time: Date.now() });
     await persistVault();
-    renderSaved();
+    renderPw(true);
     document.getElementById('save-name').value = '';
-    const btn = document.getElementById('do-save-btn');
-    const r = btn.getBoundingClientRect();
-    for (let i = 0; i < 8; i++) spawnSpark(r.left + r.width/2, r.top + r.height/2);
-    setTimeout(() => {
-      document.getElementById('add-password-modal').classList.remove('open');
-      document.getElementById('saved-list-panel').classList.add('open');
-    }, 260);
+    showToast('সেভ হয়েছে');
+    document.getElementById('add-pw-modal').classList.remove('open');
   });
 });
 
-// ─── SAVED API KEYS (expiry + last used) ───
-function apiStatusChip(expiry) {
-  if (!expiry) return '';
-  const today = new Date(); today.setHours(0,0,0,0);
-  const exp = new Date(expiry + 'T00:00:00');
-  const diffDays = Math.round((exp - today) / 86400000);
-  if (diffDays < 0)  return `<span class="status-chip status-expired">মেয়াদ উত্তীর্ণ</span>`;
-  if (diffDays <= 14) return `<span class="status-chip status-soon">${diffDays} দিনে মেয়াদ শেষ</span>`;
-  return `<span class="status-chip status-ok">মেয়াদ: ${expiry}</span>`;
+// ═══ RENDER APIs ═══
+function apiChip(exp) {
+  if (!exp) return '';
+  const t = new Date(); t.setHours(0,0,0,0);
+  const e = new Date(exp + 'T00:00:00');
+  if (isNaN(e.getTime())) return '';
+  const d = Math.round((e - t) / 86400000);
+  if (d < 0) return '<span class="chip exp">মেয়াদোত্তীর্ণ</span>';
+  if (d <= 14) return '<span class="chip soon">' + d + ' দিন</span>';
+  return '<span class="chip ok">' + esc(exp) + '</span>';
 }
-function lastUsedText(item) {
-  if (!item.lastUsed) return 'কখনো ব্যবহার হয়নি';
-  const days = Math.floor((Date.now() - item.lastUsed) / 86400000);
-  if (days <= 0) return 'আজ ব্যবহার হয়েছে';
-  if (days === 1) return '১ দিন আগে ব্যবহার হয়েছে';
-  return `${days} দিন আগে ব্যবহার হয়েছে`;
+function lastUsed(item) {
+  if (!item.lastUsed) return 'ব্যবহার হয়নি';
+  const d = Math.floor((Date.now() - item.lastUsed) / 86400000);
+  if (d <= 0) return 'আজ';
+  if (d === 1) return '১ দিন আগে';
+  return d + ' দিন আগে';
 }
-
-function renderApiList() {
+function renderApi(highlight) {
   const list = document.getElementById('api-list');
-  const empty = document.getElementById('api-empty');
-  document.getElementById('api-badge').textContent = vaultData.apis.length;
-  if (vaultData.apis.length === 0) { list.innerHTML = ''; list.appendChild(empty); return; }
+  document.getElementById('badge-api').textContent = vaultData.apis.length;
   list.innerHTML = '';
-  vaultData.apis.forEach((item, idx) => {
-    const masked = maskKey(item.key);
+  if (!vaultData.apis.length) {
+    list.appendChild(makeEmpty('কিছু সেভ করা হয়নি'));
+    return;
+  }
+  vaultData.apis.forEach(function (item, i) {
     const div = document.createElement('div');
-    div.className = 'saved-item';
+    div.className = 'item' + (highlight && i === 0 ? ' just' : '');
     div.style.alignItems = 'flex-start';
-    div.innerHTML = `
-      <div class="saved-dot" style="background:var(--accent);box-shadow:0 0 6px var(--accent-glow);margin-top:5px;"></div>
-      <div class="saved-info">
-        <div class="saved-name">${escapeHTML(item.name)}</div>
-        <div class="saved-pw" style="font-family:'JetBrains Mono',monospace;">${masked}</div>
-        <div class="saved-pw api-lastused" style="color:var(--muted);white-space:normal;">${lastUsedText(item)}</div>
-        ${item.note ? `<div class="saved-pw" style="color:var(--text2);white-space:normal;">${escapeHTML(item.note)}</div>` : ''}
-        ${apiStatusChip(item.expiry)}
-      </div>
-      <div class="saved-actions">
-        <button class="saved-btn copy-saved" title="কপি করুন">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          কপি
-        </button>
-        <button class="saved-btn del" title="মুছে ফেলুন">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-        </button>
-      </div>
-    `;
-    div.querySelector('.copy-saved').addEventListener('click', () => {
-      navigator.clipboard.writeText(item.key);
-      item.lastUsed = Date.now();
-      persistVault();
-      const lu = div.querySelector('.api-lastused');
-      if (lu) lu.textContent = lastUsedText(item);
-      const btn = div.querySelector('.copy-saved');
-      btn.style.color = 'var(--strong)'; btn.style.borderColor = 'var(--strong)';
-      setTimeout(() => { btn.style.color = ''; btn.style.borderColor = ''; }, 1500);
+    div.innerHTML =
+      '<div class="item-dot" style="background:var(--text-2);margin-top:6px;"></div>' +
+      '<div class="item-info">' +
+        '<div class="item-name"></div>' +
+        '<div class="item-val"></div>' +
+        '<div class="item-meta lastused"></div>' +
+        '<div class="item-meta note" style="color:var(--text-3);"></div>' +
+        '<div class="chipwrap"></div>' +
+      '</div>' +
+      '<div class="item-acts">' +
+        '<button type="button" class="act copy-saved">কপি</button>' +
+        '<button type="button" class="act del"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>' +
+      '</div>';
+    div.querySelector('.item-name').textContent = item.name;
+    div.querySelector('.item-val').textContent = maskKey(item.key);
+    div.querySelector('.lastused').textContent = lastUsed(item);
+    if (item.note) div.querySelector('.note').textContent = item.note;
+    else div.querySelector('.note').remove();
+    const chip = apiChip(item.expiry);
+    if (chip) div.querySelector('.chipwrap').innerHTML = chip;
+    else div.querySelector('.chipwrap').remove();
+    div.querySelector('.copy-saved').addEventListener('click', async function () {
+      const ok = await copyText(item.key);
+      if (ok) {
+        item.lastUsed = Date.now();
+        persistVault();
+        const m = div.querySelector('.lastused');
+        if (m) m.textContent = lastUsed(item);
+        const b = div.querySelector('.copy-saved');
+        b.classList.add('flash');
+        showToast('কপি হয়েছে');
+        setTimeout(function () { b.classList.remove('flash'); }, 1200);
+      } else showToast('কপি ব্যর্থ', 'warn');
     });
-    div.querySelector('.del').addEventListener('click', () => {
-      div.style.opacity = '0'; div.style.transform = 'scale(0.95)'; div.style.transition = 'all 0.25s';
-      setTimeout(() => { vaultData.apis.splice(idx,1); persistVault(); renderApiList(); }, 240);
+    div.querySelector('.del').addEventListener('click', function () {
+      div.style.opacity = '0';
+      div.style.transition = 'opacity 0.18s';
+      setTimeout(function () {
+        const idx = vaultData.apis.indexOf(item);
+        if (idx !== -1) vaultData.apis.splice(idx, 1);
+        persistVault();
+        renderApi();
+      }, 160);
     });
     list.appendChild(div);
   });
 }
-
-document.getElementById('add-api-header').addEventListener('click', () => {
-  document.getElementById('add-api-modal').classList.remove('open');
-});
-
-document.getElementById('do-save-api-btn').addEventListener('click', () => {
-  const nameInput   = document.getElementById('api-name');
-  const keyInput    = document.getElementById('api-key');
-  const noteInput   = document.getElementById('api-note');
-  const expiryInput = document.getElementById('api-expiry');
-  const name = nameInput.value.trim();
-  const key  = keyInput.value.trim();
-  const note = noteInput.value.trim();
-  const expiry = expiryInput.value || '';
-  if (!name || !key) return;
-  ensureVaultReady(async () => {
-    vaultData.apis.unshift({ name, key, note, expiry, lastUsed: null, time: Date.now() });
+document.getElementById('do-save-api').addEventListener('click', function () {
+  const n = document.getElementById('api-name').value.trim();
+  const k = document.getElementById('api-key').value.trim();
+  if (!n || !k) { showToast('নাম ও কী দিন', 'warn'); return; }
+  const note = document.getElementById('api-note').value.trim();
+  const exp = document.getElementById('api-expiry').value || '';
+  ensureVault(async function () {
+    vaultData.apis.unshift({ name: n, key: k, note: note, expiry: exp, lastUsed: null, time: Date.now() });
     await persistVault();
-    renderApiList();
-    nameInput.value = ''; keyInput.value = ''; noteInput.value = ''; expiryInput.value = '';
-    const btn = document.getElementById('do-save-api-btn');
-    const r = btn.getBoundingClientRect();
-    for (let i = 0; i < 8; i++) spawnSpark(r.left + r.width/2, r.top + r.height/2);
-    setTimeout(() => {
-      document.getElementById('add-api-modal').classList.remove('open');
-      document.getElementById('api-list-panel').classList.add('open');
-    }, 260);
+    renderApi(true);
+    ['api-name','api-key','api-note','api-expiry'].forEach(function (id) { document.getElementById(id).value = ''; });
+    showToast('সেভ হয়েছে');
+    document.getElementById('add-api-modal').classList.remove('open');
   });
 });
 
-// ─── SECURE NOTES ───
-function renderNotes() {
+// ═══ RENDER NOTES ═══
+function renderNotes(highlight) {
   const list = document.getElementById('notes-list');
-  const empty = document.getElementById('notes-empty');
-  document.getElementById('notes-badge').textContent = vaultData.notes.length;
-  if (vaultData.notes.length === 0) { list.innerHTML = ''; list.appendChild(empty); return; }
+  document.getElementById('badge-note').textContent = vaultData.notes.length;
   list.innerHTML = '';
-  vaultData.notes.forEach((item, idx) => {
+  if (!vaultData.notes.length) {
+    list.appendChild(makeEmpty('কিছু সেভ করা হয়নি'));
+    return;
+  }
+  vaultData.notes.forEach(function (item, i) {
     const div = document.createElement('div');
-    div.className = 'saved-item';
-    div.style.alignItems = 'flex-start';
+    div.className = 'item' + (highlight && i === 0 ? ' just' : '');
     div.style.flexDirection = 'column';
+    div.style.alignItems = 'stretch';
     div.style.gap = '6px';
-    div.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
-        <div class="saved-name">${escapeHTML(item.title)}</div>
-        <div class="saved-actions">
-          <button class="saved-btn copy-saved" title="কপি করুন">কপি</button>
-          <button class="saved-btn del" title="মুছে ফেলুন">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
-          </button>
-        </div>
-      </div>
-      <div class="note-preview">${escapeHTML(item.content)}</div>
-    `;
-    div.querySelector('.copy-saved').addEventListener('click', () => {
-      navigator.clipboard.writeText(item.content);
-      const btn = div.querySelector('.copy-saved');
-      btn.style.color = 'var(--strong)'; btn.style.borderColor = 'var(--strong)';
-      setTimeout(() => { btn.style.color = ''; btn.style.borderColor = ''; }, 1500);
+    div.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">' +
+        '<div class="item-name" style="margin:0;flex:1;"></div>' +
+        '<div class="item-acts">' +
+          '<button type="button" class="act copy-saved">কপি</button>' +
+          '<button type="button" class="act del"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="item-meta content" style="white-space:pre-wrap;word-break:break-word;color:var(--text-2);font-family:Inter,sans-serif;font-size:12px;line-height:1.5;"></div>';
+    div.querySelector('.item-name').textContent = item.title;
+    div.querySelector('.content').textContent = item.content;
+    div.querySelector('.copy-saved').addEventListener('click', async function () {
+      const ok = await copyText(item.content);
+      if (ok) {
+        const b = div.querySelector('.copy-saved');
+        b.classList.add('flash');
+        showToast('কপি হয়েছে');
+        setTimeout(function () { b.classList.remove('flash'); }, 1200);
+      } else showToast('কপি ব্যর্থ', 'warn');
     });
-    div.querySelector('.del').addEventListener('click', () => {
-      div.style.opacity = '0'; div.style.transform = 'scale(0.95)'; div.style.transition = 'all 0.25s';
-      setTimeout(() => { vaultData.notes.splice(idx,1); persistVault(); renderNotes(); }, 240);
+    div.querySelector('.del').addEventListener('click', function () {
+      div.style.opacity = '0';
+      div.style.transition = 'opacity 0.18s';
+      setTimeout(function () {
+        const idx = vaultData.notes.indexOf(item);
+        if (idx !== -1) vaultData.notes.splice(idx, 1);
+        persistVault();
+        renderNotes();
+      }, 160);
     });
     list.appendChild(div);
   });
 }
-
-document.getElementById('add-note-header').addEventListener('click', () => {
-  document.getElementById('add-note-modal').classList.remove('open');
-});
-
-document.getElementById('do-save-note-btn').addEventListener('click', () => {
-  const titleInput = document.getElementById('note-title');
-  const contentInput = document.getElementById('note-content');
-  const title = titleInput.value.trim();
-  const content = contentInput.value.trim();
-  if (!title || !content) return;
-  ensureVaultReady(async () => {
-    vaultData.notes.unshift({ title, content, time: Date.now() });
+document.getElementById('do-save-note').addEventListener('click', function () {
+  const t = document.getElementById('note-title').value.trim();
+  const c = document.getElementById('note-content').value.trim();
+  if (!t || !c) { showToast('শিরোনাম ও নোট দিন', 'warn'); return; }
+  ensureVault(async function () {
+    vaultData.notes.unshift({ title: t, content: c, time: Date.now() });
     await persistVault();
-    renderNotes();
-    titleInput.value = ''; contentInput.value = '';
-    const btn = document.getElementById('do-save-note-btn');
-    const r = btn.getBoundingClientRect();
-    for (let i = 0; i < 8; i++) spawnSpark(r.left + r.width/2, r.top + r.height/2);
-    setTimeout(() => {
-      document.getElementById('add-note-modal').classList.remove('open');
-      document.getElementById('notes-list-panel').classList.add('open');
-    }, 260);
+    renderNotes(true);
+    document.getElementById('note-title').value = '';
+    document.getElementById('note-content').value = '';
+    showToast('সেভ হয়েছে');
+    document.getElementById('add-note-modal').classList.remove('open');
   });
 });
 
-// ─── ENCRYPTED BACKUP (copyable text, no file download) ───
-document.getElementById('backup-header').addEventListener('click', () => {
-  document.getElementById('backup-modal').classList.remove('open');
-});
+function renderAll() { renderPw(); renderApi(); renderNotes(); }
 
-function flashMessage(el, text, ok) {
-  el.textContent = text;
-  el.style.color = ok ? 'var(--strong)' : 'var(--weak)';
-  el.classList.remove('show-msg');
-  void el.offsetWidth; // reflow, so the animation restarts every time
-  el.classList.add('show-msg');
-}
-
-document.getElementById('export-btn').addEventListener('click', () => {
-  ensureVaultReady(async () => {
+// ═══ BACKUP ═══
+document.getElementById('export-btn').addEventListener('click', function () {
+  ensureVault(async function () {
     await persistVault();
     const payload = JSON.stringify({
       v: 1,
-      salt: localStorage.getItem(VAULT_SALT_KEY),
-      verifier: localStorage.getItem(VAULT_VERIFIER_KEY),
-      blob: localStorage.getItem(VAULT_BLOB_KEY)
+      salt: lsGet(K_SALT),
+      verifier: lsGet(K_VER),
+      blob: lsGet(K_BLOB)
     });
-    const out = document.getElementById('export-output');
-    out.value = btoa(unescape(encodeURIComponent(payload)));
-    out.classList.remove('flash-highlight');
-    void out.offsetWidth;
-    out.classList.add('flash-highlight');
-    const btn = document.getElementById('export-btn');
-    const r = btn.getBoundingClientRect();
-    for (let i = 0; i < 8; i++) spawnSpark(r.left + r.width/2, r.top + r.height/2);
+    document.getElementById('export-output').value = utf8ToB64(payload);
+    showToast('তৈরি হয়েছে');
+  });
+});
+document.getElementById('export-copy').addEventListener('click', async function () {
+  const out = document.getElementById('export-output');
+  if (!out.value) { showToast('আগে তৈরি করুন', 'warn'); return; }
+  const ok = await copyText(out.value);
+  if (ok) showToast('কপি হয়েছে');
+  else showToast('কপি ব্যর্থ', 'warn');
+});
+
+let pendingImport = null;
+document.getElementById('import-btn').addEventListener('click', function () {
+  const raw = document.getElementById('import-input').value.trim();
+  const msg = document.getElementById('backup-msg');
+  msg.classList.remove('show');
+  if (!raw) return;
+  try {
+    const payload = JSON.parse(b64ToUtf8(raw));
+    if (!payload.salt || !payload.verifier || !payload.blob) throw new Error('invalid');
+    pendingImport = payload;
+    document.getElementById('import-pass-input').value = '';
+    document.getElementById('import-pass-error').classList.remove('show');
+    document.getElementById('import-pass-overlay').classList.add('open');
+    setTimeout(function () { document.getElementById('import-pass-input').focus(); }, 60);
+  } catch (_) {
+    msg.textContent = 'ভুল ফরম্যাট';
+    msg.classList.add('show');
+    showToast('ভুল ফরম্যাট', 'warn');
+  }
+});
+document.getElementById('import-pass-cancel').addEventListener('click', function () {
+  pendingImport = null;
+  document.getElementById('import-pass-overlay').classList.remove('open');
+});
+document.getElementById('import-pass-submit').addEventListener('click', async function () {
+  const err = document.getElementById('import-pass-error');
+  err.classList.remove('show');
+  const pass = document.getElementById('import-pass-input').value;
+  if (!pendingImport || !pass) return;
+  try {
+    const salt = b64ToBytes(pendingImport.salt);
+    const key = await deriveKey(pass, salt);
+    await decryptK(key, pendingImport.verifier);
+    const data = await decryptK(key, pendingImport.blob);
+    lsSet(K_SALT, pendingImport.salt);
+    lsSet(K_VER, pendingImport.verifier);
+    lsSet(K_BLOB, pendingImport.blob);
+    vaultKey = key;
+    vaultData = {
+      passwords: Array.isArray(data.passwords) ? data.passwords : [],
+      apis: Array.isArray(data.apis) ? data.apis : [],
+      notes: Array.isArray(data.notes) ? data.notes : []
+    };
+    vaultReady = true;
+    renderAll();
+    document.getElementById('import-input').value = '';
+    pendingImport = null;
+    document.getElementById('import-pass-overlay').classList.remove('open');
+    showToast('সফল');
+  } catch (_) {
+    err.textContent = 'ভুল পাসওয়ার্ড';
+    err.classList.add('show');
+  }
+});
+
+document.getElementById('backup-btn').addEventListener('click', function () { document.getElementById('backup-modal').classList.add('open'); });
+document.getElementById('import-open-btn').addEventListener('click', function () { document.getElementById('backup-modal').classList.add('open'); });
+
+// ═══ MODAL OPEN / CLOSE ═══
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+document.getElementById('add-pw-btn').addEventListener('click', function () { openModal('add-pw-modal'); });
+document.getElementById('add-api-btn').addEventListener('click', function () { openModal('add-api-modal'); });
+document.getElementById('add-note-btn').addEventListener('click', function () { openModal('add-note-modal'); });
+
+document.querySelectorAll('.dialog-x').forEach(function (btn) {
+  btn.addEventListener('click', function () { document.getElementById(btn.dataset.close).classList.remove('open'); });
+});
+
+document.querySelectorAll('.modal').forEach(function (m) {
+  m.addEventListener('click', function (e) {
+    if (e.target !== m) return;
+    if (m.id === 'import-pass-overlay') {
+      pendingImport = null;
+      m.classList.remove('open');
+      return;
+    }
+    if (m.id === 'vault-overlay') {
+      pendingAction = null;
+    }
+    m.classList.remove('open');
   });
 });
 
-document.getElementById('export-copy-btn').addEventListener('click', () => {
-  const out = document.getElementById('export-output');
-  if (!out.value) return;
-  navigator.clipboard.writeText(out.value);
-  const btn = document.getElementById('export-copy-btn');
-  const original = btn.textContent;
-  btn.textContent = 'কপি হয়েছে ✓';
-  const r = btn.getBoundingClientRect();
-  for (let i = 0; i < 6; i++) spawnSpark(r.left + r.width/2, r.top + r.height/2);
-  setTimeout(() => { btn.textContent = original; }, 1500);
-});
-
-// ─── Import: parse first, then ask for the passphrase in a proper animated modal ───
-let pendingImportPayload = null;
-
-document.getElementById('import-btn').addEventListener('click', () => {
-  const msg = document.getElementById('backup-msg');
-  msg.classList.remove('show-msg');
-  const raw = document.getElementById('import-input').value.trim();
-  if (!raw) return;
-  try {
-    const payload = JSON.parse(decodeURIComponent(escape(atob(raw))));
-    if (!payload.salt || !payload.verifier || !payload.blob) throw new Error('invalid');
-    pendingImportPayload = payload;
-    document.getElementById('import-pass-input').value = '';
-    document.getElementById('import-pass-error').classList.remove('show-msg');
-    document.getElementById('import-pass-overlay').classList.add('show');
-    setTimeout(() => document.getElementById('import-pass-input').focus(), 60);
-  } catch (e) {
-    flashMessage(msg, 'ব্যাকআপ টেক্সটের ফরম্যাট সঠিক নয়।', false);
+// Escape closes top-most modal
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Escape') return;
+  const importOverlay = document.getElementById('import-pass-overlay');
+  const vaultOverlay = document.getElementById('vault-overlay');
+  if (importOverlay.classList.contains('open')) {
+    pendingImport = null;
+    importOverlay.classList.remove('open');
+    return;
   }
-});
-
-document.getElementById('import-pass-cancel').addEventListener('click', () => {
-  pendingImportPayload = null;
-  document.getElementById('import-pass-overlay').classList.remove('show');
-});
-
-document.getElementById('import-pass-submit').addEventListener('click', async () => {
-  const errorEl = document.getElementById('import-pass-error');
-  errorEl.classList.remove('show-msg');
-  const passphrase = document.getElementById('import-pass-input').value;
-  const payload = pendingImportPayload;
-  if (!payload || !passphrase) return;
-  try {
-    const salt = base64ToBytes(payload.salt);
-    const key = await deriveKey(passphrase, salt);
-    await decryptWithKey(key, payload.verifier); // ভুল পাসওয়ার্ডে throw করবে
-    const data = await decryptWithKey(key, payload.blob);
-    localStorage.setItem(VAULT_SALT_KEY, payload.salt);
-    localStorage.setItem(VAULT_VERIFIER_KEY, payload.verifier);
-    localStorage.setItem(VAULT_BLOB_KEY, payload.blob);
-    vaultKey = key;
-    vaultData = { passwords: data.passwords || [], apis: data.apis || [], notes: data.notes || [] };
-    vaultReady = true;
-    renderSaved(); renderApiList(); renderNotes();
-    document.getElementById('import-input').value = '';
-    pendingImportPayload = null;
-    const submitBtn = document.getElementById('import-pass-submit');
-    const r = submitBtn.getBoundingClientRect();
-    for (let i = 0; i < 10; i++) spawnSpark(r.left + r.width/2, r.top + r.height/2);
-    setTimeout(() => {
-      document.getElementById('import-pass-overlay').classList.remove('show');
-      flashMessage(document.getElementById('backup-msg'), 'ব্যাকআপ সফলভাবে ইম্পোর্ট হয়েছে।', true);
-    }, 220);
-  } catch (e) {
-    flashMessage(errorEl, 'ভুল পাসওয়ার্ড, আবার চেষ্টা করুন।', false);
+  if (vaultOverlay.classList.contains('open')) {
+    pendingAction = null;
+    vaultOverlay.classList.remove('open');
+    return;
   }
+  document.querySelectorAll('.modal.open').forEach(function (m) { m.classList.remove('open'); });
 });
 
-// ─── FAB (floating quick menu) ───
-const fabWrap = document.getElementById('fab-wrap');
-document.getElementById('fab-main').addEventListener('click', (e) => {
-  e.stopPropagation();
-  fabWrap.classList.toggle('open');
-});
-document.addEventListener('click', (e) => {
-  if (fabWrap.classList.contains('open') && !fabWrap.contains(e.target)) {
-    fabWrap.classList.remove('open');
-  }
-});
-function openFeature(id) {
-  fabWrap.classList.remove('open');
-  document.getElementById(id).classList.add('open');
-}
-document.getElementById('fab-passwords').addEventListener('click', () => openFeature('add-password-modal'));
-document.getElementById('fab-apis').addEventListener('click', () => openFeature('add-api-modal'));
-document.getElementById('fab-notes').addEventListener('click', () => openFeature('add-note-modal'));
-document.getElementById('fab-backup').addEventListener('click', () => openFeature('backup-modal'));
-
-// ক্লিক করলে ব্যাকড্রপে (কার্ডের বাইরে) প্যানেল বন্ধ হবে
-document.querySelectorAll('.save-section').forEach(sec => {
-  sec.addEventListener('click', (e) => { if (e.target === sec) sec.classList.remove('open'); });
-});
-
-// ─── নীচের একর্ডিয়ন লিস্ট প্যানেল (আগের মতো) ───
-document.getElementById('saved-list-header').addEventListener('click', () => {
-  document.getElementById('saved-list-panel').classList.toggle('open');
-});
-document.getElementById('api-list-header').addEventListener('click', () => {
-  document.getElementById('api-list-panel').classList.toggle('open');
-});
-document.getElementById('notes-list-header').addEventListener('click', () => {
-  document.getElementById('notes-list-panel').classList.toggle('open');
-});
-
-// ─── INIT ───
-renderSaved();
-renderApiList();
-renderNotes();
+// ═══ INIT ═══
+renderAll();
 evaluate('');
-if (hasVault()) openVaultModal('unlock'); // আগের এনক্রিপ্টেড ডেটা থাকলে আনলক চাওয়া হচ্ছে
+if (hasVault()) openVaultModal('unlock');
 </script>
 </body>
 </html>
