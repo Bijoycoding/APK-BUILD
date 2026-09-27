@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>পাসওয়ার্ড চেকার</title>
+<title>PW/Checker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { -webkit-tap-highlight-color: transparent; }
-button, .chk, .item, .tab {
+button, .chk, .item, .tab, .scope-item {
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -61,6 +61,7 @@ body {
   transition: background 0.2s, color 0.2s;
 }
 .shell { max-width: 640px; margin: 0 auto; padding: 24px 20px 80px; }
+.shell.locked { display: none; }
 
 .head {
   display: flex; align-items: center; justify-content: space-between;
@@ -71,15 +72,18 @@ body {
   letter-spacing: -0.02em; color: var(--text);
 }
 .logo span { color: var(--text-4); font-weight: 400; }
-.theme-btn {
+.head-actions {
+  display: flex; align-items: center; gap: 6px;
+}
+.icon-action {
   width: 30px; height: 30px;
   display: flex; align-items: center; justify-content: center;
   border: 1px solid var(--border); border-radius: 6px;
   color: var(--text-2); transition: all 0.14s;
 }
-.theme-btn:hover { border-color: var(--border-2); color: var(--text); }
-.theme-btn:active { background: var(--surface-2); }
-.theme-btn svg { width: 14px; height: 14px; }
+.icon-action:hover { border-color: var(--border-2); color: var(--text); }
+.icon-action:active { background: var(--surface-2); }
+.icon-action svg { width: 14px; height: 14px; }
 
 .pw-field {
   display: flex; align-items: stretch;
@@ -170,7 +174,7 @@ body {
 }
 .btn-primary { background: var(--btn-bg); color: var(--btn-fg); }
 .btn-primary:hover { opacity: 0.9; }
-.btn-primary:disabled { opacity: 0.3; cursor: not-allowed; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 .btn-ghost { border: 1px solid var(--border); color: var(--text-2); background: var(--surface); }
 .btn-ghost:hover { border-color: var(--border-2); color: var(--text); }
 .btn-ghost:active { background: var(--surface-2); }
@@ -341,7 +345,6 @@ body {
   animation: overlayIn 0.16s ease;
 }
 .modal.open { display: flex; }
-#vault-overlay, #import-pass-overlay { z-index: 950; }
 @keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
 .dialog {
   background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
@@ -406,6 +409,118 @@ textarea.field.mono { font-family: 'JetBrains Mono', monospace; font-size: 11px;
   padding: 0 2px;
 }
 
+.scope-block {
+  display: flex; flex-direction: column; gap: 8px;
+  margin-bottom: 2px;
+}
+.scope-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--text-4);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.scope-list {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.scope-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 13px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text);
+  transition: border-color 0.14s, background 0.14s;
+  user-select: none;
+}
+.scope-item:hover { border-color: var(--border-2); }
+.scope-item input[type="checkbox"] {
+  width: 16px; height: 16px;
+  accent-color: var(--btn-bg);
+  cursor: pointer; margin: 0; flex-shrink: 0;
+}
+.scope-item .scope-text { flex: 1; line-height: 1.35; }
+.scope-item .scope-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10.5px;
+  color: var(--text-4);
+  flex-shrink: 0;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--surface-3);
+}
+
+#vault-overlay {
+  z-index: 1500;
+  background: var(--bg);
+  padding: 24px;
+  overflow-y: auto;
+}
+#vault-overlay .lock-screen {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 24px;
+  margin: auto;
+}
+.lock-brand {
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-2);
+  letter-spacing: -0.02em;
+}
+.lock-brand span { color: var(--text-4); font-weight: 400; }
+.lock-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 26px 22px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+[data-theme="dark"] .lock-card {
+  box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+}
+.lock-icon {
+  width: 44px; height: 44px; border-radius: 10px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-2); margin-bottom: 4px;
+}
+.lock-title {
+  font-size: 18px; font-weight: 600; color: var(--text);
+  letter-spacing: -0.01em;
+}
+.lock-desc {
+  font-size: 12.5px; color: var(--text-4);
+  line-height: 1.55; margin-bottom: 4px;
+}
+.lock-hint {
+  font-size: 11.5px; color: var(--text-4);
+  line-height: 1.5; text-align: center; padding: 0 6px;
+}
+
+@keyframes lockShake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-6px); }
+  30% { transform: translateX(6px); }
+  45% { transform: translateX(-4px); }
+  60% { transform: translateX(4px); }
+  75% { transform: translateX(-2px); }
+}
+.lock-card.shake {
+  animation: lockShake 0.5s cubic-bezier(.36,.07,.19,.97);
+}
+
 #vault-reset {
   position: relative;
   overflow: hidden;
@@ -415,6 +530,9 @@ textarea.field.mono { font-family: 'JetBrains Mono', monospace; font-size: 11px;
   user-select: none;
   -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
+  height: auto;
+  min-height: 36px;
+  padding: 8px 12px;
 }
 #vault-reset::before {
   content: '';
@@ -429,6 +547,9 @@ textarea.field.mono { font-family: 'JetBrains Mono', monospace; font-size: 11px;
 #vault-reset .reset-label {
   position: relative;
   z-index: 1;
+  font-size: 11.5px;
+  line-height: 1.35;
+  white-space: normal;
 }
 #vault-reset.holding {
   border-color: var(--weak);
@@ -440,7 +561,7 @@ textarea.field.mono { font-family: 'JetBrains Mono', monospace; font-size: 11px;
   transform: translate(-50%, 16px);
   padding: 9px 14px; background: var(--btn-bg); color: var(--btn-fg);
   border-radius: 6px; font-size: 12.5px; font-weight: 500;
-  z-index: 1300; opacity: 0; pointer-events: none;
+  z-index: 1700; opacity: 0; pointer-events: none;
   transition: transform 0.22s cubic-bezier(0.16,1,0.3,1), opacity 0.18s;
   display: flex; align-items: center; gap: 8px;
   max-width: calc(100vw - 32px); box-shadow: 0 8px 24px rgba(0,0,0,0.3);
@@ -452,6 +573,16 @@ textarea.field.mono { font-family: 'JetBrains Mono', monospace; font-size: 11px;
 }
 .toast.warn::before { background: var(--fair); }
 
+.noscript-msg {
+  display: none;
+  padding: 40px 24px;
+  text-align: center;
+  font-family: 'Inter', sans-serif;
+  color: #18181B;
+}
+.noscript-msg h2 { font-size: 20px; margin-bottom: 12px; }
+.noscript-msg p { font-size: 14px; line-height: 1.6; }
+
 @media (max-width: 520px) {
   .shell { padding: 18px 14px 80px; }
   #pw-input { font-size: 15px; }
@@ -462,6 +593,7 @@ textarea.field.mono { font-family: 'JetBrains Mono', monospace; font-size: 11px;
   .actions { grid-template-columns: 1fr; }
   .item { flex-wrap: wrap; }
   .item-acts { margin-left: auto; }
+  .lock-card { padding: 22px 18px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -473,26 +605,67 @@ textarea.field.mono { font-family: 'JetBrains Mono', monospace; font-size: 11px;
 </head>
 <body>
 
-<div class="shell">
+<noscript>
+  <style>
+    #vault-overlay, .shell { display: none !important; }
+    .noscript-msg { display: block !important; }
+  </style>
+</noscript>
+<div class="noscript-msg">
+  <h2>JavaScript প্রয়োজন</h2>
+  <p>এই অ্যাপ ব্যবহার করতে আপনার ব্রাউজারে JavaScript সক্রিয় করুন।</p>
+</div>
+
+<!-- ═══ LOCK SCREEN ═══ -->
+<div class="modal open" id="vault-overlay" role="dialog" aria-modal="true" aria-labelledby="vault-title">
+  <div class="lock-screen">
+    <div class="lock-brand">PW<span>/</span>Checker</div>
+    <div class="lock-card" id="lock-card">
+      <div class="lock-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <div class="lock-title" id="vault-title">আনলক করুন</div>
+      <div class="lock-desc" id="vault-desc">চালিয়ে যেতে মাস্টার পাসওয়ার্ড দিন।</div>
+      <input type="password" id="vault-pass-input" class="field" placeholder="মাস্টার পাসওয়ার্ড" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="মাস্টার পাসওয়ার্ড">
+      <input type="password" id="vault-pass-confirm" class="field" placeholder="আবার লিখুন" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" style="display:none;" aria-label="মাস্টার পাসওয়ার্ড আবার লিখুন">
+      <div class="err" id="vault-error" role="alert"></div>
+      <button class="btn btn-primary btn-full" id="vault-submit" type="button">আনলক</button>
+      <button class="btn btn-ghost btn-full" id="vault-reset" type="button" style="display:none;">
+        <span class="reset-label">ভুলে গেছেন? ১ মিনিট চেপে ধরুন</span>
+      </button>
+    </div>
+    <div class="lock-hint" id="vault-hint">সব ডেটা AES-256 দিয়ে আপনার ডিভাইসেই এনক্রিপ্টেড থাকে।</div>
+  </div>
+</div>
+
+<!-- ═══ APP CONTENT ═══ -->
+<div class="shell locked" id="app-shell">
   <header class="head">
-    <div class="logo">pw<span>/</span>checker</div>
-    <button class="theme-btn" id="theme-btn" title="থিম" type="button" aria-label="থিম পরিবর্তন">
-      <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-      </svg>
-    </button>
+    <div class="logo">PW<span>/</span>Checker</div>
+    <div class="head-actions">
+      <button class="icon-action" id="lock-btn" type="button" title="লক করুন" aria-label="অ্যাপ লক করুন">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </button>
+      <button class="icon-action" id="theme-btn" type="button" title="থিম" aria-label="থিম পরিবর্তন">
+        <svg id="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+    </div>
   </header>
 
   <div class="pw-field">
-    <input type="password" id="pw-input" placeholder="পাসওয়ার্ড লিখুন" autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off">
-    <button class="icon-btn" id="toggle-btn" title="দেখুন" type="button" aria-label="পাসওয়ার্ড দেখান বা লুকান">
-      <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <input type="password" id="pw-input" placeholder="পাসওয়ার্ড লিখুন" autocomplete="off" spellcheck="false" autocapitalize="off" autocorrect="off" aria-label="পাসওয়ার্ড">
+    <button class="icon-btn" id="toggle-btn" type="button" title="দেখুন" aria-label="পাসওয়ার্ড দেখান বা লুকান">
+      <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
         <circle cx="12" cy="12" r="3"/>
       </svg>
     </button>
-    <button class="icon-btn" id="copy-btn" title="কপি" type="button" aria-label="কপি">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+    <button class="icon-btn" id="copy-btn" type="button" title="কপি" aria-label="কপি">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
       </svg>
@@ -522,11 +695,11 @@ textarea.field.mono { font-family: 'JetBrains Mono', monospace; font-size: 11px;
 
   <div class="actions">
     <button class="btn btn-ghost" id="gen-strong" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/><path d="M15.5 7.5L18 5l3 3-2.5 2.5"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 2l-9.6 9.6"/><circle cx="7.5" cy="15.5" r="5.5"/><path d="M15.5 7.5L18 5l3 3-2.5 2.5"/></svg>
       পাসওয়ার্ড
     </button>
     <button class="btn btn-ghost" id="gen-pass" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
       পাসফ্রেজ
     </button>
   </div>
@@ -534,7 +707,7 @@ textarea.field.mono { font-family: 'JetBrains Mono', monospace; font-size: 11px;
   <details class="tips" id="tips">
     <summary>
       <span id="tips-label">পরামর্শ</span>
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>
     </summary>
     <div class="tips-body" id="tips-body"></div>
   </details>
@@ -542,7 +715,7 @@ textarea.field.mono { font-family: 'JetBrains Mono', monospace; font-size: 11px;
   <section class="vault">
     <div class="vault-head">
       <span class="vault-title">ভল্ট</span>
-      <button class="vault-link" id="change-pw-btn" type="button" style="display:none;">পাসওয়ার্ড বদল</button>
+      <button class="vault-link" id="change-pw-btn" type="button">পাসওয়ার্ড বদল</button>
     </div>
 
     <div class="tabs">
@@ -554,7 +727,7 @@ textarea.field.mono { font-family: 'JetBrains Mono', monospace; font-size: 11px;
     <div class="panel active" data-panel="passwords">
       <div class="list-head">
         <button class="add-btn" id="add-pw-btn" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           নতুন
         </button>
       </div>
@@ -564,7 +737,7 @@ textarea.field.mono { font-family: 'JetBrains Mono', monospace; font-size: 11px;
     <div class="panel" data-panel="apis">
       <div class="list-head">
         <button class="add-btn" id="add-api-btn" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           নতুন
         </button>
       </div>
@@ -574,7 +747,7 @@ textarea.field.mono { font-family: 'JetBrains Mono', monospace; font-size: 11px;
     <div class="panel" data-panel="notes">
       <div class="list-head">
         <button class="add-btn" id="add-note-btn" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           নতুন
         </button>
       </div>
@@ -588,51 +761,35 @@ textarea.field.mono { font-family: 'JetBrains Mono', monospace; font-size: 11px;
   </section>
 </div>
 
-<div class="toast" id="toast"><span id="toast-msg">কপি হয়েছে</span></div>
+<div class="toast" id="toast" role="status" aria-live="polite"><span id="toast-msg">কপি হয়েছে</span></div>
 
-<div class="modal" id="vault-overlay">
-  <div class="dialog">
-    <div class="dialog-body">
-      <div class="lock-badge">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      </div>
-      <div class="dialog-title" id="vault-title" style="font-size:15px;">মাস্টার পাসওয়ার্ড</div>
-      <input type="password" id="vault-pass-input" class="field" placeholder="পাসওয়ার্ড" autocomplete="off">
-      <input type="password" id="vault-pass-confirm" class="field" placeholder="আবার লিখুন" autocomplete="off" style="display:none;">
-      <div class="err" id="vault-error"></div>
-      <button class="btn btn-primary btn-full" id="vault-submit" type="button">তৈরি করুন</button>
-      <button class="btn btn-ghost btn-full" id="vault-reset" type="button" style="display:none;font-size:12px;height:36px;">
-        <span class="reset-label">রিসেট</span>
-      </button>
-    </div>
-  </div>
-</div>
-
+<!-- ═══ CHANGE PASSWORD MODAL ═══ -->
 <div class="modal" id="change-pw-modal">
   <div class="dialog">
     <div class="dialog-head">
       <div class="dialog-title">মাস্টার পাসওয়ার্ড বদল</div>
       <button class="dialog-x" data-close="change-pw-modal" type="button" aria-label="বন্ধ">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
     <div class="dialog-body">
       <div class="dialog-hint">সব সেভ করা ডেটা নতুন পাসওয়ার্ড দিয়ে পুনরায় এনক্রিপ্ট হবে।</div>
-      <input type="password" class="field" id="chg-current" placeholder="বর্তমান পাসওয়ার্ড" autocomplete="off">
-      <input type="password" class="field" id="chg-new" placeholder="নতুন পাসওয়ার্ড (কমপক্ষে ৪ অক্ষর)" autocomplete="off">
-      <input type="password" class="field" id="chg-confirm" placeholder="আবার নতুন পাসওয়ার্ড" autocomplete="off">
-      <div class="err" id="chg-error"></div>
+      <input type="password" class="field" id="chg-current" placeholder="বর্তমান পাসওয়ার্ড" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <input type="password" class="field" id="chg-new" placeholder="নতুন পাসওয়ার্ড (কমপক্ষে ৪ অক্ষর)" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <input type="password" class="field" id="chg-confirm" placeholder="আবার নতুন পাসওয়ার্ড" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <div class="err" id="chg-error" role="alert"></div>
       <button class="btn btn-primary btn-full" id="chg-submit" type="button">বদল করুন</button>
     </div>
   </div>
 </div>
 
+<!-- ═══ ADD PASSWORD MODAL ═══ -->
 <div class="modal" id="add-pw-modal">
   <div class="dialog">
     <div class="dialog-head">
       <div class="dialog-title">নতুন পাসওয়ার্ড</div>
       <button class="dialog-x" data-close="add-pw-modal" type="button" aria-label="বন্ধ">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
     <div class="dialog-body">
@@ -642,12 +799,13 @@ textarea.field.mono { font-family: 'JetBrains Mono', monospace; font-size: 11px;
   </div>
 </div>
 
+<!-- ═══ ADD API MODAL ═══ -->
 <div class="modal" id="add-api-modal">
   <div class="dialog">
     <div class="dialog-head">
       <div class="dialog-title">নতুন API কী</div>
       <button class="dialog-x" data-close="add-api-modal" type="button" aria-label="বন্ধ">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
     <div class="dialog-body">
@@ -660,12 +818,13 @@ textarea.field.mono { font-family: 'JetBrains Mono', monospace; font-size: 11px;
   </div>
 </div>
 
+<!-- ═══ ADD NOTE MODAL ═══ -->
 <div class="modal" id="add-note-modal">
   <div class="dialog">
     <div class="dialog-head">
       <div class="dialog-title">নতুন নোট</div>
       <button class="dialog-x" data-close="add-note-modal" type="button" aria-label="বন্ধ">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
     <div class="dialog-body">
@@ -676,36 +835,64 @@ textarea.field.mono { font-family: 'JetBrains Mono', monospace; font-size: 11px;
   </div>
 </div>
 
+<!-- ═══ BACKUP MODAL ═══ -->
 <div class="modal" id="backup-modal">
   <div class="dialog">
     <div class="dialog-head">
-      <div class="dialog-title">ব্যাকআপ</div>
+      <div class="dialog-title">ব্যাকআপ ও এক্সপোর্ট</div>
       <button class="dialog-x" data-close="backup-modal" type="button" aria-label="বন্ধ">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
     <div class="dialog-body">
-      <button class="btn btn-ghost btn-full" id="export-btn" type="button">এক্সপোর্ট</button>
-      <textarea class="field mono" id="export-output" placeholder="এনক্রিপ্টেড টেক্সট" readonly style="min-height:80px;font-size:11px;"></textarea>
-      <button class="btn btn-ghost btn-full" id="export-copy" type="button">কপি</button>
-      <div style="height:1px;background:var(--border);margin:4px 0;"></div>
-      <span class="field-label">ইম্পোর্ট</span>
-      <textarea class="field mono" id="import-input" placeholder="ব্যাকআপ পেস্ট করুন" style="font-size:11px;"></textarea>
-      <button class="btn btn-ghost btn-full" id="import-btn" type="button">ইম্পোর্ট</button>
-      <div class="err" id="backup-msg"></div>
+      <div class="dialog-hint">কোন ডেটা অন্য ডিভাইসে নিতে চান বেছে নিন। বাছাই করা ক্যাটাগরিগুলো মাস্টার পাসওয়ার্ড দিয়ে এনক্রিপ্ট হয়ে একটি টেক্সট কোডে রূপান্তরিত হবে।</div>
+
+      <div class="scope-block">
+        <span class="scope-label">এক্সপোর্টে কী কী থাকবে</span>
+        <div class="scope-list" id="export-scope-list">
+          <label class="scope-item">
+            <input type="checkbox" data-cat="passwords" checked>
+            <span class="scope-text">পাসওয়ার্ড</span>
+            <span class="scope-count" id="exp-count-pw">0</span>
+          </label>
+          <label class="scope-item">
+            <input type="checkbox" data-cat="apis" checked>
+            <span class="scope-text">API কী</span>
+            <span class="scope-count" id="exp-count-api">0</span>
+          </label>
+          <label class="scope-item">
+            <input type="checkbox" data-cat="notes" checked>
+            <span class="scope-text">নোট</span>
+            <span class="scope-count" id="exp-count-note">0</span>
+          </label>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-full" id="export-btn" type="button">এক্সপোর্ট কোড তৈরি করুন</button>
+      <textarea class="field mono" id="export-output" placeholder="এখানে এনক্রিপ্টেড কোড দেখাবে…" readonly style="min-height:88px;font-size:11px;"></textarea>
+      <button class="btn btn-ghost btn-full" id="export-copy" type="button">কোড কপি করুন</button>
+
+      <div style="height:1px;background:var(--border);margin:6px 0;"></div>
+      <span class="field-label">ইম্পোর্ট (অন্য ডিভাইসের কোড)</span>
+      <div class="dialog-hint" style="margin-bottom:2px;">এই কোডে যে ক্যাটাগরিগুলো আছে সেগুলো আপনার ভল্টে যোগ হবে — বাকি ডেটা অপরিবর্তিত থাকবে।</div>
+      <textarea class="field mono" id="import-input" placeholder="ব্যাকআপ কোড এখানে পেস্ট করুন" style="font-size:11px;"></textarea>
+      <button class="btn btn-ghost btn-full" id="import-btn" type="button">ইম্পোর্ট করুন</button>
+      <div class="err" id="backup-msg" role="alert"></div>
     </div>
   </div>
 </div>
 
+<!-- ═══ IMPORT PASS MODAL ═══ -->
 <div class="modal" id="import-pass-overlay">
   <div class="dialog">
     <div class="dialog-body">
       <div class="lock-badge">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
       </div>
-      <div class="dialog-title" style="font-size:15px;">মাস্টার পাসওয়ার্ড</div>
-      <input type="password" id="import-pass-input" class="field" placeholder="পাসওয়ার্ড" autocomplete="off">
-      <div class="err" id="import-pass-error"></div>
+      <div class="dialog-title" style="font-size:15px;">ব্যাকআপের মাস্টার পাসওয়ার্ড</div>
+      <div class="dialog-hint" style="margin-bottom:4px;">যে পাসওয়ার্ড দিয়ে ব্যাকআপ তৈরি হয়েছিল সেটি দিন।</div>
+      <input type="password" id="import-pass-input" class="field" placeholder="পাসওয়ার্ড" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <div class="err" id="import-pass-error" role="alert"></div>
       <div class="dialog-acts">
         <button class="btn btn-ghost" id="import-pass-cancel" type="button">বাতিল</button>
         <button class="btn btn-primary" id="import-pass-submit" type="button">ইম্পোর্ট</button>
@@ -717,6 +904,7 @@ textarea.field.mono { font-family: 'JetBrains Mono', monospace; font-size: 11px;
 <script>
 'use strict';
 
+// ═══ STORAGE HELPERS ═══
 function lsGet(k) { try { return localStorage.getItem(k); } catch (_) { return null; } }
 function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (_) {} }
 function lsRemove(k) { try { localStorage.removeItem(k); } catch (_) {} }
@@ -794,12 +982,15 @@ function showToast(msg, type) {
   toastTimer = setTimeout(function () { t.classList.remove('show'); }, 1800);
 }
 
+// ═══ THEME ═══
 const html = document.documentElement;
 let isDark = lsGet('pw-theme') === 'dark';
 function applyTheme() {
   html.setAttribute('data-theme', isDark ? 'dark' : 'light');
   lsSet('pw-theme', isDark ? 'dark' : 'light');
-  document.getElementById('theme-icon').innerHTML = isDark
+  const icon = document.getElementById('theme-icon');
+  if (!icon) return;
+  icon.innerHTML = isDark
     ? '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>'
     : '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
 }
@@ -809,6 +1000,7 @@ document.getElementById('theme-btn').addEventListener('click', function () {
   applyTheme();
 });
 
+// ═══ DOM REFS ═══
 const input = document.getElementById('pw-input');
 const toggleBtn = document.getElementById('toggle-btn');
 const eyeIcon = document.getElementById('eye-icon');
@@ -822,6 +1014,9 @@ const lenVal = document.getElementById('len-val');
 const tipsBody = document.getElementById('tips-body');
 const tipsLabel = document.getElementById('tips-label');
 const resetBtn = document.getElementById('vault-reset');
+const appShell = document.getElementById('app-shell');
+const vaultOverlay = document.getElementById('vault-overlay');
+const lockCard = document.getElementById('lock-card');
 const checks = {
   len: document.getElementById('chk-len'),
   upper: document.getElementById('chk-upper'),
@@ -843,7 +1038,60 @@ function makeEmpty(text) {
 
 const revealedNotes = new Set();
 
-// ═══ RESET BUTTON — hold 60s silently resets ═══
+// ═══ APP LOCK STATE ═══
+let isAppLocked = true;
+
+function lockApp() {
+  isAppLocked = true;
+  appShell.classList.add('locked');
+  vaultOverlay.classList.add('open');
+}
+function unlockApp() {
+  isAppLocked = false;
+  appShell.classList.remove('locked');
+  vaultOverlay.classList.remove('open');
+}
+
+function shakeLockCard() {
+  if (!lockCard) return;
+  lockCard.classList.remove('shake');
+  void lockCard.offsetWidth;
+  lockCard.classList.add('shake');
+  lockCard.addEventListener('animationend', function h() {
+    lockCard.classList.remove('shake');
+    lockCard.removeEventListener('animationend', h);
+  });
+}
+
+function isVaultCorrupt() {
+  const salt = lsGet('bcoding-vault-salt');
+  const ver = lsGet('bcoding-vault-verifier');
+  if (!salt || !ver) return true;
+  try {
+    const saltBytes = b64ToBytes(salt);
+    if (saltBytes.length !== 16) return true;
+    const vparts = ver.split('.');
+    if (vparts.length !== 2) return true;
+    b64ToBytes(vparts[0]);
+    b64ToBytes(vparts[1]);
+    return false;
+  } catch (_) { return true; }
+}
+
+// ═══ LOCK BUTTON (manual) ═══
+document.getElementById('lock-btn').addEventListener('click', function () {
+  // Clear in-memory secrets and show lock screen
+  vaultKey = null;
+  vaultReady = false;
+  vaultData = { passwords: [], apis: [], notes: [] };
+  revealedNotes.clear();
+  // Clear input fields
+  input.value = '';
+  evaluate('');
+  openVaultModal('unlock');
+});
+
+// ═══ RESET BUTTON ═══
 const HOLD_DURATION = 60000;
 let holdStartTime = 0;
 let holdRAF = null;
@@ -929,7 +1177,7 @@ document.querySelectorAll('.tab').forEach(function (tab) {
   });
 });
 
-// ═══ TOGGLE MAIN VISIBILITY ═══
+// ═══ TOGGLE ═══
 let visible = false;
 toggleBtn.addEventListener('click', function () {
   visible = !visible;
@@ -984,7 +1232,7 @@ const tiers = [
 // ═══ SECURE RANDOM ═══
 function secureRandomInt(max) {
   if (max <= 0) return 0;
-  if (!hasGetRandomValues()) return Math.floor(Math.random() * max);
+  if (!hasGetRandomValues()) throw new Error('Secure RNG unavailable');
   const maxU32 = 4294967296;
   const range = maxU32 - (maxU32 % max);
   const arr = new Uint32Array(1);
@@ -1048,13 +1296,17 @@ function updateTips(pw) {
     b.appendChild(text);
     b.appendChild(apply);
     b.addEventListener('click', function () {
-      const nw = tip.apply(input.value || '');
-      input.value = nw;
-      input.type = 'text';
-      visible = true;
-      eyeIcon.innerHTML = EYE_CLOSED;
-      input.focus();
-      evaluate(nw);
+      try {
+        const nw = tip.apply(input.value || '');
+        input.value = nw;
+        input.type = 'text';
+        visible = true;
+        eyeIcon.innerHTML = EYE_CLOSED;
+        input.focus();
+        evaluate(nw);
+      } catch (_) {
+        showToast('এই ব্রাউজারে secure RNG নেই', 'warn');
+      }
     });
     tipsBody.appendChild(b);
   });
@@ -1165,18 +1417,28 @@ function setPassword(pw) {
   eyeIcon.innerHTML = EYE_CLOSED;
   evaluate(pw);
 }
-document.getElementById('gen-strong').addEventListener('click', function () { setPassword(genStrong()); });
-document.getElementById('gen-pass').addEventListener('click', function () { setPassword(genPass()); });
+document.getElementById('gen-strong').addEventListener('click', function () {
+  if (!hasGetRandomValues()) { showToast('এই ব্রাউজারে secure RNG নেই', 'warn'); return; }
+  try { setPassword(genStrong()); }
+  catch (_) { showToast('তৈরি করা যায়নি', 'warn'); }
+});
+document.getElementById('gen-pass').addEventListener('click', function () {
+  if (!hasGetRandomValues()) { showToast('এই ব্রাউজারে secure RNG নেই', 'warn'); return; }
+  try { setPassword(genPass()); }
+  catch (_) { showToast('তৈরি করা যায়নি', 'warn'); }
+});
 
 // ═══ VAULT CRYPTO ═══
 const K_SALT = 'bcoding-vault-salt';
 const K_VER = 'bcoding-vault-verifier';
 const K_BLOB = 'bcoding-vault-blob';
+
 let vaultKey = null;
 let vaultData = { passwords: [], apis: [], notes: [] };
 let vaultReady = false;
 let pendingAction = null;
 let vaultMode = 'create';
+let vaultSubmitting = false;
 
 function bytesToB64(b) { let s = ''; b.forEach(function (x) { s += String.fromCharCode(x); }); return btoa(s); }
 function b64ToBytes(b64) {
@@ -1211,29 +1473,37 @@ function hasVault() { return lsGet(K_SALT) !== null; }
 function openVaultModal(mode) {
   vaultMode = mode;
   const title = document.getElementById('vault-title');
-  const confirm = document.getElementById('vault-pass-confirm');
+  const desc = document.getElementById('vault-desc');
+  const hint = document.getElementById('vault-hint');
+  const confirmInput = document.getElementById('vault-pass-confirm');
   const submit = document.getElementById('vault-submit');
-  const reset = document.getElementById('vault-reset');
+  const resetBtnEl = document.getElementById('vault-reset');
   document.getElementById('vault-error').classList.remove('show');
   document.getElementById('vault-pass-input').value = '';
-  confirm.value = '';
+  confirmInput.value = '';
+  vaultSubmitting = false;
+  submit.disabled = false;
   if (mode === 'create') {
     title.textContent = 'মাস্টার পাসওয়ার্ড তৈরি করুন';
-    confirm.style.display = 'block';
+    desc.textContent = 'অ্যাপ ব্যবহার করতে একটি মাস্টার পাসওয়ার্ড তৈরি করুন। সব সেভ করা ডেটা এই পাসওয়ার্ড দিয়ে এনক্রিপ্ট হবে।';
+    hint.textContent = 'এটি ভুলে গেলে ডেটা ফিরে পাওয়া যাবে না।';
+    confirmInput.style.display = 'block';
     submit.textContent = 'তৈরি করুন';
-    reset.style.display = 'none';
+    resetBtnEl.style.display = 'none';
   } else {
     title.textContent = 'আনলক করুন';
-    confirm.style.display = 'none';
+    desc.textContent = 'চালিয়ে যেতে মাস্টার পাসওয়ার্ড দিন।';
+    hint.textContent = 'সব ডেটা AES-256 দিয়ে আপনার ডিভাইসেই এনক্রিপ্টেড থাকে।';
+    confirmInput.style.display = 'none';
     submit.textContent = 'আনলক';
-    reset.style.display = 'flex';
+    resetBtnEl.style.display = 'flex';
   }
-  document.getElementById('vault-overlay').classList.add('open');
+  lockApp();
   setTimeout(function () { document.getElementById('vault-pass-input').focus(); }, 60);
 }
 function closeVaultModal() {
   resetHold();
-  document.getElementById('vault-overlay').classList.remove('open');
+  unlockApp();
 }
 
 function ensureVault(action) {
@@ -1261,13 +1531,21 @@ async function createVault(pass) {
   vaultReady = true;
 }
 async function unlockVault(pass) {
-  const saltB64 = lsGet(K_SALT);
-  if (!saltB64) throw new Error('no salt');
-  const salt = b64ToBytes(saltB64);
+  if (isVaultCorrupt()) {
+    const e = new Error('corrupt');
+    e.code = 'CORRUPT';
+    throw e;
+  }
+  const salt = b64ToBytes(lsGet(K_SALT));
   const key = await deriveKey(pass, salt);
   const ver = lsGet(K_VER);
-  if (!ver) throw new Error('no verifier');
-  await decryptK(key, ver);
+  try {
+    await decryptK(key, ver);
+  } catch (_) {
+    const e = new Error('auth');
+    e.code = 'AUTH';
+    throw e;
+  }
   const blob = lsGet(K_BLOB);
   const data = blob ? await decryptK(key, blob) : { passwords: [], apis: [], notes: [] };
   vaultKey = key;
@@ -1279,34 +1557,90 @@ async function unlockVault(pass) {
   vaultReady = true;
 }
 
+['vault-pass-input', 'vault-pass-confirm'].forEach(function (id) {
+  document.getElementById(id).addEventListener('input', function () {
+    document.getElementById('vault-error').classList.remove('show');
+  });
+});
+
 document.getElementById('vault-submit').addEventListener('click', async function () {
-  const p1 = document.getElementById('vault-pass-input').value;
+  if (vaultSubmitting) return;
   const err = document.getElementById('vault-error');
   err.classList.remove('show');
+
+  if (!hasSubtleCrypto()) {
+    err.textContent = 'এই ব্রাউজারে এনক্রিপশন সাপোর্ট নেই। HTTPS ব্যবহার করুন বা ব্রাউজার আপডেট করুন।';
+    err.classList.add('show');
+    return;
+  }
+  if (!hasGetRandomValues()) {
+    err.textContent = 'এই ব্রাউজারে secure র‍্যান্ডম সাপোর্ট নেই।';
+    err.classList.add('show');
+    return;
+  }
+
+  const p1 = document.getElementById('vault-pass-input').value;
+
+  if (vaultMode === 'create') {
+    const p2 = document.getElementById('vault-pass-confirm').value;
+    if (!p1 || p1.length < 4) { err.textContent = 'কমপক্ষে ৪ অক্ষরের পাসওয়ার্ড দিন'; err.classList.add('show'); return; }
+    if (p1 !== p2) { err.textContent = 'দুটি পাসওয়ার্ড মিলছে না'; err.classList.add('show'); return; }
+  } else {
+    if (!p1) { err.textContent = 'পাসওয়ার্ড দিন'; err.classList.add('show'); return; }
+  }
+
+  vaultSubmitting = true;
+  const submitBtn = document.getElementById('vault-submit');
+  const originalText = submitBtn.textContent;
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'যাচাই করা হচ্ছে…';
+
   try {
     if (vaultMode === 'create') {
-      const p2 = document.getElementById('vault-pass-confirm').value;
-      if (!p1 || p1.length < 4) { err.textContent = 'কমপক্ষে ৪ অক্ষর'; err.classList.add('show'); return; }
-      if (p1 !== p2) { err.textContent = 'মিলছে না'; err.classList.add('show'); return; }
       await createVault(p1);
       showToast('ভল্ট তৈরি হয়েছে');
     } else {
       try { await unlockVault(p1); }
-      catch (_) { err.textContent = 'ভুল পাসওয়ার্ড'; err.classList.add('show'); return; }
+      catch (e) {
+        if (e && e.code === 'CORRUPT') {
+          err.textContent = 'ভল্ট ক্ষতিগ্রস্ত। নিচের রিসেট বাটন ১ মিনিট চেপে ধরে আবার শুরু করুন।';
+        } else {
+          err.textContent = 'ভুল পাসওয়ার্ড, আবার চেষ্টা করুন।';
+        }
+        err.classList.add('show');
+        shakeLockCard();
+        const f = document.getElementById('vault-pass-input');
+        f.focus();
+        f.select();
+        return;
+      }
       showToast('আনলক হয়েছে');
     }
   } catch (e) {
-    err.textContent = 'সমস্যা হয়েছে';
+    console.error('vault error:', e);
+    err.textContent = 'সমস্যা হয়েছে, আবার চেষ্টা করুন।';
     err.classList.add('show');
     return;
+  } finally {
+    vaultSubmitting = false;
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
   }
+
   closeVaultModal();
   renderAll();
+  setTimeout(function () { try { input.focus(); } catch (_) {} }, 100);
   if (pendingAction) {
     const fn = pendingAction;
     pendingAction = null;
     try { fn(); } catch (e) { console.error(e); }
   }
+});
+
+['vault-pass-input', 'vault-pass-confirm'].forEach(function (id) {
+  document.getElementById(id).addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('vault-submit').click(); }
+  });
 });
 
 // ═══ CHANGE MASTER PASSWORD ═══
@@ -1320,11 +1654,8 @@ function openChangePwModal() {
 }
 
 document.getElementById('change-pw-btn').addEventListener('click', function () {
-  if (!hasSubtleCrypto()) {
-    showToast('এই ব্রাউজারে এনক্রিপশন সাপোর্ট নেই', 'warn');
-    return;
-  }
-  if (!hasVault()) return; // nothing to change (button hidden anyway)
+  if (!hasSubtleCrypto()) { showToast('এই ব্রাউজারে এনক্রিপশন সাপোর্ট নেই', 'warn'); return; }
+  if (!hasVault()) return;
   if (!vaultReady) {
     pendingAction = openChangePwModal;
     openVaultModal('unlock');
@@ -1333,10 +1664,12 @@ document.getElementById('change-pw-btn').addEventListener('click', function () {
   openChangePwModal();
 });
 
-// Clear error as user types in the change modal
 ['chg-current', 'chg-new', 'chg-confirm'].forEach(function (id) {
   document.getElementById(id).addEventListener('input', function () {
     document.getElementById('chg-error').classList.remove('show');
+  });
+  document.getElementById(id).addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); document.getElementById('chg-submit').click(); }
   });
 });
 
@@ -1362,18 +1695,15 @@ document.getElementById('chg-submit').addEventListener('click', async function (
     const oldVer = lsGet(K_VER);
     if (!oldVer) throw new Error('no verifier');
 
-    // Verify current password
     const oldSalt = b64ToBytes(oldSaltB64);
     const oldKey = await deriveKey(cur, oldSalt);
     await decryptK(oldKey, oldVer);
 
-    // Fresh salt + new key
     const newSalt = crypto.getRandomValues(new Uint8Array(16));
     const newKey = await deriveKey(nw, newSalt);
     const newVerifier = await encryptK(newKey, { ok: 1 });
     const newBlob = await encryptK(newKey, vaultData);
 
-    // Save atomically
     lsSet(K_SALT, bytesToB64(newSalt));
     lsSet(K_VER, newVerifier);
     lsSet(K_BLOB, newBlob);
@@ -1416,11 +1746,6 @@ function maskContent(content) {
   return '•'.repeat(len);
 }
 
-function updateChangePwVisibility() {
-  const btn = document.getElementById('change-pw-btn');
-  btn.style.display = hasVault() ? '' : 'none';
-}
-
 // ═══ RENDER PASSWORDS ═══
 function renderPw(highlight) {
   const list = document.getElementById('saved-list');
@@ -1438,7 +1763,7 @@ function renderPw(highlight) {
       '<div class="item-acts">' +
         '<button type="button" class="act load">লোড</button>' +
         '<button type="button" class="act copy-saved">কপি</button>' +
-        '<button type="button" class="act del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>' +
+        '<button type="button" class="act del" aria-label="মুছে ফেলুন"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>' +
       '</div>';
     div.querySelector('.item-name').textContent = item.name;
     div.querySelector('.item-val').textContent = masked;
@@ -1514,7 +1839,7 @@ function renderApi(highlight) {
       '</div>' +
       '<div class="item-acts">' +
         '<button type="button" class="act copy-saved">কপি</button>' +
-        '<button type="button" class="act del"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>' +
+        '<button type="button" class="act del" aria-label="মুছে ফেলুন"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>' +
       '</div>';
     div.querySelector('.item-name').textContent = item.name;
     div.querySelector('.item-val').textContent = maskKey(item.key);
@@ -1591,8 +1916,8 @@ function renderNotes(highlight) {
     eyeBtn.title = revealed ? 'লুকান' : 'দেখুন';
     eyeBtn.setAttribute('aria-label', revealed ? 'নোট লুকান' : 'নোট দেখুন');
     eyeBtn.innerHTML = revealed
-      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'
-      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
 
     const copyBtnN = document.createElement('button');
     copyBtnN.type = 'button';
@@ -1602,7 +1927,8 @@ function renderNotes(highlight) {
     const delBtn = document.createElement('button');
     delBtn.type = 'button';
     delBtn.className = 'act del';
-    delBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>';
+    delBtn.setAttribute('aria-label', 'মুছে ফেলুন');
+    delBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>';
 
     acts.appendChild(eyeBtn);
     acts.appendChild(copyBtnN);
@@ -1625,14 +1951,14 @@ function renderNotes(highlight) {
         content.textContent = maskContent(item.content);
         eyeBtn.title = 'দেখুন';
         eyeBtn.setAttribute('aria-label', 'নোট দেখুন');
-        eyeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+        eyeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
       } else {
         revealedNotes.add(item.time);
         content.classList.remove('masked');
         content.textContent = item.content;
         eyeBtn.title = 'লুকান';
         eyeBtn.setAttribute('aria-label', 'নোট লুকান');
-        eyeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+        eyeBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
       }
     });
 
@@ -1676,37 +2002,93 @@ function renderAll() {
   renderPw();
   renderApi();
   renderNotes();
-  updateChangePwVisibility();
+  updateExportCounts();
 }
 
-// ═══ BACKUP ═══
-document.getElementById('export-btn').addEventListener('click', function () {
-  ensureVault(async function () {
-    await persistVault();
-    const payload = JSON.stringify({
-      v: 1,
-      salt: lsGet(K_SALT),
-      verifier: lsGet(K_VER),
-      blob: lsGet(K_BLOB)
-    });
-    document.getElementById('export-output').value = utf8ToB64(payload);
-    showToast('তৈরি হয়েছে');
+// ═══ EXPORT COUNTS ═══
+function updateExportCounts() {
+  const pw = document.getElementById('exp-count-pw');
+  const api = document.getElementById('exp-count-api');
+  const note = document.getElementById('exp-count-note');
+  if (pw) pw.textContent = vaultData.passwords.length;
+  if (api) api.textContent = vaultData.apis.length;
+  if (note) note.textContent = vaultData.notes.length;
+}
+
+function getExportCats() {
+  const arr = [];
+  document.querySelectorAll('#export-scope-list input[type="checkbox"]').forEach(function (cb) {
+    if (cb.checked) arr.push(cb.dataset.cat);
   });
+  return arr;
+}
+
+function resetExportCheckboxes() {
+  document.querySelectorAll('#export-scope-list input[type="checkbox"]').forEach(function (cb) {
+    cb.checked = true;
+  });
+}
+
+// ═══ BACKUP: EXPORT ═══
+document.getElementById('export-btn').addEventListener('click', function () {
+  if (!vaultReady) {
+    // Should not happen — backup modal is behind lock screen
+    return;
+  }
+  if (!hasSubtleCrypto()) { showToast('এই ব্রাউজারে এনক্রিপশন সাপোর্ট নেই', 'warn'); return; }
+  const cats = getExportCats();
+  if (cats.length === 0) {
+    showToast('অন্তত একটি ক্যাটাগরি বেছে নিন', 'warn');
+    return;
+  }
+  const btn = document.getElementById('export-btn');
+  btn.disabled = true;
+  const orig = btn.textContent;
+  btn.textContent = 'তৈরি হচ্ছে…';
+
+  (async function () {
+    try {
+      const subset = {
+        cats: cats,
+        passwords: cats.indexOf('passwords') !== -1 ? vaultData.passwords : [],
+        apis: cats.indexOf('apis') !== -1 ? vaultData.apis : [],
+        notes: cats.indexOf('notes') !== -1 ? vaultData.notes : []
+      };
+      const blob = await encryptK(vaultKey, subset);
+      const payload = JSON.stringify({
+        v: 2,
+        salt: lsGet(K_SALT),
+        verifier: lsGet(K_VER),
+        blob: blob
+      });
+      document.getElementById('export-output').value = utf8ToB64(payload);
+      showToast('এক্সপোর্ট কোড তৈরি হয়েছে');
+    } catch (e) {
+      console.error('export failed', e);
+      showToast('তৈরি করা যায়নি', 'warn');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = orig;
+    }
+  })();
 });
+
 document.getElementById('export-copy').addEventListener('click', async function () {
   const out = document.getElementById('export-output');
   if (!out.value) { showToast('আগে তৈরি করুন', 'warn'); return; }
   const ok = await copyText(out.value);
-  if (ok) showToast('কপি হয়েছে');
+  if (ok) showToast('কোড কপি হয়েছে');
   else showToast('কপি ব্যর্থ', 'warn');
 });
 
+// ═══ BACKUP: IMPORT ═══
 let pendingImport = null;
+
 document.getElementById('import-btn').addEventListener('click', function () {
   const raw = document.getElementById('import-input').value.trim();
   const msg = document.getElementById('backup-msg');
   msg.classList.remove('show');
-  if (!raw) return;
+  if (!raw) { showToast('ব্যাকআপ কোড পেস্ট করুন', 'warn'); return; }
   try {
     const payload = JSON.parse(b64ToUtf8(raw));
     if (!payload.salt || !payload.verifier || !payload.blob) throw new Error('invalid');
@@ -1721,45 +2103,95 @@ document.getElementById('import-btn').addEventListener('click', function () {
     showToast('ভুল ফরম্যাট', 'warn');
   }
 });
+
 document.getElementById('import-pass-cancel').addEventListener('click', function () {
   pendingImport = null;
   document.getElementById('import-pass-overlay').classList.remove('open');
 });
+
+document.getElementById('import-pass-input').addEventListener('keydown', function (e) {
+  if (e.key === 'Enter') { e.preventDefault(); document.getElementById('import-pass-submit').click(); }
+});
+
 document.getElementById('import-pass-submit').addEventListener('click', async function () {
   const err = document.getElementById('import-pass-error');
   err.classList.remove('show');
   const pass = document.getElementById('import-pass-input').value;
   if (!pendingImport || !pass) return;
   if (!hasSubtleCrypto()) { err.textContent = 'এনক্রিপশন সাপোর্ট নেই'; err.classList.add('show'); return; }
+
+  const btn = document.getElementById('import-pass-submit');
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'ইম্পোর্ট হচ্ছে…';
+
   try {
     const salt = b64ToBytes(pendingImport.salt);
-    const key = await deriveKey(pass, salt);
-    await decryptK(key, pendingImport.verifier);
-    const data = await decryptK(key, pendingImport.blob);
-    lsSet(K_SALT, pendingImport.salt);
-    lsSet(K_VER, pendingImport.verifier);
-    lsSet(K_BLOB, pendingImport.blob);
-    vaultKey = key;
-    vaultData = {
-      passwords: Array.isArray(data.passwords) ? data.passwords : [],
-      apis: Array.isArray(data.apis) ? data.apis : [],
-      notes: Array.isArray(data.notes) ? data.notes : []
-    };
-    vaultReady = true;
-    revealedNotes.clear();
+    const impKey = await deriveKey(pass, salt);
+    await decryptK(impKey, pendingImport.verifier);
+    const data = await decryptK(impKey, pendingImport.blob);
+
+    let cats;
+    if (Array.isArray(data.cats)) cats = data.cats.filter(function (c) { return ['passwords','apis','notes'].indexOf(c) !== -1; });
+    else cats = ['passwords', 'apis', 'notes'];
+
+    if (cats.length === 0) throw new Error('no cats');
+
+    if (!vaultReady || !vaultKey) {
+      // No local vault — establish one from imported credentials
+      lsSet(K_SALT, pendingImport.salt);
+      lsSet(K_VER, pendingImport.verifier);
+      vaultKey = impKey;
+      vaultData = { passwords: [], apis: [], notes: [] };
+      if (cats.indexOf('passwords') !== -1) vaultData.passwords = Array.isArray(data.passwords) ? data.passwords : [];
+      if (cats.indexOf('apis') !== -1) vaultData.apis = Array.isArray(data.apis) ? data.apis : [];
+      if (cats.indexOf('notes') !== -1) vaultData.notes = Array.isArray(data.notes) ? data.notes : [];
+      vaultReady = true;
+      await persistVault();
+    } else {
+      // Merge with existing vault (replace only the imported categories)
+      if (cats.indexOf('passwords') !== -1) vaultData.passwords = Array.isArray(data.passwords) ? data.passwords : [];
+      if (cats.indexOf('apis') !== -1) vaultData.apis = Array.isArray(data.apis) ? data.apis : [];
+      if (cats.indexOf('notes') !== -1) vaultData.notes = Array.isArray(data.notes) ? data.notes : [];
+      await persistVault();
+    }
+
+    // Close backup modal too
+    document.getElementById('backup-modal').classList.remove('open');
     renderAll();
     document.getElementById('import-input').value = '';
     pendingImport = null;
     document.getElementById('import-pass-overlay').classList.remove('open');
-    showToast('সফল');
-  } catch (_) {
-    err.textContent = 'ভুল পাসওয়ার্ড';
+    const catLabel = cats.map(function (c) {
+      return c === 'passwords' ? 'পাসওয়ার্ড' : c === 'apis' ? 'API' : 'নোট';
+    }).join(', ');
+    showToast('সফল · ' + catLabel);
+  } catch (e) {
+    console.error('import error', e);
+    err.textContent = 'ভুল পাসওয়ার্ড বা ক্ষতিগ্রস্ত কোড';
     err.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
   }
 });
 
-document.getElementById('backup-btn').addEventListener('click', function () { document.getElementById('backup-modal').classList.add('open'); });
-document.getElementById('import-open-btn').addEventListener('click', function () { document.getElementById('backup-modal').classList.add('open'); });
+document.getElementById('backup-btn').addEventListener('click', function () {
+  resetExportCheckboxes();
+  document.getElementById('export-output').value = '';
+  document.getElementById('import-input').value = '';
+  document.getElementById('backup-msg').classList.remove('show');
+  updateExportCounts();
+  document.getElementById('backup-modal').classList.add('open');
+});
+document.getElementById('import-open-btn').addEventListener('click', function () {
+  resetExportCheckboxes();
+  document.getElementById('export-output').value = '';
+  document.getElementById('import-input').value = '';
+  document.getElementById('backup-msg').classList.remove('show');
+  updateExportCounts();
+  document.getElementById('backup-modal').classList.add('open');
+});
 
 // ═══ MODAL OPEN / CLOSE ═══
 function openModal(id) { document.getElementById(id).classList.add('open'); }
@@ -1774,14 +2206,11 @@ document.querySelectorAll('.dialog-x').forEach(function (btn) {
 document.querySelectorAll('.modal').forEach(function (m) {
   m.addEventListener('click', function (e) {
     if (e.target !== m) return;
+    if (m.id === 'vault-overlay') return;
     if (m.id === 'import-pass-overlay') {
       pendingImport = null;
       m.classList.remove('open');
       return;
-    }
-    if (m.id === 'vault-overlay') {
-      pendingAction = null;
-      resetHold();
     }
     m.classList.remove('open');
   });
@@ -1789,17 +2218,11 @@ document.querySelectorAll('.modal').forEach(function (m) {
 
 document.addEventListener('keydown', function (e) {
   if (e.key !== 'Escape') return;
+  if (isAppLocked) return;
   const importOverlay = document.getElementById('import-pass-overlay');
-  const vaultOverlay = document.getElementById('vault-overlay');
   if (importOverlay.classList.contains('open')) {
     pendingImport = null;
     importOverlay.classList.remove('open');
-    return;
-  }
-  if (vaultOverlay.classList.contains('open')) {
-    pendingAction = null;
-    resetHold();
-    vaultOverlay.classList.remove('open');
     return;
   }
   document.querySelectorAll('.modal.open').forEach(function (m) { m.classList.remove('open'); });
@@ -1808,7 +2231,7 @@ document.addEventListener('keydown', function (e) {
 // ═══ INIT ═══
 renderAll();
 evaluate('');
-if (hasVault()) openVaultModal('unlock');
+openVaultModal(hasVault() ? 'unlock' : 'create');
 </script>
 </body>
 </html>
